@@ -24,8 +24,15 @@ class MingguPenilaianController extends Controller
         $periode = PeriodePenilaian::where('is_aktif', true)->with('tahunAjaran')->get();
         $subkriteria = Subkriteria::with('kriteria')->orderBy('kriteria_id')->get();
         
-        // Data sederhana untuk auto-suggest AlpineJS (tanpa relasi berat)
-        $existingWeeks = MingguPenilaian::select('periode_id', 'minggu_ke')->get();
+        // Data untuk auto-suggest & validasi AlpineJS
+        $existingWeeks = MingguPenilaian::with('subkriteria:id')->get()->map(function($m) {
+            return [
+                'id' => $m->id,
+                'periode_id' => $m->periode_id,
+                'minggu_ke' => $m->minggu_ke,
+                'subkriteria_ids' => $m->subkriteria->pluck('id')->toArray()
+            ];
+        });
 
         return view('admin.minggu', compact('minggu', 'periode', 'subkriteria', 'existingWeeks'));
     }
@@ -175,9 +182,41 @@ class MingguPenilaianController extends Controller
 
         // Aktif -> Selesai
         if ($minggu->status === 'aktif' && $newStatus === 'selesai') {
-            if (!$minggu->sudahDinilai()) {
-                return back()->with('error', 'Gagal finalisasi. Pastikan seluruh guru telah memfinalisasi (bukan draf) penilaian untuk semua siswa dan subkriteria minggu ini.');
+            // Cek kelengkapan penilaian per kelas
+            $kelasPeriode = $minggu->periode->kelas;
+            $jadwalIds = $minggu->jadwalSubkriteria->pluck('id');
+            
+            if ($jadwalIds->isEmpty()) {
+                return back()->with('error', 'Gagal finalisasi. Minggu ini belum memiliki jadwal subkriteria.');
             }
+
+            $kelasBelumLengkap = [];
+
+            foreach ($kelasPeriode as $kelas) {
+                $siswaIds = \App\Models\Siswa::where('kelas_id', $kelas->id)->pluck('id');
+                if ($siswaIds->isEmpty()) {
+                    $kelasBelumLengkap[] = $kelas->nama_kelas . " (Kosong/Tidak ada siswa)";
+                    continue;
+                }
+
+                $totalSiswa = $siswaIds->count();
+                $totalHarusDinilai = $jadwalIds->count() * $totalSiswa;
+
+                $totalSudahFinal = \App\Models\PenilaianMingguan::whereIn('jadwal_sub_id', $jadwalIds)
+                    ->whereIn('siswa_id', $siswaIds)
+                    ->where('status', 'final')
+                    ->count();
+
+                if ($totalSudahFinal < $totalHarusDinilai) {
+                    $kelasBelumLengkap[] = $kelas->nama_kelas;
+                }
+            }
+
+            if (!empty($kelasBelumLengkap)) {
+                $namaKelasDigabung = implode(', ', $kelasBelumLengkap);
+                return back()->with('error', "Gagal finalisasi. Terdapat kelas yang belum melengkapi/memfinalisasi seluruh penilaian: Kelas {$namaKelasDigabung}");
+            }
+
             $minggu->update(['status' => 'selesai']);
             return back()->with('success', 'Minggu berhasil difinalisasi (Final Minggu).');
         }

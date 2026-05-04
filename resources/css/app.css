@@ -37,7 +37,8 @@
 /* ─── Sidebar ──────────────────────────────────────── */
 #sidebar {
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    background: #14532d; /* Formal Green Dark */
+    background: #F8F9F5; /* Putih Krem */
+    border-right: 1px solid #E8EBE3;
 }
 #sidebar-overlay {
     transition: opacity 0.3s ease;
@@ -46,33 +47,31 @@
     display: flex;
     align-items: center;
     gap: 0.625rem;
-    padding: 0.5rem 0.75rem;
-    border-radius: 0.5rem;
-    font-size: 0.825rem;
-    font-weight: 500;
-    color: #bbf7d0;
-    transition: all 0.2s ease;
+    padding: 0.625rem 0.875rem;
+    border-radius: 0.75rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #545F52;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
     cursor: pointer;
     text-decoration: none;
 }
 .nav-item:hover {
-    color: #ffffff;
-    background-color: rgba(255,255,255,0.1);
+    color: #151914;
+    background-color: #F1F4E9;
 }
 .nav-item.active {
     color: #ffffff;
-    background: #16a34a;
-    box-shadow: 0 2px 8px rgba(22, 163, 74, 0.2);
+    background: #84934A;
+    box-shadow: 0 8px 16px -4px rgba(132, 147, 74, 0.25);
 }
 .nav-item.active svg { color: #ffffff; }
 .nav-section-label {
-    font-size: 0.6rem;
-    font-weight: 700;
+    font-size: 0.65rem;
+    font-weight: 800;
     letter-spacing: 0.05em;
-    text-transform: uppercase;
-    color: #4ade80;
-    padding: 0.75rem 0.75rem 0.25rem;
-    opacity: 0.6;
+    color: #8E998B;
+    padding: 1.5rem 0.875rem 0.5rem;
 }
 .nav-submenu { padding-left: 1rem; }
 
@@ -107,7 +106,6 @@
     border-radius: 4px;
     font-size: 0.65rem;
     font-weight: 700;
-    text-transform: uppercase;
     letter-spacing: 0.02em;
 }
 .badge-mb    { background: #fef2f2; color: #991b1b; } /* Merah - Status Rendah */
@@ -166,7 +164,6 @@
     text-align: left;
     font-size: 0.78rem;
     font-weight: 700;
-    text-transform: uppercase;
     letter-spacing: 0.05em;
     color: #64748b;
     border-bottom: 1px solid #f1f5f9;

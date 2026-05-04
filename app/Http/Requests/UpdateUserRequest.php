@@ -36,7 +36,7 @@ class UpdateUserRequest extends FormRequest
                 'max:255',
                 Rule::unique('users', 'email')->ignore($userId),
             ],
-            'password'     => 'nullable|string|min:6',
+            'password'     => 'nullable|string|min:8',
             'role'         => 'required|in:admin,guru,kepala_sekolah,wali_murid',
             'no_hp'        => 'nullable|string|max:20',
             'alamat'       => 'nullable|string',

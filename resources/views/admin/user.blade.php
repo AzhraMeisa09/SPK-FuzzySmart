@@ -4,6 +4,14 @@
 
 @section('content')
 
+@php
+    $totalUsers = \App\Models\User::count();
+    $totalAdmin = \App\Models\User::where('role', 'admin')->count();
+    $totalGuru  = \App\Models\User::where('role', 'guru')->count();
+    $totalKepsek = \App\Models\User::where('role', 'kepala_sekolah')->count();
+    $totalWali  = \App\Models\User::where('role', 'wali_murid')->count();
+@endphp
+
 <div x-data="{
     showAdd: {{ $errors->any() && !session('edit_id') ? 'true' : 'false' }},
     showEdit: {{ session('edit_id') ? 'true' : 'false' }},
@@ -33,164 +41,210 @@
         this.showEdit = true; 
     },
     openDelete(u) { this.deleteData = u; this.showDelete = true; }
-}" class="space-y-5">
+}" class="space-y-6">
 
-    <div class="flex items-center justify-between">
-        <div>
-            <h1 class="text-base font-black text-gray-900">Manajemen User</h1>
-            <p class="text-xs text-gray-500">{{ $users->total() }} akun terdaftar</p>
+    {{-- ── SUMMARY STATS ── --}}
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-6">
+        @php
+            $stats = [
+                ['label' => 'Total Akun', 'value' => $totalUsers, 'color' => '#64748b'],
+                ['label' => 'Admin',      'value' => $totalAdmin, 'color' => '#8b5cf6'],
+                ['label' => 'Guru',       'value' => $totalGuru,  'color' => '#3b82f6'],
+                ['label' => 'Kepsek',     'value' => $totalKepsek,'color' => '#f59e0b'],
+                ['label' => 'Wali',       'value' => $totalWali,  'color' => '#84934A'],
+            ];
+        @endphp
+        @foreach($stats as $s)
+        <div class="card p-5 shadow-xl border-none flex flex-col items-center justify-center text-center group hover:translate-y-[-2px] transition-all duration-300">
+            <span class="text-[9px] font-bold text-gray-400 mb-2 group-hover:text-gray-500 transition-colors">{{ $s['label'] }}</span>
+            <span class="text-2xl font-bold tracking-tighter" style="color: {{ $s['color'] }}">{{ $s['value'] }}</span>
         </div>
-        <button @click="showAdd = true" class="btn btn-green">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
-            Tambah User
-        </button>
+        @endforeach
     </div>
 
-    <form action="{{ route('admin.user.index') }}" method="GET" class="flex flex-col md:flex-row items-center gap-3 bg-white p-4 rounded-xl border border-gray-100 shadow-sm mt-5 mb-4">
-        <div class="relative flex-1 w-full">
-            <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-            <input type="text" name="search" value="{{ request('search') }}" class="form-input w-full py-2.5" style="padding-left: 42px;" placeholder="Ketik kata kunci (nama, username, atau email)...">
-        </div>
-        <div class="flex gap-2 w-full md:w-auto shrink-0 md:pl-2">
-            <button type="submit" class="btn btn-blue py-2.5 px-6 shadow-sm">Cari</button>
-            <select name="filter_role" onchange="this.form.submit()" class="form-select w-full md:w-48 py-2.5 bg-gray-50 border-gray-200">
-                <option value="" {{ empty(request('filter_role')) || strtolower(request('filter_role')) == 'semua role' ? 'selected' : '' }}>Semua Role</option>
-                <option value="admin" {{ strtolower(request('filter_role')) == 'admin' ? 'selected' : '' }}>Admin</option>
-                <option value="guru" {{ strtolower(request('filter_role')) == 'guru' ? 'selected' : '' }}>Guru</option>
-                <option value="kepala_sekolah" {{ strtolower(request('filter_role')) == 'kepala_sekolah' ? 'selected' : '' }}>Kepsek</option>
-                <option value="wali_murid" {{ strtolower(request('filter_role')) == 'wali_murid' ? 'selected' : '' }}>Wali</option>
-            </select>
-        </div>
-    </form>
+    {{-- ── HEADER CARD ── --}}
+    <div class="card p-6 shadow-xl border-none">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            <div>
+                <h2 class="text-lg font-semibold" style="color: var(--text-1);">Manajemen User</h2>
+                <p class="text-xs mt-0.5" style="color: var(--text-3);">Kelola hak akses administrator, pendidik, dan wali murid dalam sistem.</p>
+            </div>
+            
+            <div class="flex flex-wrap gap-3 items-center">
+                <form action="{{ route('admin.user.index') }}" method="GET" class="flex flex-wrap gap-2 items-center w-full lg:w-auto">
+                    <div class="search-box">
+                        <input type="text" 
+                               name="search" 
+                               value="{{ request('search') }}" 
+                               placeholder="Cari nama atau email...">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    </div>
+                    <div class="relative">
+                        <select name="filter_role" onchange="this.form.submit()" class="form-select bg-var(--bg) border-var(--border) rounded-xl text-[13px] font-bold h-[42px] min-w-[140px]" style="padding-left: 16px;">
+                            <option value="">Semua Role</option>
+                            <option value="admin" {{ request('filter_role') == 'admin' ? 'selected' : '' }}>Admin</option>
+                            <option value="guru" {{ request('filter_role') == 'guru' ? 'selected' : '' }}>Guru</option>
+                            <option value="kepala_sekolah" {{ request('filter_role') == 'kepala_sekolah' ? 'selected' : '' }}>Kepsek</option>
+                            <option value="wali_murid" {{ request('filter_role') == 'wali_murid' ? 'selected' : '' }}>Wali</option>
+                        </select>
+                    </div>
+                </form>
 
-    <div class="card overflow-hidden">
+        <button @click="showAdd = true" class="btn btn-green shadow-lg shadow-green-100 px-6 py-2.5 rounded-xl flex items-center gap-2 font-bold text-sm">
+                    <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
+                    Tambah User
+                </button>
+            </div>
+        </div>
+    </div>
+
+    @if(session('success'))
+        <div class="p-4 bg-green-50/50 border border-green-100 text-green-700 rounded-2xl text-[10px] font-bold flex items-center animate-fade-in shadow-sm">
+            <svg class="w-5 h-5 mr-3 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+            {{ session('success') }}
+        </div>
+    @endif
+
+    {{-- ── TABLE CARD ── --}}
+    <div class="card overflow-hidden shadow-xl border-none">
         <table class="tbl">
             <thead>
                 <tr>
-                    <th>No</th>
-                    <th>Nama Lengkap</th>
-                    <th>Username</th>
-                    <th>Email</th>
-                    <th>Role</th>
-                    <th>Status</th>
-                    <th>Aksi</th>
+                    <th class="w-16">No</th>
+                    <th>Identitas Pengguna</th>
+                    <th>Kontak & Email</th>
+                    <th>Otoritas</th>
+                    <th class="text-center">Status</th>
+                    <th class="text-center">Aksi</th>
                 </tr>
             </thead>
-            <tbody>
+            <tbody class="divide-y divide-gray-50">
                 @forelse($users as $i => $u)
-                    <tr>
-                        <td class="text-gray-400 text-xs">{{ $users->firstItem() + $i }}</td>
-                        <td>
-                            <div class="flex items-center gap-2.5">
-                                <div class="w-7 h-7 rounded-full bg-green-100 flex items-center justify-center text-[11px] font-black text-green-700">{{ strtoupper(substr($u->nama_lengkap, 0, 1)) }}</div>
-                                <span class="font-semibold text-gray-800">{{ $u->nama_lengkap }}</span>
+                    <tr class="hover:bg-var(--bg) transition-colors">
+                        <td class="text-var(--text-3) text-[11px] font-bold">{{ $users->firstItem() + $i }}</td>
+                        <td class="py-4">
+                            <div class="flex items-center gap-4">
+                                <div class="w-10 h-10 rounded-2xl bg-var(--accent-lt) flex items-center justify-center text-xs font-bold text-var(--accent) border border-var(--accent)/10 shadow-sm">{{ strtoupper(substr($u->nama_lengkap, 0, 1)) }}</div>
+                                <div class="flex flex-col">
+                                    <span class="font-semibold text-var(--text-1) leading-tight">{{ $u->nama_lengkap }}</span>
+                                    <span class="text-[10px] text-var(--text-3) font-medium mt-0.5">@ {{ $u->username }}</span>
+                                </div>
                             </div>
                         </td>
-                        <td><code class="text-xs bg-gray-100 px-1.5 py-0.5 rounded text-gray-600">{{ $u->username }}</code></td>
-                        <td class="text-xs text-gray-500">{{ $u->email }}</td>
-                        <td>
-                            <span class="badge {{ $u->role == 'admin' ? 'bg-purple-100 text-purple-700' : ($u->role == 'guru' ? 'badge-blue' : ($u->role == 'kepala_sekolah' ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-600')) }}">
+                        <td class="py-4">
+                            <div class="flex flex-col gap-1">
+                                <div class="flex items-center gap-2 text-xs text-var(--text-2)">
+                                    <svg class="w-3.5 h-3.5 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                                    {{ $u->email }}
+                                </div>
+                                @if($u->no_hp)
+                                <div class="flex items-center gap-2 text-[10px] text-var(--text-3) font-medium">
+                                    <svg class="w-3.5 h-3.5 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+                                    {{ $u->no_hp }}
+                                </div>
+                                @endif
+                            </div>
+                        </td>
+                        <td class="py-4 text-center">
+                            <span class="badge {{ $u->role == 'admin' ? 'bg-purple-50 text-purple-700 border-purple-100' : ($u->role == 'guru' ? 'badge-blue shadow-[0_0_8px_rgba(59,130,246,0.1)]' : ($u->role == 'kepala_sekolah' ? 'bg-amber-50 text-amber-700 border-amber-100' : 'bg-gray-100 text-gray-600')) }}">
                                 {{ ucfirst(str_replace('_', ' ', $u->role)) }}
                             </span>
                         </td>
-                        <td>
-                            <form action="{{ route('admin.user.toggle-status', $u->id) }}" method="POST">
-                                @csrf
-                                @method('PATCH')
-                                <button type="submit" class="badge {{ $u->is_active ? 'badge-aktif' : 'badge-nonaktif' }} transition-opacity hover:opacity-75">
-                                    {{ $u->is_active ? 'Aktif' : 'Nonaktif' }}
+                        <td class="text-center py-4">
+                            <form action="{{ route('admin.user.toggle', $u->id) }}" method="POST">
+                                @csrf @method('PATCH')
+                                <button type="submit" class="badge {{ $u->is_active ? 'badge-aktif shadow-[0_0_8px_rgba(132,147,74,0.15)]' : 'badge-nonaktif' }} transition-all hover:scale-105 active:scale-95" {{ auth()->id() == $u->id ? 'disabled' : '' }}>
+                                    {{ $u->is_active ? 'Aktif' : 'Terblokir' }}
                                 </button>
                             </form>
                         </td>
-                        <td>
-                            <div class="flex gap-1.5">
-                                <a href="{{ route('admin.user.show', $u->id) }}" class="btn btn-xs outline-gray text-gray-600 px-2 group hover:text-green-600 hover:border-green-200" title="Detail Profil">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg> 
+                        <td class="text-center py-4">
+                            <div class="flex items-center justify-center gap-2">
+                                <a href="{{ route('admin.user.show', $u->id) }}" class="p-2 rounded-xl bg-white border border-var(--border) text-var(--text-2) hover:text-var(--accent) hover:border-var(--accent) transition-all shadow-sm group" title="Detail Profil">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg> 
                                 </a>
-                                <button @click="openEdit({{ json_encode($u) }})"
-                                        class="btn btn-xs btn-blue" title="Edit Data">Edit</button>
-                                <button @click="openDelete({ id: {{ $u->id }}, nama: '{{ addslashes($u->nama_lengkap) }}', username: '{{ $u->username }}' })"
-                                        class="btn btn-xs btn-gray text-red-500" title="Hapus Data">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                <button @click="openEdit({{ Js::from($u) }})" class="p-2 rounded-xl bg-blue-50 border border-blue-100 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                </button>
+                                <button @click="openDelete({{ Js::from($u) }})" class="p-2 rounded-xl bg-red-50 border border-red-100 text-red-600 hover:bg-red-600 hover:text-white transition-all shadow-sm" {{ auth()->id() == $u->id ? 'disabled' : '' }}>
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                 </button>
                             </div>
                         </td>
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="7" class="text-center py-10 text-gray-400">Data user tidak ditemukan.</td>
+                        <td colspan="6" class="text-center py-24 text-var(--text-3) font-medium italic text-sm">Tidak ada data pengguna yang ditemukan.</td>
                     </tr>
                 @endforelse
             </tbody>
         </table>
         
         @if($users->hasPages())
-        <div class="px-5 py-3 border-t border-gray-100">
+        <div class="px-5 py-3 border-t border-gray-100 bg-gray-50/50">
             {{ $users->links() }}
         </div>
         @endif
     </div>
 
+    {{-- ── MODALS ── --}}
+    
     {{-- MODAL TAMBAH --}}
     <template x-teleport="body">
-    <div x-show="showAdd" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" @keydown.escape.window="showAdd = false" class="modal-overlay" x-cloak>
-        <div class="modal-box w-full max-w-md" @click.stop x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100">
+    <div x-show="showAdd" x-transition.opacity @keydown.escape.window="showAdd = false" class="modal-overlay" x-cloak>
+        <div class="modal-box w-full max-w-lg" @click.stop x-transition.scale.95>
             <form action="{{ route('admin.user.store') }}" method="POST">
                 @csrf
-                <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-                    <h3 class="font-black text-gray-900">Tambah User</h3>
-                    <button type="button" @click="showAdd = false" class="p-2 rounded-lg hover:bg-gray-100 text-gray-400"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
+                <div class="px-8 py-5 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+                    <h3 class="text-base font-bold text-gray-800">Tambah Akun Baru</h3>
+                    <button type="button" @click="showAdd = false" class="p-2 rounded-xl hover:bg-gray-200 text-var(--text-3) transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
                 </div>
-                <div class="px-6 py-5 space-y-4">
+                <div class="px-8 py-6 space-y-5">
                     <div class="form-group">
-                        <label class="form-label">Nama Lengkap <span class="text-red-500">*</span></label>
-                        <input type="text" name="nama_lengkap" value="{{ old('nama_lengkap') }}" class="form-input @error('nama_lengkap') border-red-500 @enderror" placeholder="Nama lengkap pengguna">
-                        @error('nama_lengkap') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
+                        <label class="form-label text-[10px] font-bold text-gray-500 mb-1.5 block">Nama Lengkap <span class="text-red-500">*</span></label>
+                        <input type="text" name="nama_lengkap" required class="form-input rounded-xl bg-var(--bg) border-var(--border) font-bold text-xs" placeholder="Contoh: Ahmad Subardjo, S.Pd">
                     </div>
-                    <div class="grid grid-cols-2 gap-4">
+                    <div class="grid grid-cols-2 gap-5">
                         <div class="form-group">
-                            <label class="form-label">Username <span class="text-red-500">*</span></label>
-                            <input type="text" name="username" value="{{ old('username') }}" class="form-input @error('username') border-red-500 @enderror" placeholder="username_unik">
-                            @error('username') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
+                            <label class="form-label text-[10px] font-bold text-gray-500 mb-1.5 block">Username <span class="text-red-500">*</span></label>
+                            <input type="text" name="username" required class="form-input rounded-xl bg-var(--bg) border-var(--border) font-bold text-xs" placeholder="ahmad_subardjo">
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Role <span class="text-red-500">*</span></label>
-                            <select name="role" class="form-select @error('role') border-red-500 @enderror">
-                                <option value="">Pilih Role</option>
-                                <option value="admin" {{ old('role') == 'admin' ? 'selected' : '' }}>Admin</option>
-                                <option value="guru" {{ old('role') == 'guru' ? 'selected' : '' }}>Guru</option>
-                                <option value="kepala_sekolah" {{ old('role') == 'kepala_sekolah' ? 'selected' : '' }}>Kepsek</option>
-                                <option value="wali_murid" {{ old('role') == 'wali_murid' ? 'selected' : '' }}>Wali</option>
-                            </select>
-                            @error('role') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="form-group">
-                            <label class="form-label">Email <span class="text-red-500">*</span></label>
-                            <input type="email" name="email" value="{{ old('email') }}" class="form-input @error('email') border-red-500 @enderror" placeholder="email@sekolah.sch.id">
-                            @error('email') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">Nomor HP</label>
-                            <input type="text" name="no_hp" value="{{ old('no_hp') }}" class="form-input @error('no_hp') border-red-500 @enderror" placeholder="08xxxxxxxxxx">
-                            @error('no_hp') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
+                            <label class="form-label text-[10px] font-bold text-gray-500 mb-1.5 block">Email Aktif <span class="text-red-500">*</span></label>
+                            <input type="email" name="email" required class="form-input rounded-xl bg-var(--bg) border-var(--border) font-bold text-xs" placeholder="ahmad@example.com">
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Alamat / Domisili</label>
-                        <textarea name="alamat" class="form-input h-20 @error('alamat') border-red-500 @enderror" placeholder="Alamat pengguna...">{{ old('alamat') }}</textarea>
-                        @error('alamat') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
+                        <label class="form-label text-[10px] font-bold text-gray-500 mb-1.5 block">Otoritas / Role <span class="text-red-500">*</span></label>
+                        <select name="role" required class="form-select rounded-xl bg-var(--bg) border-var(--border) font-bold text-xs">
+                            <option value="guru">Guru / Pendidik</option>
+                            <option value="admin">Administrator</option>
+                            <option value="kepala_sekolah">Kepala Sekolah</option>
+                            <option value="wali_murid">Wali Murid</option>
+                        </select>
+                    </div>
+                    <div class="grid grid-cols-2 gap-5">
+                        <div class="form-group">
+                            <label class="form-label text-[10px] font-bold text-gray-500 mb-1.5 block">Password <span class="text-red-500">*</span></label>
+                            <input type="password" name="password" required class="form-input rounded-xl bg-var(--bg) border-var(--border) font-bold text-xs" placeholder="Minimal 8 karakter">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label text-[10px] font-bold text-gray-500 mb-1.5 block">Konfirmasi Password <span class="text-red-500">*</span></label>
+                            <input type="password" name="password_confirmation" required class="form-input rounded-xl bg-var(--bg) border-var(--border) font-bold text-xs" placeholder="Ulangi password">
+                        </div>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Password <span class="text-red-500">*</span></label>
-                        <input type="password" name="password" class="form-input @error('password') border-red-500 @enderror" placeholder="Minimal 6 karakter">
-                        @error('password') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
+                        <label class="form-label text-[10px] font-bold text-gray-500 mb-1.5 block">Nomor WhatsApp</label>
+                        <input type="text" name="no_hp" class="form-input rounded-xl bg-var(--bg) border-var(--border) font-bold text-xs" placeholder="08xxxxxxxx">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label text-[10px] font-bold text-gray-500 mb-1.5 block">Alamat Tinggal</label>
+                        <textarea name="alamat" class="form-input rounded-xl bg-var(--bg) border-var(--border) font-bold text-xs h-24 resize-none p-4" placeholder="Alamat lengkap..."></textarea>
                     </div>
                 </div>
-                <div class="px-6 py-4 border-t border-gray-100 flex gap-3 justify-end">
-                    <button type="button" @click="showAdd = false" class="btn btn-gray">Batal</button>
-                    <button type="submit" class="btn btn-green">Tambah User</button>
+                <div class="px-8 py-5 border-t border-gray-100 flex gap-3 justify-end bg-gray-50/50">
+                    <button type="button" @click="showAdd = false" class="px-6 py-2 rounded-xl text-sm font-bold text-var(--text-3) hover:bg-gray-100 transition-colors">Batal</button>
+                    <button type="submit" class="btn btn-green px-8 py-2.5 rounded-xl font-bold text-sm shadow-lg shadow-green-100">Simpan Akun</button>
                 </div>
             </form>
         </div>
@@ -199,60 +253,55 @@
 
     {{-- MODAL EDIT --}}
     <template x-teleport="body">
-    <div x-show="showEdit" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" @keydown.escape.window="showEdit = false" class="modal-overlay" x-cloak>
-        <div class="modal-box w-full max-w-md" @click.stop x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100">
+    <div x-show="showEdit" x-transition.opacity @keydown.escape.window="showEdit = false" class="modal-overlay" x-cloak>
+        <div class="modal-box w-full max-w-lg" @click.stop x-transition.scale.95>
             <form :action="'{{ route('admin.user.index') }}/' + editData.id" method="POST">
-                @csrf
-                @method('PUT')
-                <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-                    <h3 class="font-black text-gray-900">Edit User</h3>
-                    <button type="button" @click="showEdit = false" class="p-2 rounded-lg hover:bg-gray-100 text-gray-400"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
+                @csrf @method('PUT')
+                <div class="px-8 py-5 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+                    <h3 class="text-base font-bold text-gray-800">Edit Profil Pengguna</h3>
+                    <button type="button" @click="showEdit = false" class="p-2 rounded-xl hover:bg-gray-200 text-var(--text-3) transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
                 </div>
-                <div class="px-6 py-5 space-y-4">
+                <div class="px-8 py-6 space-y-5">
                     <div class="form-group">
-                        <label class="form-label">Nama Lengkap <span class="text-red-500">*</span></label>
-                        <input type="text" name="nama_lengkap" x-model="editData.nama" class="form-input @error('nama_lengkap') border-red-500 @enderror">
-                        @error('nama_lengkap') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
+                        <label class="form-label text-[10px] font-bold text-gray-500 mb-1.5 block">Nama Lengkap</label>
+                        <input type="text" name="nama_lengkap" x-model="editData.nama" required class="form-input rounded-xl bg-var(--bg) border-var(--border) font-bold text-xs">
                     </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="form-group"><label class="form-label">Username</label><input type="text" name="username" x-model="editData.username" class="form-input bg-gray-50 border-gray-200" readonly></div>
+                    <div class="grid grid-cols-2 gap-5">
                         <div class="form-group">
-                            <label class="form-label">Role <span class="text-red-500">*</span></label>
-                            <select name="role" x-model="editData.role" class="form-select @error('role') border-red-500 @enderror">
-                                <option value="admin">Admin</option>
+                            <label class="form-label text-[10px] font-bold text-gray-500 mb-1.5 block">Username</label>
+                            <input type="text" name="username" x-model="editData.username" required class="form-input rounded-xl bg-gray-50 border-var(--border) font-bold text-xs" readonly>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label text-[10px] font-bold text-gray-500 mb-1.5 block">Email</label>
+                            <input type="email" name="email" x-model="editData.email" required class="form-input rounded-xl bg-var(--bg) border-var(--border) font-bold text-xs">
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-5">
+                        <div class="form-group">
+                            <label class="form-label text-[10px] font-bold text-gray-500 mb-1.5 block">Role</label>
+                            <select name="role" x-model="editData.role" required class="form-select rounded-xl bg-var(--bg) border-var(--border) font-bold text-xs">
                                 <option value="guru">Guru</option>
+                                <option value="admin">Admin</option>
                                 <option value="kepala_sekolah">Kepsek</option>
-                                <option value="wali_murid">Wali</option>
+                                <option value="wali_murid">Wali Murid</option>
                             </select>
-                            @error('role') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="form-group">
-                            <label class="form-label">Email <span class="text-red-500">*</span></label>
-                            <input type="email" name="email" x-model="editData.email" class="form-input @error('email') border-red-500 @enderror">
-                            @error('email') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
                         </div>
                         <div class="form-group">
-                            <label class="form-label">Nomor HP</label>
-                            <input type="text" name="no_hp" x-model="editData.no_hp" class="form-input @error('no_hp') border-red-500 @enderror">
-                            @error('no_hp') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
+                            <label class="form-label text-[10px] font-bold text-gray-500 mb-1.5 block">Status Akses</label>
+                            <select name="is_active" x-model="editData.is_active" class="form-select rounded-xl bg-var(--bg) border-var(--border) font-bold text-xs">
+                                <option value="1">Aktif</option>
+                                <option value="0">Blokir</option>
+                            </select>
                         </div>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Alamat / Domisili</label>
-                        <textarea name="alamat" x-model="editData.alamat" class="form-input h-20 @error('alamat') border-red-500 @enderror"></textarea>
-                        @error('alamat') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Password Baru <span class="text-gray-400 font-normal">(kosongkan jika tidak diubah)</span></label>
-                        <input type="password" name="password" class="form-input @error('password') border-red-500 @enderror" placeholder="Biarkan kosong jika tidak diubah">
-                        @error('password') <p class="text-xs text-red-500 mt-1">{{ $message }}</p> @enderror
+                        <label class="form-label text-[10px] font-bold text-gray-500 mb-1.5 block">Update Password <span class="text-gray-400 font-normal lowercase">(opsional)</span></label>
+                        <input type="password" name="password" class="form-input rounded-xl bg-var(--bg) border-var(--border) font-bold text-xs" placeholder="Biarkan kosong jika tidak ingin mengubah">
                     </div>
                 </div>
-                <div class="px-6 py-4 border-t border-gray-100 flex gap-3 justify-end">
-                    <button type="button" @click="showEdit = false" class="btn btn-gray">Batal</button>
-                    <button type="submit" class="btn btn-blue">Simpan Perubahan</button>
+                <div class="px-8 py-5 border-t border-gray-100 flex gap-3 justify-end bg-gray-50/50">
+                    <button type="button" @click="showEdit = false" class="px-6 py-2 rounded-xl text-sm font-bold text-var(--text-3) hover:bg-gray-100 transition-colors">Batal</button>
+                    <button type="submit" class="px-8 py-2.5 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-700 transition-all shadow-lg shadow-blue-100">Simpan Perubahan</button>
                 </div>
             </form>
         </div>
@@ -261,23 +310,23 @@
 
     {{-- MODAL HAPUS --}}
     <template x-teleport="body">
-    <div x-show="showDelete" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="transition ease-in duration-150" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" @keydown.escape.window="showDelete = false" class="modal-overlay" x-cloak>
-        <div class="modal-box w-full max-w-sm" @click.stop x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100">
+    <div x-show="showDelete" x-transition.opacity @keydown.escape.window="showDelete = false" class="modal-overlay" x-cloak>
+        <div class="modal-box w-full max-w-sm" @click.stop x-transition.scale.95>
             <form :action="'{{ route('admin.user.index') }}/' + deleteData.id" method="POST">
-                @csrf
-                @method('DELETE')
-                <div class="px-6 py-5 text-center">
-                    <div class="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center mx-auto mb-4">
-                        <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                @csrf @method('DELETE')
+                <div class="px-8 py-10 text-center">
+                    <div class="w-20 h-20 rounded-3xl bg-red-50 text-red-600 flex items-center justify-center mx-auto mb-6 shadow-sm border border-red-100">
+                        <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                     </div>
-                    <h3 class="font-black text-gray-900 text-base mb-2">Hapus User?</h3>
-                    <p class="text-sm font-bold text-gray-800 mb-1" x-text="deleteData.nama"></p>
-                    <p class="text-xs text-gray-500 mb-4" x-text="'@' + deleteData.username"></p>
-                    <p class="text-xs text-red-600 bg-red-50 border border-red-100 rounded-lg p-2">⚠️ Aksi ini tidak dapat dibatalkan!</p>
+                    <h3 class="text-xl font-bold text-var(--text-1) tracking-tight mb-2">Hapus Pengguna?</h3>
+                    <p class="text-sm text-var(--text-3) font-medium mb-6" x-text="deleteData.nama_lengkap"></p>
+                    <div class="p-4 rounded-xl bg-red-50/50 border border-red-100 text-[10px] font-bold text-red-700">
+                        ⚠️ Seluruh data akses untuk akun ini akan dihapus permanen!
+                    </div>
                 </div>
-                <div class="px-6 pb-5 flex gap-3">
-                    <button type="button" @click="showDelete = false" class="flex-1 btn btn-gray justify-center">Batal</button>
-                    <button type="submit" class="flex-1 btn btn-red justify-center">Hapus User</button>
+                <div class="px-8 pb-8 flex gap-3">
+                    <button type="button" @click="showDelete = false" class="flex-1 px-4 py-3 rounded-xl text-xs font-bold text-var(--text-3) bg-gray-100 hover:bg-gray-200 transition-all">Batal</button>
+                    <button type="submit" class="flex-1 px-4 py-3 rounded-xl text-xs font-bold text-white bg-red-600 hover:bg-red-700 transition-all shadow-lg shadow-red-100">Ya, Hapus</button>
                 </div>
             </form>
         </div>

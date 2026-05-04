@@ -15,6 +15,8 @@ class Evaluasi extends Model
         'siswa_id',
         'nilai_akhir',
         'kategori_akhir',
+        'rekomendasi',
+        'catatan_guru',
         'is_final',
     ];
 
@@ -64,9 +66,9 @@ class Evaluasi extends Model
         return $kategori?->nama ?? '-';
     }
 
-    // 🔥 Ambil nilai per kriteria
-    public function nilaiPerKriteria()
+    // 🔥 Ambil nilai per subkriteria
+    public function nilaiPerSubkriteria()
     {
-        return $this->detail()->with('kriteria')->get();
+        return $this->detail()->with('subkriteria.kriteria')->get();
     }
 }

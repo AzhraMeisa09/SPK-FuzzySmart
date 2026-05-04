@@ -61,7 +61,7 @@ class User extends Authenticatable
     // wali murid punya siswa
     public function siswaWali()
     {
-        return $this->hasMany(Siswa::class, 'wali_murid_id');
+        return $this->belongsToMany(Siswa::class, 'wali_siswa', 'user_id', 'siswa_id');
     }
 
     // guru upload portofolio

@@ -29,11 +29,14 @@ class TahunAjaranController extends Controller
      */
     public function store(Request $request)
     {
+        $request->merge(['nama' => trim($request->nama)]);
+        
         $request->validate([
             'nama' => ['required', 'regex:/^\d{4}\/\d{4}$/', 'unique:tahun_ajaran,nama'],
             'tanggal_mulai' => 'required|date',
             'tanggal_selesai' => 'required|date|after:tanggal_mulai',
         ], [
+            'nama.required' => 'Nama Tahun Ajaran wajib diisi.',
             'nama.regex' => 'Format Nama Tahun Ajaran harus YYYY/YYYY (Contoh: 2024/2025).',
             'nama.unique' => 'Tahun Ajaran ini sudah ada dalam sistem.',
             'tanggal_selesai.after' => 'Tanggal Selesai harus lebih besar dari Tanggal Mulai.',
@@ -55,11 +58,14 @@ class TahunAjaranController extends Controller
     {
         $tahunAjaran = TahunAjaran::findOrFail($id);
 
+        $request->merge(['nama' => trim($request->nama)]);
+
         $request->validate([
             'nama' => ['required', 'regex:/^\d{4}\/\d{4}$/', 'unique:tahun_ajaran,nama,' . $id],
             'tanggal_mulai' => 'required|date',
             'tanggal_selesai' => 'required|date|after:tanggal_mulai',
         ], [
+            'nama.required' => 'Nama Tahun Ajaran wajib diisi.',
             'nama.regex' => 'Format Nama Tahun Ajaran harus YYYY/YYYY (Contoh: 2024/2025).',
             'nama.unique' => 'Tahun Ajaran ini sudah ada dalam sistem.',
             'tanggal_selesai.after' => 'Tanggal Selesai harus lebih besar dari Tanggal Mulai.',

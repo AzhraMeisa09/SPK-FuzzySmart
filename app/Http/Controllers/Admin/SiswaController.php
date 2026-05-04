@@ -16,7 +16,7 @@ class SiswaController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Siswa::query()->with(['kelas', 'waliMurid']);
+        $query = Siswa::query()->with(['kelas', 'wali']);
 
         if ($request->filled('search')) {
             $search = $request->get('search');
@@ -78,7 +78,11 @@ class SiswaController extends Controller
             $data['foto'] = $request->file('foto')->store('siswa', 'public');
         }
 
-        Siswa::create($data);
+        $siswa = Siswa::create($data);
+
+        if ($request->filled('wali_murid_id')) {
+            $siswa->wali()->sync([$request->wali_murid_id]);
+        }
 
         return redirect()->route('admin.siswa.index')
                          ->with('success', 'Data siswa berhasil ditambahkan.');
@@ -89,7 +93,7 @@ class SiswaController extends Controller
      */
     public function show($id)
     {
-        $siswa = Siswa::with(['kelas', 'waliMurid'])->findOrFail($id);
+        $siswa = Siswa::with(['kelas', 'wali'])->findOrFail($id);
         return view('admin.detail_siswa', compact('siswa'));
     }
 
@@ -139,6 +143,12 @@ class SiswaController extends Controller
         }
 
         $siswa->update($data);
+
+        if ($request->filled('wali_murid_id')) {
+            $siswa->wali()->sync([$request->wali_murid_id]);
+        } else {
+            $siswa->wali()->detach();
+        }
 
         return redirect()->route('admin.siswa.index')
                          ->with('success', 'Data siswa berhasil diperbarui.');

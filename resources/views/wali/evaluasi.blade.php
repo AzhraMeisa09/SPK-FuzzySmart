@@ -1,159 +1,334 @@
 @extends('layouts.app')
-@section('title', 'Evaluasi Akhir Anak')
-@section('page-title', 'Evaluasi')
+@section('title', 'Detail Evaluasi SPK — ' . $siswa->nama)
+@section('page-title', 'Evaluasi Final')
 
 @section('content')
-<div class="space-y-5">
+<div class="space-y-6 pb-20 fade-in">
 
-    @if($selectedAnak)
-    <!-- Child Profile Card -->
-    <div class="card p-6 flex flex-wrap items-center gap-6 shadow-sm border-none bg-white">
-        <div class="w-16 h-16 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-700 font-black text-2xl flex-shrink-0">
-            {{ strtoupper(substr($selectedAnak->nama, 0, 1)) }}
+    {{-- ── STUDENT SWITCHER ── --}}
+    @if($anak->count() > 1)
+        <div class="flex flex-wrap items-center gap-3 no-print">
+            @foreach($anak as $a)
+                <a href="{{ route('wali.evaluasi', ['siswa_id' => $a->id]) }}" 
+                   class="group flex items-center gap-3 px-4 py-2.5 rounded-2xl transition-all border {{ $siswa->id == $a->id ? 'bg-white border-var(--accent) shadow-md ring-4 ring-var(--accent-lt)' : 'bg-white border-gray-100 opacity-60 hover:opacity-100 hover:border-gray-200 shadow-sm' }}">
+                    <div class="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black transition-transform group-hover:scale-110 {{ $siswa->id == $a->id ? 'bg-var(--accent) text-white shadow-lg shadow-var(--accent-lt)' : 'bg-gray-100 text-gray-400' }} overflow-hidden">
+                        @if($a->foto)
+                            <img src="{{ asset('storage/' . $a->foto) }}" class="w-full h-full object-cover" alt="{{ $a->nama }}">
+                        @else
+                            {{ strtoupper(substr($a->nama, 0, 1)) }}
+                        @endif
+                    </div>
+                    <span class="text-[11px] font-bold {{ $siswa->id == $a->id ? 'text-var(--text-1)' : 'text-gray-500' }}">{{ $a->nama }}</span>
+                </a>
+            @endforeach
         </div>
-        <div class="flex-1">
-            <h2 class="text-xl font-black text-slate-800 tracking-tight">{{ $selectedAnak->nama }}</h2>
-            <p class="text-xs text-slate-400 font-medium mt-1 uppercase tracking-wider">
-                {{ $selectedAnak->kelas->nama_kelas ?? 'Tanpa Kelas' }} • {{ $periode ? $periode->nama_periode : 'Periode Tidak Ditemukan' }}
+    @endif
+
+    @if(!$evaluasi)
+        <div class="card p-20 text-center">
+            <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5" style="background: var(--bg); border: 1px solid var(--border);">
+                <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--text-3);"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+            </div>
+            <h3 class="font-semibold text-sm" style="color: var(--text-2);">Laporan Belum Tersedia</h3>
+            <p class="text-xs mt-2 max-w-sm mx-auto" style="color: var(--text-3);">
+                Laporan evaluasi final untuk {{ $siswa->nama }} belum diterbitkan oleh pihak sekolah atau periode penilaian belum berakhir.
             </p>
+            <div class="mt-8">
+                <a href="{{ route('wali.dashboard') }}" class="btn btn-gray py-2.5 px-8 text-xs font-bold">Kembali ke Dashboard</a>
+            </div>
         </div>
+    @else
+        {{-- ── HERO BANNER ── --}}
+        <div class="rounded-xl p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-sm border border-gray-100 no-print" style="background: linear-gradient(135deg, #84934A 0%, #A3B18A 100%);">
+            <div class="flex flex-col md:flex-row items-center gap-6">
+                <div class="w-20 h-20 rounded-2xl flex items-center justify-center text-[#84934A] font-black text-3xl shadow-xl bg-white/90 backdrop-blur-sm transform hover:scale-105 transition-transform overflow-hidden">
+                    @if($siswa->foto)
+                        <img src="{{ asset('storage/' . $siswa->foto) }}" class="w-full h-full object-cover" alt="{{ $siswa->nama }}">
+                    @else
+                        🎓
+                    @endif
+                </div>
+                <div class="text-center md:text-left">
+                    <p class="text-[10px] font-bold uppercase tracking-[0.2em] mb-1.5" style="color: rgba(255,255,255,.7);">Laporan Hasil Evaluasi SPK</p>
+                    <h1 class="text-2xl font-black tracking-tight text-white">{{ $siswa->nama }}</h1>
+                    <div class="flex flex-wrap items-center gap-3 mt-3 text-[10px] font-bold">
+                        @if($periode)
+                            <span class="px-3 py-1 rounded-lg bg-white/20 text-white backdrop-blur-sm uppercase tracking-widest">{{ $periode->nama_periode }}</span>
+                        @endif
+                        <span class="text-white/40 uppercase">Kelas: {{ $siswa->kelas->nama_kelas ?? '—' }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="flex flex-wrap justify-center md:justify-end gap-3">
+                <a href="{{ route('wali.dashboard') }}" class="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold bg-white text-[#84934A] hover:bg-[#F1F4E9] transition-all shadow-lg shadow-black/5">
+                    Kembali ke Dashboard
+                </a>
+            </div>
+        </div>
+        {{-- ── ANALYTIC HERO SECTION ── --}}
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
-        @if($evaluasi)
-        <div class="flex items-center gap-3">
-            <div class="text-center px-6 py-3 rounded-2xl bg-indigo-50 border border-indigo-100 shadow-sm">
-                <p class="text-[10px] text-indigo-600 font-black uppercase tracking-widest mb-1">Nilai Akhir</p>
-                <p class="text-3xl font-black text-indigo-700 tracking-tighter">{{ number_format($evaluasi->nilai_akhir, 0) }}%</p>
-                <div class="mt-1">
-                    <span class="badge badge-{{ strtolower($evaluasi->kategori_akhir) }} text-xs">{{ $evaluasi->kategori_akhir }}</span>
-                </div>
-            </div>
-        </div>
-        @endif
-    </div>
-
-    @if($evaluasi)
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-        <!-- Score Visual (Circular SVG) -->
-        <div class="card p-8 text-center shadow-sm border-none bg-white">
-            <h3 class="font-black text-slate-700 text-sm uppercase tracking-widest mb-6">Skor Total SPK</h3>
-            <div class="relative w-40 h-40 mx-auto mb-6">
-                <svg class="w-full h-full transform -rotate-90 filter drop-shadow-sm" viewBox="0 0 100 100">
-                    <circle cx="50" cy="50" r="42" stroke="#f1f5f9" stroke-width="8" fill="none"/>
-                    <circle cx="50" cy="50" r="42" stroke="currentColor" stroke-width="8" fill="none"
-                            class="text-indigo-600"
-                            stroke-dasharray="{{ 263.8 * ($evaluasi->nilai_akhir / 100) }} 263.8"
-                            stroke-linecap="round"/>
-                </svg>
-                <div class="absolute inset-0 flex flex-col items-center justify-center">
-                    <span class="text-3xl font-black text-slate-800 tracking-tighter">{{ round($evaluasi->nilai_akhir) }}%</span>
-                    <span class="text-[11px] font-black {{ $evaluasi->nilai_akhir >= 80 ? 'text-green-600' : 'text-indigo-600' }} uppercase mt-0.5 tracking-widest">
-                        {{ $evaluasi->kategori_akhir }}
-                    </span>
-                </div>
-            </div>
-            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Metode Fuzzy SMART</p>
-        </div>
-
-        <!-- Per kriteria progress -->
-        <div class="md:col-span-2 card p-6 shadow-sm border-none bg-white">
-            <h3 class="font-black text-slate-700 text-sm uppercase tracking-widest mb-6">Capaian Per Aspek Utama</h3>
-            <div class="space-y-6">
-                @foreach($evaluasi->detail as $det)
-                    @php
-                        $score = $det->nilai_akhir * 100;
-                        $kategori = $score >= 80 ? 'BSB' : ($score >= 60 ? 'BSH' : 'MB');
-                        $pClass = $score >= 80 ? 'progress-green' : ($score >= 60 ? 'progress-blue' : 'progress-yellow');
-                    @endphp
+        {{-- Summary Info --}}
+        <div class="lg:col-span-8 space-y-6">
+            <div class="card p-8 group hover:border-var(--accent)/20 transition-all duration-300">
+                <div class="space-y-8">
                     <div>
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="text-xs font-black text-slate-700 uppercase tracking-wide">{{ $det->kriteria->nama }}</span>
-                            <div class="flex items-center gap-3">
-                                <span class="text-xs font-black text-slate-800">{{ round($score) }}%</span>
-                                <span class="badge badge-{{ strtolower($kategori) }} text-[10px]">{{ $kategori }}</span>
+                        <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-5 flex items-center gap-3">
+                            <span class="w-8 h-px bg-gray-200"></span>
+                            Rekomendasi Utama (SPK)
+                        </h4>
+                        <div class="p-6 rounded-2xl bg-var(--bg) border border-var(--border) relative overflow-hidden group/recom">
+                            <div class="absolute right-0 top-0 p-4 opacity-5 group-hover/recom:scale-110 transition-transform">
+                                <svg class="w-16 h-16 text-var(--accent)" fill="currentColor" viewBox="0 0 24 24"><path d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.36 2.25 12.174 2.25 8.25 2.25 5.322 4.714 3 7.5 3c1.557 0 3.046.716 3.945 2.031C12.344 3.715 13.833 3 15.39 3 18.286 3 20.75 5.322 20.75 8.25c0 3.924-2.438 7.111-4.739 9.256a25.175 25.175 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001z"/></svg>
                             </div>
-                        </div>
-                        <div class="progress-track h-2 bg-slate-50">
-                            <div class="progress-fill h-full rounded-full {{ $pClass }} transition-all duration-1000" style="width: {{ $score }}%"></div>
+                            <p class="text-sm font-bold text-gray-800 leading-relaxed italic relative z-10">
+                                &ldquo;{{ $evaluasi->rekomendasi }}&rdquo;
+                            </p>
                         </div>
                     </div>
-                @endforeach
+                    <div>
+                        <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-5 flex items-center gap-3">
+                            <span class="w-8 h-px bg-gray-200"></span>
+                            Catatan Perkembangan Guru
+                        </h4>
+                        <div class="p-6 rounded-2xl bg-gray-50 border border-gray-100">
+                            <p class="text-sm text-gray-600 leading-relaxed font-medium">
+                                {{ $evaluasi->catatan_guru ?: 'Belum ada catatan tambahan dari guru untuk laporan periode ini.' }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Final Score Card --}}
+        <div class="lg:col-span-4">
+            <div class="card p-8 flex flex-col items-center justify-center text-center relative overflow-hidden group h-full">
+                <div class="absolute inset-0 bg-var(--accent-lt)/30 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                
+                <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-8 relative z-10">Indeks Capaian Akhir</p>
+                
+                <div class="relative mb-8 flex justify-center">
+                    <svg class="w-48 h-48 transform -rotate-90" viewBox="0 0 100 100">
+                        <!-- Background Circle -->
+                        <circle cx="50" cy="50" r="44" stroke="currentColor" stroke-width="6" fill="transparent" class="text-gray-100"/>
+                        <!-- Progress Circle -->
+                        @php 
+                            $circumference = 2 * pi() * 44;
+                            $offset = $circumference - ($evaluasi->nilai_akhir * $circumference);
+                            $strokeColor = $evaluasi->kategori_akhir === 'BSB' ? '#10b981' : ($evaluasi->kategori_akhir === 'BSH' ? '#f59e0b' : '#f43f5e');
+                        @endphp
+                        <circle cx="50" cy="50" r="44" stroke="{{ $strokeColor }}" stroke-width="8" fill="transparent" 
+                                stroke-dasharray="{{ $circumference }}" 
+                                stroke-dashoffset="{{ $offset }}"
+                                stroke-linecap="round"
+                                class="transition-all duration-1000 shadow-lg"/>
+                    </svg>
+                    <div class="absolute inset-0 flex flex-col items-center justify-center">
+                        <span class="text-3xl font-black text-gray-900 leading-none">{{ number_format($evaluasi->nilai_akhir, 3) }}</span>
+                        <span class="text-[9px] font-black text-gray-400 mt-2 uppercase tracking-[0.2em]">Skor (V)</span>
+                    </div>
+                </div>
+
+                <div class="relative z-10 w-full space-y-6">
+                    @php $color = $evaluasi->kategori_akhir === 'BSB' ? 'emerald' : ($evaluasi->kategori_akhir === 'BSH' ? 'amber' : 'rose'); @endphp
+                    <span class="badge {{ 'badge-'.$color }} px-8 py-2 text-[11px] font-black shadow-lg uppercase">{{ $evaluasi->kategori_akhir }}</span>
+                    
+                    <div class="grid grid-cols-2 gap-4 pt-8 border-t border-gray-100">
+                        <div class="text-center">
+                            <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Ranking</p>
+                            <p class="text-lg font-black text-gray-900 tracking-tighter">#{{ $ranking }}</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Siswa</p>
+                            <p class="text-lg font-black text-gray-900 tracking-tighter">{{ $totalSiswa ?? 0 }} Orang</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Recommendations Section -->
-    @if($evaluasi->rekomendasi->count() > 0)
-    <div>
-        <div class="flex items-center gap-2 mb-4 pl-1">
-            <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
-            <h3 class="text-sm font-black text-slate-700 uppercase tracking-widest leading-none mt-0.5">Rekomendasi Stimulasi di Rumah</h3>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            @foreach($evaluasi->rekomendasi as $idx => $rec)
-                @php
-                    $colors = [
-                        ['bg-green-50 border-green-100 text-green-700 hover:bg-green-100', 'bg-green-200'],
-                        ['bg-blue-50 border-blue-100 text-blue-700 hover:bg-blue-100', 'bg-blue-200'],
-                        ['bg-purple-50 border-purple-100 text-purple-700 hover:bg-purple-100', 'bg-purple-200'],
-                        ['bg-amber-50 border-amber-100 text-amber-700 hover:bg-amber-100', 'bg-amber-200'],
-                    ];
-                    $c = $colors[$idx % 4];
+    {{-- ── CRITERIA ANALYSIS ── --}}
+    <div class="space-y-5">
+        <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] px-2">Analisis Capaian Aspek</h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            @foreach($details as $kriteriaName => $items)
+                @php 
+                    $avg = $items->avg('nilai_crisp');
+                    $katObj = \App\Models\KategoriNilai::findByNilai($avg ?? 0);
+                    $kat = $katObj ? $katObj->nama : 'MB';
+                    $color = $kat === 'BSB' ? 'emerald' : ($kat === 'BSH' ? 'amber' : 'rose');
+                    $progressBarColor = $kat === 'BSB' ? 'bg-green-500 shadow-green-100' : ($kat === 'BSH' ? 'bg-amber-500 shadow-amber-100' : 'bg-red-500 shadow-red-100');
                 @endphp
-                <div class="card p-5 {{ $c[0] }} border transition-all duration-300">
-                    <div class="flex items-start gap-4">
-                        <div class="w-10 h-10 rounded-xl {{ $c[1] }} flex items-center justify-center font-bold shadow-sm flex-shrink-0">
-                            {{ $idx + 1 }}
-                        </div>
-                        <div>
-                            <h4 class="font-black {{ $c[0] == 'bg-green-50' ? 'text-green-800' : 'text-slate-800' }} mb-2 tracking-tight">Rekomendasi #{{ $idx + 1 }}</h4>
-                            <p class="text-sm opacity-80 leading-relaxed">{{ $rec->rekomendasi }}</p>
-                        </div>
+                <div class="card p-6 flex flex-col group hover:-translate-y-1 transition-all duration-300">
+                    <div class="flex items-center justify-between mb-6">
+                        <h4 class="text-[10px] font-black text-gray-800 uppercase tracking-wider truncate mr-3">{{ $kriteriaName }}</h4>
+                        <span class="badge {{ 'badge-'.$color }} px-3 py-1 font-bold text-[9px]">{{ $kat }}</span>
+                    </div>
+                    
+                    <div class="flex items-end gap-2 mb-4">
+                        <span class="text-3xl font-black text-gray-900 leading-none tracking-tighter">{{ number_format($avg, 1) }}</span>
+                        <span class="text-[10px] font-black text-gray-400 mb-1">%</span>
+                    </div>
+
+                    <div class="h-2 w-full bg-gray-100 rounded-full overflow-hidden mb-6 shadow-inner">
+                        <div class="h-full {{ $progressBarColor }} transition-all duration-1000 shadow-lg" style="width: {{ $avg }}%"></div>
+                    </div>
+
+                    <div class="mt-auto pt-4 border-t border-gray-50 flex items-center justify-between">
+                        <span class="text-[10px] font-bold text-gray-400 uppercase">Indikator</span>
+                        <span class="text-[10px] font-black text-gray-900">{{ $items->count() }} Poin</span>
                     </div>
                 </div>
             @endforeach
         </div>
     </div>
-    @else
-        <div class="card p-10 bg-slate-50 border-none flex flex-col items-center text-center">
-             <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-300 mb-4">
-                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-             </div>
-             <p class="text-sm text-slate-400 font-medium italic">Sistem belum mengenerate rekomendasi otomatis untuk periode ini.</p>
-        </div>
-    @endif
 
-    <!-- Actions -->
-    <div class="flex flex-wrap gap-4 pt-4 pb-10">
-        <a href="{{ route('wali.laporan') }}" class="btn btn-green px-8 py-3.5 shadow-lg shadow-green-200">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-            Download Rapor Lengkap
-        </a>
-        <a href="{{ route('wali.perkembangan') }}" class="btn btn-white border-slate-200 px-8 py-3.5 shadow-sm">Lihat Timeline Detail</a>
+    {{-- ── INDICATOR DETAILS ── --}}
+    <div class="space-y-5">
+        <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] px-2">Rincian Capaian per Indikator</h3>
+
+        <div class="card overflow-hidden border-none shadow-xl">
+            <table class="tbl">
+                <thead>
+                    <tr class="bg-gray-50/50">
+                        <th class="w-20 text-center">ID</th>
+                        <th>Indikator Capaian</th>
+                        <th class="text-center w-40">Kategori</th>
+                        <th class="text-right w-40">Skor Akhir</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-50">
+                    @foreach($evaluasi->detail as $d)
+                        @php
+                            $rubrikKey = 'rubrik_' . strtolower($d->kategori);
+                            $rubrikText = $d->subkriteria->$rubrikKey ?? null;
+                            if($rubrikText) {
+                                $rubrikText = str_replace('{{nama_siswa}}', $siswa->nama, $rubrikText);
+                            }
+                        @endphp
+                        <tr class="hover:bg-var(--bg) transition-colors">
+                            <td class="text-center font-mono text-[10px] font-bold text-gray-400">{{ $d->subkriteria->kode }}</td>
+                            <td class="py-5">
+                                <p class="text-sm font-black text-gray-800 tracking-tight leading-tight mb-1.5">{{ $d->subkriteria->nama }}</p>
+                                @if($rubrikText)
+                                    <p class="text-[11px] text-gray-500 italic mb-2 leading-relaxed">&ldquo;{{ $rubrikText }}&rdquo;</p>
+                                @endif
+                                <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{{ $d->subkriteria->kriteria->nama }}</p>
+                            </td>
+                            <td class="text-center">
+                                <span class="badge {{ $d->kategori === 'BSB' ? 'badge-bsb' : ($d->kategori === 'BSH' ? 'badge-bsh' : 'badge-mb') }} px-4 py-1 font-bold">{{ $d->kategori }}</span>
+                            </td>
+                            <td class="text-right">
+                                <span class="text-sm font-black text-gray-900 font-mono tracking-tighter">{{ number_format($d->nilai_crisp, 1) }}%</span>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
     </div>
 
-    @else
-        {{-- Empty State: No Finalized Evaluation found --}}
-        <div class="card p-20 flex flex-col items-center text-center shadow-sm border-none bg-white">
-            <div class="w-20 h-20 bg-amber-50 rounded-full flex items-center justify-center mb-6">
-                <svg class="w-10 h-10 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+    {{-- ── RECOMMENDATION TABLE (AS GURU PAGE) ── --}}
+    <div class="space-y-5">
+        <div class="flex items-center gap-3 px-2">
+            <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-var(--accent-lt) text-var(--accent)">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg>
             </div>
-            <h3 class="text-2xl font-black text-slate-800 tracking-tight">Evaluasi Belum Siap</h3>
-            <p class="text-sm text-slate-500 mt-3 max-w-sm">Mohon maaf, hasil evaluasi akhir periode <strong>{{ $periode ? $periode->nama_periode : 'sedang berjalan' }}</strong> belum difinalisasi oleh Admin. Silakan cek menu Perkembangan untuk melihat laporan mingguan yang tersedia.</p>
-            <div class="mt-8">
-                <a href="{{ route('wali.perkembangan') }}" class="btn btn-blue px-10 py-3 shadow-lg shadow-blue-200 rounded-xl">Lihat Laporan Mingguan</a>
+            <div>
+                <h3 class="text-sm font-black text-gray-800 uppercase tracking-wider">Rekomendasi Strategis per Aspek</h3>
+                <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Analisis mendalam sistem pakar fuzzy smart</p>
             </div>
         </div>
-    @endif
 
-    @else
-        {{-- Akun belum terhubung --}}
-        <div class="card p-20 flex flex-col items-center text-center shadow-sm border-none">
-            <div class="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mb-6">
-                <svg class="w-10 h-10 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+        <div class="card p-8">
+            <div class="space-y-10">
+                @foreach($details as $kriteriaName => $items)
+                    @php
+                        $rekList = $items->filter(fn($item) => $item->rekomendasi_detail && !str_contains(strtolower($item->rekomendasi_detail), 'sangat baik'));
+                    @endphp
+                    @if($rekList->isNotEmpty())
+                        <div class="relative pl-8">
+                            <div class="absolute left-0 top-0 bottom-0 w-px bg-gray-100"></div>
+                            <div class="absolute left-0 top-0 w-px h-8 bg-var(--accent)"></div>
+                            
+                            <h5 class="text-[11px] font-black text-var(--accent) uppercase tracking-[0.15em] mb-4 flex items-center gap-3">
+                                <span class="w-2 h-2 rounded-full bg-var(--accent) -ml-[4.5px] border-4 border-white shadow-sm"></span>
+                                {{ $kriteriaName }}
+                            </h5>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                @foreach($rekList as $item)
+                                    <div class="p-5 rounded-2xl bg-var(--bg) border border-var(--border) hover:border-var(--accent)/20 transition-colors group/rek">
+                                        <div class="flex items-start gap-3 mb-2">
+                                            <span class="text-[9px] font-bold text-gray-400 uppercase tracking-tighter">{{ $item->subkriteria->kode }}</span>
+                                            <p class="text-[10px] font-black text-gray-700 uppercase tracking-tight">{{ $item->subkriteria->nama }}</p>
+                                        </div>
+                                        <p class="text-xs font-bold text-gray-600 leading-relaxed italic">&ldquo;{{ $item->rekomendasi_detail }}&rdquo;</p>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+                @endforeach
             </div>
-            <h3 class="text-xl font-black text-slate-800 tracking-tight">Akun Belum Terhubung</h3>
-            <p class="text-sm text-slate-500 mt-2 max-w-sm">Segera hubungi Admin Sekolah untuk mendaftarkan data siswa ke akun Anda.</p>
         </div>
+    </div>
+
+    {{-- ── PORTOFOLIO SECTION ── --}}
+    <div class="space-y-5">
+        <div class="flex items-center gap-3 px-2">
+            <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-var(--accent-lt) text-var(--accent)">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            </div>
+            <div>
+                <h3 class="text-sm font-black text-gray-800 uppercase tracking-wider">Portofolio & Dokumentasi</h3>
+                <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Evidence-based progress records</p>
+            </div>
+        </div>
+
+        <div class="card p-8">
+            @forelse($portofolio_list->groupBy('minggu_id') as $mingguId => $items)
+                <div class="mb-10 last:mb-0">
+                    <div class="flex items-center gap-4 mb-6">
+                        <span class="px-4 py-1.5 rounded-xl bg-var(--accent-lt) text-var(--accent) text-[10px] font-black uppercase tracking-widest border border-var(--accent)/10 shadow-sm">Minggu {{ $items->first()->minggu->minggu_ke }}</span>
+                        <div class="h-px flex-1 bg-gray-50"></div>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        @foreach($items as $p)
+                            <div class="p-6 rounded-[2rem] bg-var(--bg) border border-var(--border) hover:border-var(--accent)/20 transition-all group/port shadow-sm">
+                                <div class="flex flex-col gap-5">
+                                    <div class="grid grid-cols-3 gap-2">
+                                        @foreach($p->images as $img)
+                                            <div class="aspect-square rounded-2xl overflow-hidden border-2 border-white shadow-sm hover:scale-105 transition-transform">
+                                                <img src="{{ asset('storage/'.$img->file_path) }}" class="w-full h-full object-cover">
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                    <div class="space-y-3">
+                                        <h4 class="text-xs font-black text-gray-800 uppercase tracking-tight group-hover:text-var(--accent) transition-colors">{{ $p->judul }}</h4>
+                                        <p class="text-[11px] leading-relaxed text-gray-600 font-medium" style="white-space: pre-wrap;">{{ $p->deskripsi }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @empty
+                <div class="py-20 text-center rounded-[2.5rem] bg-var(--bg) border border-dashed border-gray-200">
+                    <div class="w-16 h-16 bg-white rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm border border-gray-100">
+                        <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    </div>
+                    <p class="text-xs font-black uppercase tracking-widest text-gray-400">Tidak ada portofolio pada periode ini</p>
+                </div>
+            @endforelse
+        </div>
+    </div>
+
+
     @endif
 </div>
 @endsection

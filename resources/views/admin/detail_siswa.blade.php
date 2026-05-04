@@ -1,112 +1,150 @@
 @extends('layouts.app')
-@section('title', 'Detail Siswa: ' . $siswa->nama)
-@section('page-title', 'Profil Siswa')
+@section('title', 'Profil Murid: ' . $siswa->nama)
+@section('page-title', 'Profil Detail Murid')
 
 @section('content')
-<div class="max-w-5xl mx-auto space-y-6 pb-10">
+<div class="space-y-6 pb-12">
 
     <!-- Header Actions -->
-    <div class="flex items-center justify-between">
-        <a href="{{ route('admin.siswa.index') }}" class="btn btn-gray flex items-center gap-2">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
+    <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <a href="{{ route('admin.siswa.index') }}" class="btn btn-gray bg-white shadow-sm hover:shadow transition-all flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold text-var(--text-2)">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
             Kembali ke Daftar Siswa
         </a>
+        
+        <div class="flex gap-3">
+             <a href="{{ route('admin.siswa.edit', $siswa->id) }}" class="btn btn-blue shadow-md hover:shadow-lg transition-all flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                Edit Data Murid
+            </a>
+        </div>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-gray-800">
-        
-        <!-- SECTION 1: PROFILE CARD -->
-        <div class="md:col-span-1">
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col items-center text-center">
-                @if($siswa->foto)
-                    <img src="{{ asset('storage/' . $siswa->foto) }}" alt="Foto Siswa" class="w-24 h-24 rounded-full object-cover shadow-inner ring-4 ring-blue-50/50 mb-4 bg-white">
-                @else
-                    <div class="w-24 h-24 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-3xl font-black mb-4 shadow-inner ring-4 ring-blue-50/50">
-                        {{ strtoupper(substr($siswa->nama, 0, 1)) }}
+    <!-- Student Hero Section -->
+    <div class="card overflow-hidden border-none shadow-xl">
+        <div class="h-32 w-full" style="background: linear-gradient(135deg, #84934A 0%, #A3B18A 100%);"></div>
+        <div class="px-8 pb-8">
+            <div class="relative flex flex-col md:flex-row items-center md:items-end gap-6 -mt-12">
+                <div class="relative">
+                    @if($siswa->foto)
+                        <img src="{{ asset('storage/' . $siswa->foto) }}" alt="Foto Murid" class="w-32 h-32 rounded-3xl object-cover border-4 border-white shadow-2xl bg-white">
+                    @else
+                        <div class="w-32 h-32 rounded-3xl bg-white border-4 border-white shadow-2xl flex items-center justify-center text-4xl font-bold text-var(--accent)">
+                            {{ strtoupper(substr($siswa->nama, 0, 1)) }}
+                        </div>
+                    @endif
+                    <div class="absolute -bottom-1 -right-1 w-8 h-8 rounded-2xl bg-var(--accent) border-4 border-white flex items-center justify-center shadow-lg">
+                        <svg class="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
                     </div>
-                @endif
+                </div>
                 
-                <h2 class="text-xl font-bold text-gray-900 leading-tight mb-1">{{ $siswa->nama }}</h2>
-                <p class="text-sm text-gray-500 mb-3 font-mono">NISN: {{ $siswa->kode ?? '-' }}</p>
-                
-                @if($siswa->kelas)
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100">
-                        Kelas {{ $siswa->kelas->nama_kelas }}
-                    </span>
+                <div class="flex-1 text-center md:text-left mb-2">
+                    <div class="flex flex-wrap items-center justify-center md:justify-start gap-3 mb-1">
+                        <h2 class="text-3xl font-bold text-var(--text-1) tracking-tight">{{ $siswa->nama }}</h2>
+                        <span class="px-3 py-1 rounded-lg bg-blue-50 text-blue-600 text-[10px] font-bold border border-blue-100">
+                            {{ $siswa->kelas->nama_kelas ?? 'Tanpa Kelas' }}
+                        </span>
+                    </div>
+                    <p class="text-var(--text-3) font-medium text-sm flex items-center justify-center md:justify-start gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+                        NISN: {{ $siswa->kode ?? '—' }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- INFO SIDEBAR -->
+        <div class="lg:col-span-4 space-y-6">
+            <!-- BIODATA SINGKAT -->
+            <div class="card p-6">
+                <h4 class="text-[11px] font-bold text-var(--text-3) mb-4">Informasi Kelahiran</h4>
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center py-2 border-b border-gray-50">
+                        <span class="text-xs text-var(--text-2) font-medium">Jenis Kelamin</span>
+                        <span class="text-xs font-bold text-var(--text-1)">{{ $siswa->jenis_kelamin == 'L' ? 'Laki-laki' : 'Perempuan' }}</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2 border-b border-gray-50">
+                        <span class="text-xs text-var(--text-2) font-medium">Tanggal Lahir</span>
+                        <span class="text-xs font-bold text-var(--text-1)">{{ \Carbon\Carbon::parse($siswa->tanggal_lahir)->translatedFormat('d F Y') }}</span>
+                    </div>
+                    <div class="flex justify-between items-center py-2">
+                        <span class="text-xs text-var(--text-2) font-medium">Usia Saat Ini</span>
+                        <span class="text-xs font-bold text-var(--accent)">{{ \Carbon\Carbon::parse($siswa->tanggal_lahir)->age }} Tahun</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- WALi MURID INFO -->
+            <div class="card p-6 border-none text-white shadow-lg" style="background: linear-gradient(135deg, #6A783D 0%, #84934A 100%);">
+                <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center mb-4">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                </div>
+                <h4 class="text-xs font-bold mb-2">Akses Wali Murid</h4>
+                @if($siswa->wali->count() > 0)
+                    @foreach($siswa->wali as $w)
+                        <p class="text-sm font-bold mb-1">{{ $w->nama_lengkap }}</p>
+                        <p class="text-[11px] opacity-80 font-medium">{{ $w->email }}</p>
+                    @endforeach
                 @else
-                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-gray-50 text-gray-500 border border-gray-100">
-                        Belum Ditempatkan
-                    </span>
+                    <p class="text-[11px] leading-relaxed opacity-80 font-medium italic">
+                        Belum ada akun wali murid yang ditautkan ke profil siswa ini.
+                    </p>
                 @endif
             </div>
         </div>
 
-        <div class="md:col-span-2 space-y-6">
+        <!-- MAIN DATA -->
+        <div class="lg:col-span-8 space-y-6">
             
-            <!-- SECTION 2: DATA SISWA -->
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
-                    <h3 class="font-bold text-gray-800 flex items-center gap-2">
-                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                        Informasi Biodata
+            <!-- ALAMAT & ORTU -->
+            <div class="card overflow-hidden">
+                <div class="px-6 py-4 bg-gray-50/50 border-b border-gray-100">
+                    <h3 class="text-sm font-bold text-var(--text-1) flex items-center gap-2">
+                        <svg class="w-4 h-4 text-var(--accent)" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                        Data Tempat Tinggal & Orang Tua
                     </h3>
                 </div>
-                <div class="p-6 grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-6">
-                    <div>
-                        <p class="text-sm text-gray-500 mb-1">Tanggal Lahir</p>
-                        <p class="font-medium text-gray-900">{{ \Carbon\Carbon::parse($siswa->tanggal_lahir)->translatedFormat('d F Y') }}</p>
-                    </div>
-                    <div>
-                        <p class="text-sm text-gray-500 mb-1">Jenis Kelamin</p>
-                        <p class="font-medium text-gray-900">
-                            {{ $siswa->jenis_kelamin == 'L' ? 'Laki-Laki' : 'Perempuan' }}
-                        </p>
-                    </div>
-                    <div class="sm:col-span-2">
-                        <p class="text-sm text-gray-500 mb-1">Alamat Lengkap</p>
-                        <p class="font-medium text-gray-900">{{ $siswa->alamat ?? '-' }}</p>
+                <div class="p-8">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div class="md:col-span-2">
+                            <label class="text-[10px] font-bold text-var(--text-3) mb-1.5 block">Alamat Lengkap Siswa</label>
+                            <div class="px-5 py-4 bg-var(--bg) rounded-2xl border border-var(--border) text-sm font-medium text-var(--text-1) leading-relaxed">
+                                {{ $siswa->alamat ?? 'Data alamat belum dilengkapi.' }}
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold text-var(--text-3) mb-1.5 block">Nama Orang Tua (Manual)</label>
+                            <div class="px-4 py-3 bg-white rounded-xl border border-var(--border) text-sm font-bold text-var(--text-1)">
+                                {{ $siswa->nama_orang_tua ?? '—' }}
+                            </div>
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold text-var(--text-3) mb-1.5 block">Kontak Orang Tua</label>
+                            <div class="px-4 py-3 bg-white rounded-xl border border-var(--border) text-sm font-bold text-var(--text-1)">
+                                {{ $siswa->no_hp_orang_tua ?? '—' }}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- SECTION 3: DATA ORANG TUA / WALI -->
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                <div class="px-6 py-4 border-b border-gray-100 bg-gray-50/50 flex items-center justify-between">
-                    <h3 class="font-bold text-gray-800 flex items-center gap-2">
-                        <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-                        Kontak & Orang Tua
-                    </h3>
-                    @if($siswa->waliMurid)
-                        <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-green-100 text-green-700 uppercase tracking-widest border border-green-200">Terverifikasi Sistem</span>
-                    @endif
-                </div>
-                <div class="p-6 grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-6">
-                    <div>
-                        <p class="text-sm text-gray-500 mb-1">Nama Wali Murid / Orang Tua</p>
-                        <p class="font-medium text-gray-900">
-                            @if($siswa->waliMurid)
-                                {{ $siswa->waliMurid->nama_lengkap }}
-                            @else
-                                {{ $siswa->nama_orang_tua ?? '-' }}
-                            @endif
-                        </p>
+            <!-- PENILAIAN SUMMARY (Optional but nice for consistency) -->
+            <div class="card p-8 bg-var(--accent-lt) border-var(--accent)/20 relative overflow-hidden">
+                <div class="absolute -right-8 -top-8 w-32 h-32 bg-var(--accent)/5 rounded-full"></div>
+                <div class="relative">
+                    <h4 class="text-sm font-bold text-var(--accent) mb-4">Status Akademik</h4>
+                    <div class="flex items-start gap-4">
+                        <div class="w-12 h-12 rounded-2xl bg-white flex items-center justify-center flex-shrink-0 shadow-sm border border-var(--accent)/10">
+                            <svg class="w-6 h-6 text-var(--accent)" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        </div>
+                        <div>
+                            <p class="text-sm font-bold text-var(--text-1) mb-1 tracking-tight">Terdaftar Aktif</p>
+                            <p class="text-xs text-var(--text-2) leading-relaxed font-medium">Siswa ini terdaftar secara resmi di kelas <strong>{{ $siswa->kelas->nama_kelas ?? '—' }}</strong> untuk tahun ajaran aktif. Seluruh data penilaian mingguan dan bulanan dapat diakses melalui modul Guru.</p>
+                        </div>
                     </div>
-                    <div>
-                        <p class="text-sm text-gray-500 mb-1">Nomor HP</p>
-                        <p class="font-medium text-gray-900">
-                            @if($siswa->waliMurid)
-                                {{ $siswa->waliMurid->no_hp ?? '-' }}
-                            @else
-                                {{ $siswa->no_hp_orang_tua ?? '-' }}
-                            @endif
-                        </p>
-                    </div>
-                    @if($siswa->waliMurid && $siswa->waliMurid->email)
-                    <div class="sm:col-span-2">
-                        <p class="text-sm text-gray-500 mb-1">Email Akun App Wali Murid</p>
-                        <p class="font-medium text-gray-900">{{ $siswa->waliMurid->email }}</p>
-                    </div>
-                    @endif
                 </div>
             </div>
 

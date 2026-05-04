@@ -12,14 +12,16 @@ class DetailEvaluasi extends Model
 
     protected $fillable = [
         'evaluasi_id',
-        'kriteria_id',
-        'nilai',
+        'subkriteria_id',
+        'nilai_crisp',
+        'nilai_normalisasi',
         'bobot_snapshot',
+        'kategori',
+        'rekomendasi_detail',
     ];
 
     protected $casts = [
-        'nilai'           => 'double',
-        'bobot_snapshot'  => 'double',
+        'nilai_crisp' => 'double',
     ];
 
     // ================= RELASI =================
@@ -29,16 +31,8 @@ class DetailEvaluasi extends Model
         return $this->belongsTo(Evaluasi::class, 'evaluasi_id');
     }
 
-    public function kriteria()
+    public function subkriteria()
     {
-        return $this->belongsTo(Kriteria::class, 'kriteria_id');
-    }
-
-    // ================= HELPER =================
-
-    // 🔥 Nilai setelah dikali bobot
-    public function nilaiTerbobot(): float
-    {
-        return $this->nilai * $this->bobot_snapshot;
+        return $this->belongsTo(Subkriteria::class, 'subkriteria_id');
     }
 }

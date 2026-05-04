@@ -13,6 +13,7 @@ class Kriteria extends Model
     protected $table = 'kriteria';
 
     protected $fillable = [
+        'kode',
         'nama',
         'bobot'
     ];

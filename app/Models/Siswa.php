@@ -37,9 +37,9 @@ class Siswa extends Model
         return $this->belongsTo(Kelas::class, 'kelas_id');
     }
 
-    public function waliMurid()
+    public function wali()
     {
-        return $this->belongsTo(User::class, 'wali_murid_id');
+        return $this->belongsToMany(User::class, 'wali_siswa', 'siswa_id', 'user_id');
     }
 
     public function penilaian()

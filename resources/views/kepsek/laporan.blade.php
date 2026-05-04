@@ -1,44 +1,189 @@
 @extends('layouts.app')
-
-@section('title', 'Laporan Akhir')
+@section('title', 'Rekap Laporan Global')
+@section('page-title', 'Laporan')
 
 @section('content')
-<div class="space-y-6">
-    <div class="flex items-center justify-between">
-        <div>
-            <h1 class="text-xl font-black text-slate-800 tracking-tight">Laporan Akhir Semester</h1>
-            <p class="text-xs text-slate-500 font-medium">Manajemen dokumen laporan hasil belajar</p>
-        </div>
-        <div class="flex items-center gap-3">
-            <select class="form-select w-40 font-bold">
-                <option>Semester Ganjil 2023</option>
-            </select>
-        </div>
+<div class="space-y-6 pb-20 fade-in">
+
+    {{-- ── FILTER SECTION ── --}}
+    <div class="card p-6 no-print shadow-sm border border-gray-100">
+        <form action="{{ route('kepsek.laporan') }}" method="GET" class="grid grid-cols-1 md:grid-cols-12 gap-4">
+            <div class="md:col-span-5">
+                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">Pilih Periode Analisis</label>
+                <select name="periode_id" class="form-select">
+                    @foreach($periodeList as $p)
+                        <option value="{{ $p->id }}" {{ $selectedPeriodeId == $p->id ? 'selected' : '' }}>{{ $p->nama_periode }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="md:col-span-4">
+                <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">Saring Berdasarkan Kelas</label>
+                <select name="kelas_id" class="form-select">
+                    <option value="">Seluruh Unit Kelas</option>
+                    @foreach($kelasList as $kelas)
+                        <option value="{{ $kelas->id }}" {{ $selectedKelasId == $kelas->id ? 'selected' : '' }}>{{ $kelas->nama_kelas }}</option>
+                    @endforeach
+                </select>
+            </div>
+            <div class="md:col-span-3 flex items-end">
+                <button type="submit" class="btn btn-green w-full justify-center h-[42px] rounded-xl shadow-lg shadow-green-100">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    Tampilkan Rekap
+                </button>
+            </div>
+        </form>
     </div>
 
-    <!-- Grouped Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        @foreach(['A1 (Bintang)', 'A2 (Bulan)', 'B1 (Matahari)', 'B2 (Awan)', 'C1 (Anggrek)', 'C2 (Mawar)'] as $kelas)
-            <div class="card p-6 flex flex-col justify-between hover:shadow-lg transition-all border-t-4 border-t-emerald-600">
-                <div class="flex items-start justify-between mb-4">
-                    <div class="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
-                        @include('components.icons.document-text')
-                    </div>
-                    <x-badge type="info">{{ $loop->index % 2 == 0 ? 'Verified' : 'Review' }}</x-badge>
-                </div>
-                <div>
-                     <h3 class="text-sm font-black text-slate-800 uppercase tracking-tight mb-1">Rapor Kelas {{ $kelas }}</h3>
-                     <p class="text-[10px] text-slate-400 font-medium leading-relaxed mb-6">Total 24 dokumen siswa terlampir dalam satu paket laporan PDF.</p>
-                </div>
-                <div class="flex gap-2">
-                    <button class="flex-1 btn btn-secondary py-2 text-[10px] uppercase">Review</button>
-                    <button class="flex-1 btn btn-success py-2 text-[10px] uppercase">
-                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                        PDF
-                    </button>
+    {{-- ── REKAP GLOBAL ── --}}
+    <div class="card p-12 print:shadow-none print:border-none border-none shadow-2xl relative overflow-hidden">
+        {{-- Background Decoration --}}
+        <div class="absolute top-0 right-0 w-64 h-64 bg-gray-50 rounded-full -mr-32 -mt-32 opacity-50 no-print"></div>
+        
+        {{-- Header KOP --}}
+        <div class="relative flex flex-col md:flex-row items-center justify-between border-b-2 border-gray-100 pb-10 mb-10 gap-8">
+            <div class="flex items-center gap-8">
+                <div class="w-20 h-20 rounded-2xl bg-gray-900 text-white flex items-center justify-center text-2xl font-black shadow-xl">TK</div>
+                <div class="text-center md:text-left">
+                    <h2 class="text-xl font-black text-gray-900 tracking-tight leading-none mb-2">Rekapitulasi Hasil Evaluasi Siswa</h2>
+                    <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">TK Negeri Pembina Kota Padang Panjang</p>
                 </div>
             </div>
-        @endforeach
+            <div class="text-right no-print">
+                <button onclick="window.print()" class="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-gray-900 text-white text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-lg shadow-black/20">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
+                    Cetak Laporan
+                </button>
+            </div>
+        </div>
+
+        {{-- Statistics Overview --}}
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12 relative z-10">
+            @php
+                $rekapStats = [
+                    ['label' => 'Total Siswa', 'value' => $evaluasi->count(), 'sub' => 'Populasi Aktif', 'color' => 'gray'],
+                    ['label' => 'Rata-rata Skor', 'value' => number_format($evaluasi->avg('nilai_akhir') * 100, 1) . '%', 'sub' => 'Performa Agregat', 'color' => 'indigo'],
+                    ['label' => 'Kategori BSB', 'value' => $evaluasi->where('kategori_akhir', 'BSB')->count(), 'sub' => 'Capaian Tertinggi', 'color' => 'emerald'],
+                    ['label' => 'Kategori MB', 'value' => $evaluasi->where('kategori_akhir', 'MB')->count(), 'sub' => 'Butuh Intervensi', 'color' => 'rose'],
+                ];
+            @endphp
+            @foreach($rekapStats as $rs)
+                <div class="p-6 rounded-2xl bg-gray-50/50 border border-gray-100 text-center hover:bg-white hover:shadow-xl hover:border-transparent transition-all group">
+                    <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-2">{{ $rs['label'] }}</p>
+                    <p class="text-2xl font-black text-{{ $rs['color'] }}-600 tracking-tighter leading-none mb-1">{{ $rs['value'] }}</p>
+                    <p class="text-[8px] font-bold text-gray-300 uppercase tracking-tighter">{{ $rs['sub'] }}</p>
+                </div>
+            @endforeach
+        </div>
+
+        {{-- ── KESIMPULAN GLOBAL ── --}}
+        <div class="mb-12 p-10 rounded-[2.5rem] relative overflow-hidden shadow-2xl" style="background: linear-gradient(135deg, #1B211A 0%, #2D3A2A 100%);">
+            <div class="absolute top-0 right-0 p-8 opacity-[0.05]">
+                <svg class="w-32 h-32 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/></svg>
+            </div>
+            <div class="relative z-10 max-w-4xl">
+                <div class="flex items-center gap-3 mb-6">
+                    <span class="w-10 h-px bg-[#84934A]"></span>
+                    <h4 class="text-[10px] font-black text-[#84934A] uppercase tracking-[0.3em]">Kesimpulan Global</h4>
+                </div>
+                <p class="text-xl font-black text-white leading-relaxed italic tracking-tight">
+                    "Area prioritas peningkatan saat ini tertuju pada <span class="text-[#C5CF8E]">Berdoa dengan tertib</span>. Dibutuhkan penguatan kurikulum dan pendampingan intensif pada indikator ini."
+                </p>
+                <div class="mt-8 flex items-center gap-4 text-[9px] font-black text-white/30 uppercase tracking-[0.25em]">
+                    <div class="flex items-center gap-2">
+                        <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                        Analisis Strategis
+                    </div>
+                    <span class="w-1 h-1 rounded-full bg-white/10"></span>
+                    <span>Sistem Pendukung Keputusan</span>
+                </div>
+            </div>
+        </div>
+
+        {{-- Table Rekap --}}
+        <div class="overflow-hidden border border-gray-100 rounded-2xl relative z-10">
+            <table class="tbl">
+                <thead>
+                    <tr class="bg-gray-50/80">
+                        <th class="w-16 text-center text-[10px] font-black text-gray-400 tracking-wide">No</th>
+                        <th class="text-[10px] font-black text-gray-400 tracking-wide">Informasi Siswa</th>
+                        <th class="text-[10px] font-black text-gray-400 tracking-wide">Unit Kelas</th>
+                        <th class="text-center text-[10px] font-black text-gray-400 tracking-wide">Skor Akhir (V)</th>
+                        <th class="text-center text-[10px] font-black text-gray-400 tracking-wide">Status Capaian</th>
+                        <th class="no-print text-right pr-8 text-[10px] font-black text-gray-400 tracking-wide">Detail</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-50">
+                    @foreach($evaluasi as $index => $eval)
+                        <tr class="hover:bg-gray-50 transition-colors group">
+                            <td class="text-center text-[10px] font-mono font-bold text-gray-300">{{ $index + 1 }}</td>
+                            <td class="py-5">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-8 h-8 rounded-lg bg-white border border-gray-100 flex items-center justify-center font-black text-[10px] text-gray-400 group-hover:text-indigo-600 transition-colors">
+                                        {{ strtoupper(substr($eval->siswa->nama, 0, 1)) }}
+                                    </div>
+                                    <div>
+                                        <p class="text-xs font-black text-gray-800 tracking-tight leading-none mb-1">{{ $eval->siswa->nama }}</p>
+                                        <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{{ $eval->siswa->kode ?: '—' }}</p>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="text-[10px] font-black text-gray-600 uppercase tracking-tight">{{ $eval->siswa->kelas->nama_kelas ?? '—' }}</span>
+                            </td>
+                            <td class="text-center">
+                                <span class="text-sm font-black text-gray-900 tracking-tighter">{{ number_format($eval->nilai_akhir * 100, 1) }}%</span>
+                            </td>
+                            <td class="text-center">
+                                @php $color = $eval->kategori_akhir === 'BSB' ? 'emerald' : ($eval->kategori_akhir === 'BSH' ? 'amber' : 'rose'); @endphp
+                                <div class="flex flex-col items-center gap-1.5">
+                                    <span class="badge badge-{{ $color }} px-4 py-0.5 text-[8px] font-black shadow-sm uppercase">{{ $eval->kategori_akhir }}</span>
+                                    @if(isset($eval->is_draft))
+                                        <span class="text-[7px] font-black text-rose-400 uppercase tracking-[0.2em] animate-pulse">Draft Mode</span>
+                                    @endif
+                                </div>
+                            </td>
+                            <td class="text-right no-print pr-8">
+                                <form action="{{ route('kepsek.laporan.generate-word') }}" method="POST" class="inline-block">
+                                    @csrf
+                                    <input type="hidden" name="siswa_id" value="{{ $eval->siswa_id }}">
+                                    <input type="hidden" name="periode_id" value="{{ $selectedPeriodeId }}">
+                                    <button type="submit" class="w-8 h-8 rounded-lg bg-white border border-gray-100 flex items-center justify-center text-gray-400 hover:bg-indigo-600 hover:text-white hover:border-indigo-600 transition-all shadow-sm">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+
+        {{-- Footer Signature --}}
+        <div class="mt-20 grid grid-cols-2 gap-20 text-center relative z-10">
+            <div class="space-y-24">
+                <p class="text-[10px] font-black text-gray-800 tracking-widest uppercase">Kepala Sekolah</p>
+                <div class="border-b border-gray-200 w-3/4 mx-auto"></div>
+                <p class="text-[10px] font-black text-gray-800 tracking-widest">( ........................................ )</p>
+            </div>
+            <div class="space-y-24">
+                <p class="text-[10px] font-black text-gray-800 tracking-widest">Padang Panjang, {{ now()->translatedFormat('d F Y') }}</p>
+                <div class="border-b border-gray-200 w-3/4 mx-auto"></div>
+                <p class="text-[10px] font-black text-gray-400 tracking-widest italic opacity-50 uppercase">Generated via Decision Support System</p>
+            </div>
+        </div>
+
     </div>
+
 </div>
+
+<style>
+    @media print {
+        body { background: white !important; }
+        .no-print { display: none !important; }
+        main { padding: 0 !important; }
+        .card { border: none !important; box-shadow: none !important; padding: 0 !important; }
+        table { border-collapse: collapse !important; }
+        th, td { border: 1px solid #eee !important; }
+    }
+</style>
 @endsection

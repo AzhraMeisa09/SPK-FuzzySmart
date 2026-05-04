@@ -23,7 +23,7 @@ class StoreUserRequest extends FormRequest
             'nama_lengkap' => 'required|string|max:255',
             'username'     => 'required|string|max:255|unique:users,username',
             'email'        => 'required|email|max:255|unique:users,email',
-            'password'     => 'required|string|min:6',
+            'password'     => 'required|string|min:8|confirmed',
             'role'         => 'required|in:admin,guru,kepala_sekolah,wali_murid',
             'no_hp'        => 'nullable|string|max:20',
             'alamat'       => 'nullable|string',
@@ -39,6 +39,7 @@ class StoreUserRequest extends FormRequest
             'username.unique' => 'Username sudah digunakan.',
             'email.unique'    => 'Email sudah terdaftar.',
             'role.in'         => 'Role tidak valid.',
+            'password.confirmed' => 'Konfirmasi password tidak cocok.',
         ];
     }
 }

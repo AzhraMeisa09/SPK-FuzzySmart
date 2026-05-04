@@ -185,32 +185,68 @@ class PeriodeController extends Controller
         }
     }
 
-    /**
-     * Finalisasi Periode & Hitung SPK
-     */
-    public function finalize(PeriodePenilaian $periode)
+    public function finalize($id)
     {
-        if (!$periode->canBeFinalized()) {
-            return back()->with('error', 'Periode tidak memenuhi syarat untuk finalisasi. Pastikan semua minggu sudah berstatus Selesai.');
+        $periode = PeriodePenilaian::with('minggu')->findOrFail($id);
+
+        // 🔒 VALIDASI 1: semua minggu harus selesai
+        if ($periode->minggu()->where('status', '!=', 'selesai')->exists()) {
+            return back()->with('error', 'Masih ada minggu yang belum selesai');
+        }
+
+        // 🔒 VALIDASI 2: tidak boleh ada nilai draft
+        if (\App\Models\PenilaianMingguan::whereHas('jadwalSubkriteria.minggu', function ($q) use ($id) {
+            $q->where('periode_id', $id);
+        })->where('status', 'draft')->exists()) {
+            return back()->with('error', 'Masih ada nilai draft');
+        }
+
+        // 🔒 VALIDASI 3: pastikan setiap kelas sudah melakukan pengisian
+        $kelasIds = $periode->kelas->pluck('id');
+        $kelasKosong = [];
+
+        foreach ($kelasIds as $kelasId) {
+            $siswaIds = \App\Models\Siswa::where('kelas_id', $kelasId)->pluck('id');
+            $namaKelas = \App\Models\Kelas::find($kelasId)->nama_kelas;
+
+            if ($siswaIds->isEmpty()) {
+                $kelasKosong[] = $namaKelas . " (Kosong/Tidak ada siswa)";
+                continue;
+            }
+
+            $hasPengisian = \App\Models\PenilaianMingguan::whereIn('siswa_id', $siswaIds)
+                ->whereHas('jadwalSubkriteria.minggu', function ($q) use ($id) {
+                    $q->where('periode_id', $id);
+                })->exists();
+
+            if (!$hasPengisian) {
+                $kelasKosong[] = $namaKelas;
+            }
+        }
+
+        if (!empty($kelasKosong)) {
+            $namaKelasDigabung = implode(', ', $kelasKosong);
+            return back()->with('error', "Gagal Finalisasi. Terdapat kelas yang belum melakukan pengisian penilaian sama sekali: Kelas {$namaKelasDigabung}");
         }
 
         try {
             DB::beginTransaction();
 
-            $spkService = new \App\Services\SpkService();
-            $spkService->hitungPeriode($periode);
+            // 🚀 JALANKAN SPK
+            app(\App\Services\SpkService::class)->hitungPeriode($periode);
 
+            // ✅ UPDATE STATUS
             $periode->update([
+                'is_aktif' => false,
                 'status' => PeriodePenilaian::STATUS_FINAL,
-                'finalized_at' => now(),
-                'is_aktif' => false
+                'finalized_at' => now()
             ]);
 
             DB::commit();
-            return back()->with('success', 'Periode berhasil difinalisasi. Seluruh data penilaian telah dikunci dan perhitungan SPK selesai.');
+            return back()->with('success', 'Periode berhasil difinalisasi & SPK dihitung');
         } catch (\Exception $e) {
             DB::rollBack();
-            return back()->with('error', 'Gagal melakukan finalisasi: ' . $e->getMessage());
+            return back()->with('error', $e->getMessage());
         }
     }
 

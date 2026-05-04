@@ -1,6 +1,6 @@
 @extends('layouts.app')
-
 @section('title', 'Manajemen Minggu Penilaian')
+@section('page-title', 'Manajemen Minggu Penilaian')
 
 @section('content')
 <div x-data="{ 
@@ -13,6 +13,7 @@
     addMingguKe: '',
     
     rawWeeks: {{ Js::from($existingWeeks) }},
+    allPeriodes: {{ Js::from($periode->mapWithKeys(fn($p) => [$p->id => ['start' => $p->tanggal_mulai->format('Y-m-d'), 'end' => $p->tanggal_selesai->format('Y-m-d')]])) }},
     
     editData: {
         id: '',
@@ -47,7 +48,7 @@
             this.addMingguKe = 1;
         } else {
             const maxWeek = Math.max(...weeks.map(w => w.minggu_ke));
-            this.addMingguKe = maxWeek + 1;
+            this.addMingguKe = isFinite(maxWeek) ? maxWeek + 1 : 1;
         }
     },
     
@@ -81,215 +82,311 @@
     openDelete(m) {
         this.deleteData = { id: m.id, nama: 'Minggu Ke-' + m.minggu_ke };
         this.showDelete = true;
+    },
+    
+    isSubDisabled(subId, mode) {
+        let currentPeriodeId = (mode === 'add') ? this.addPeriodeId : this.editData.periode_id;
+        let currentMingguId = (mode === 'edit') ? this.editData.id : null;
+        
+        if (!currentPeriodeId) return false;
+        
+        // Cek apakah subkriteria ini sudah ada di minggu LAIN dalam periode yang SAMA
+        return this.rawWeeks.some(w => 
+            w.periode_id == currentPeriodeId && 
+            w.id != currentMingguId && 
+            w.subkriteria_ids.includes(subId)
+        );
     }
 }" class="space-y-6">
 
     {{-- HEADER --}}
-    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-            <h1 class="text-2xl font-black text-slate-800 tracking-tight">Minggu Penilaian</h1>
-            <p class="text-sm text-slate-500 font-medium tracking-tight lh-relaxed">Jadwalkan subkriteria yang akan dinilai oleh guru setiap minggunya.</p>
+    <div class="card p-6 shadow-xl border-none">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            <div>
+                <h2 class="text-lg font-semibold" style="color: var(--text-1);">Penjadwalan Mingguan</h2>
+                <p class="text-xs mt-0.5" style="color: var(--text-3);">Atur distribusi subkriteria penilaian untuk setiap minggu akademik.</p>
+            </div>
+            
+            <div class="flex flex-wrap gap-3 items-center">
+                <form action="{{ route('admin.minggu.index') }}" method="GET" class="w-full lg:w-auto">
+                    <div class="search-box lg:w-64">
+                        <input type="text" name="search" value="{{ request('search') }}" 
+                               placeholder="Cari tema minggu...">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    </div>
+                </form>
+
+                <button @click="{{ $periode->count() > 0 ? 'showAdd = true; addPeriodeId = \'' . $periode->first()->id . '\'; suggestWeek();' : 'alert(\'Belum ada periode penilaian yang aktif.\')' }}" 
+                        class="btn {{ $periode->count() > 0 ? 'btn-green shadow-lg shadow-green-100' : 'btn-gray opacity-60' }} px-6 py-2.5 rounded-xl flex items-center gap-2 font-bold text-sm">
+                    <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M12 4v16m8-8H4"/></svg>
+                    Tambah Minggu
+                </button>
+            </div>
         </div>
-        <button @click="{{ $periode->count() > 0 ? 'showAdd = true; addPeriodeId = \'' . $periode->first()->id . '\'; suggestWeek();' : 'alert(\'Belum ada periode penilaian yang aktif. Silakan aktifkan periode terlebih dahulu di menu Periode Penilaian.\')' }}" 
-                class="btn {{ $periode->count() > 0 ? 'btn-green' : 'btn-gray opacity-60' }} shadow-lg shadow-green-100">
-            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
-            Tambah Minggu
-        </button>
     </div>
 
     {{-- ALERTS --}}
     @if(session('success'))
-        <div class="p-4 bg-green-50 border border-green-200 text-green-700 rounded-xl text-sm font-medium flex items-center animate-fade-in">
-            <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+        <div class="p-4 bg-green-50/50 border border-green-100 text-green-700 rounded-2xl text-xs font-bold flex items-center animate-fade-in shadow-sm">
+            <svg class="w-5 h-5 mr-3 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
             {{ session('success') }}
         </div>
     @endif
 
-    @if(session('error'))
-        <div class="p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm font-medium flex items-center animate-shake">
-            <svg class="w-5 h-5 mr-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
-            {{ session('error') }}
-        </div>
-    @endif
-
-    {{-- VALIDATION ERRORS --}}
-    @if($errors->any())
-        <div class="p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-xs font-medium space-y-1 mb-4 flex flex-col">
-            <p class="font-black uppercase tracking-widest text-[10px] mb-1">Terjadi Kesalahan Input:</p>
-            <ul class="list-disc list-inside">
-                @foreach($errors->all() as $error)
-                    <li>{{ $error }}</li>
-                @endforeach
-            </ul>
-        </div>
-    @endif
-
-    <form action="{{ route('admin.minggu.index') }}" method="GET" class="flex flex-col md:flex-row items-center gap-3 bg-white p-4 rounded-xl border border-gray-100 shadow-sm mt-5 mb-4">
-        <div class="relative flex-1 w-full">
-            <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-            <input type="text" name="search" value="{{ request('search') }}" class="form-input w-full py-2.5" style="padding-left: 42px;" placeholder="Cari tema minggu...">
-        </div>
-        <div class="flex gap-2 w-full md:w-auto shrink-0 md:pl-2">
-            <button type="submit" class="btn btn-blue py-2.5 px-6 shadow-sm">Cari</button>
-        </div>
-    </form>
-
     {{-- MAIN TABLE --}}
-    <div class="card overflow-hidden border-none shadow-sm bg-white">
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr class="bg-slate-50 border-b border-slate-100 uppercase text-[10px] font-black text-slate-400">
-                        <th class="px-6 py-4 tracking-wider">No</th>
-                        <th class="px-6 py-4 tracking-wider">Periode</th>
-                        <th class="px-6 py-4 tracking-wider">Minggu Ke</th>
-                        <th class="px-6 py-4 tracking-wider">Tema</th>
-                        <th class="px-6 py-4 tracking-wider">Rentang Tanggal</th>
-                        <th class="px-6 py-4 tracking-wider text-center">Status</th>
-                        <th class="px-6 py-4 tracking-wider text-right">Aksi</th>
+    <div class="card overflow-hidden shadow-xl border-none">
+        <table class="tbl">
+            <thead>
+                <tr>
+                    <th class="w-16">No</th>
+                    <th>Periode & Semester</th>
+                    <th>Identitas</th>
+                    <th>Tema Pembelajaran</th>
+                    <th>Rentang Waktu</th>
+                    <th class="text-center">Status</th>
+                    <th class="text-center">Aksi</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-50">
+                @forelse($minggu as $i => $m)
+                    <tr class="hover:bg-var(--bg) transition-colors">
+                        <td class="text-var(--text-3) text-[11px] font-bold">{{ $minggu->firstItem() + $i }}</td>
+                        <td>
+                            <div class="flex flex-col">
+                                <span class="font-semibold text-var(--text-1) leading-tight">{{ $m->periode->tahunAjaran->nama }}</span>
+                                <span class="text-[10px] font-medium text-var(--text-3) mt-0.5 tracking-wide">Semester {{ $m->periode->semester }}</span>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="px-2.5 py-1.5 bg-var(--accent-lt) text-var(--accent) rounded-lg text-[10px] font-bold border border-var(--accent)/10">
+                                Minggu Ke-{{ $m->minggu_ke }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="text-xs font-semibold text-var(--text-1) tracking-tight">{{ $m->tema ?: '—' }}</span>
+                        </td>
+                        <td>
+                            <div class="flex flex-col gap-1 text-[11px] font-bold">
+                                <div class="flex items-center gap-2 text-var(--text-2)">
+                                    <svg class="w-3 h-3 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                    {{ $m->tanggal_mulai->translatedFormat('d M Y') }}
+                                </div>
+                                <div class="flex items-center gap-2 text-var(--text-3)">
+                                    <svg class="w-3 h-3 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                    {{ $m->tanggal_selesai->translatedFormat('d M Y') }}
+                                </div>
+                            </div>
+                        </td>
+                         <td class="text-center">
+                             @if($m->status === 'draft')
+                                 <form action="{{ route('admin.minggu.status', $m) }}" method="POST">
+                                     @csrf @method('PATCH')
+                                     <input type="hidden" name="status" value="aktif">
+                                     <button type="submit" class="px-3 py-1.5 bg-amber-50 text-amber-600 border border-amber-100 rounded-xl text-[9px] font-bold hover:bg-amber-600 hover:text-white transition-all">
+                                         Draf (Aktifkan)
+                                     </button>
+                                 </form>
+                             @elseif($m->status === 'aktif')
+                                 <form action="{{ route('admin.minggu.status', $m) }}" method="POST">
+                                     @csrf @method('PATCH')
+                                     <input type="hidden" name="status" value="selesai">
+                                     <button type="submit" class="px-3 py-1.5 bg-blue-50 text-blue-600 border border-blue-100 rounded-xl text-[9px] font-bold hover:bg-blue-600 hover:text-white transition-all">
+                                         Aktif (Kunci)
+                                     </button>
+                                 </form>
+                             @else
+                                 <span class="px-3 py-1.5 bg-green-50 text-green-700 border border-green-100 rounded-xl text-[9px] font-bold">
+                                     Final
+                                 </span>
+                             @endif
+                         </td>
+                        <td>
+                            <div class="flex items-center justify-center gap-2">
+                                <button @click="openDetail({{ Js::from($m->load(['subkriteria', 'periode.tahunAjaran'])) }})" 
+                                         class="p-2 rounded-xl bg-white border border-var(--border) text-var(--text-2) hover:text-var(--accent) hover:border-var(--accent) transition-all shadow-sm">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                </button>
+                                
+                                <button @click="openEdit({{ Js::from($m->load('subkriteria')) }})" 
+                                        class="p-2 rounded-xl {{ $m->status === 'draft' ? 'bg-blue-50 border-blue-100 text-blue-600 hover:bg-blue-600 hover:text-white' : 'bg-gray-50 border-gray-100 text-gray-300 cursor-not-allowed' }} border transition-all shadow-sm" 
+                                        :disabled="{{ $m->status !== 'draft' ? 'true' : 'false' }}">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                </button>
+                                
+                                <button @click="openDelete({{ Js::from($m) }})" 
+                                        class="p-2 rounded-xl {{ $m->status === 'draft' ? 'bg-red-50 border-red-100 text-red-600 hover:bg-red-600 hover:text-white' : 'bg-gray-50 border-gray-100 text-gray-300 cursor-not-allowed' }} border transition-all shadow-sm"
+                                        :disabled="{{ $m->status !== 'draft' ? 'true' : 'false' }}">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                </button>
+                            </div>
+                        </td>
                     </tr>
-                </thead>
-                <tbody class="divide-y divide-slate-50">
-                    @forelse($minggu as $i => $m)
-                        <tr class="hover:bg-slate-50/50 transition-colors group">
-                            <td class="px-6 py-4 text-xs font-bold text-slate-400">{{ $minggu->firstItem() + $i }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="flex flex-col">
-                                    <span class="text-xs font-bold text-slate-700 leading-tight">{{ $m->periode->tahunAjaran->nama }}</span>
-                                    <span class="text-[10px] font-black uppercase text-slate-400">Sem {{ $m->periode->semester }}</span>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4">
-                                <span class="px-2 py-1 bg-slate-100 text-slate-600 rounded-lg text-xs font-black italic">
-                                    M-{{ $m->minggu_ke }}
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 text-sm font-bold text-slate-700 truncate max-w-[150px]">
-                                {{ $m->tema ?: '-' }}
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="flex flex-col text-[11px] space-y-0.5">
-                                    <span class="text-slate-500 font-medium">Mulai: <span class="text-slate-800 font-bold">{{ $m->tanggal_mulai->format('d/m/Y') }}</span></span>
-                                    <span class="text-slate-500 font-medium">Selesai: <span class="text-slate-800 font-bold">{{ $m->tanggal_selesai->format('d/m/Y') }}</span></span>
-                                </div>
-                            </td>
-                             <td class="px-6 py-4 text-center">
-                                 @if($m->status === 'draft')
-                                     <form action="{{ route('admin.minggu.status', $m) }}" method="POST">
-                                         @csrf @method('PATCH')
-                                         <input type="hidden" name="status" value="aktif">
-                                         <button type="submit" class="px-3 py-1 bg-amber-50 text-amber-600 border border-amber-200 rounded-lg text-[10px] font-black uppercase hover:bg-amber-100 transition-colors">
-                                             Draf (Aktifkan?)
-                                         </button>
-                                     </form>
-                                 @elseif($m->status === 'aktif')
-                                     <form action="{{ route('admin.minggu.status', $m) }}" method="POST" onsubmit="return confirm('Finalisasi Minggu akan mengunci input guru dan menjadikannya laporan wali murid. Lanjutkan?')">
-                                         @csrf @method('PATCH')
-                                         <input type="hidden" name="status" value="selesai">
-                                         <button type="submit" class="px-3 py-1 bg-blue-50 text-blue-600 border border-blue-200 rounded-lg text-[10px] font-black uppercase hover:bg-blue-100 transition-colors">
-                                             Aktif (Finalisasi?)
-                                         </button>
-                                     </form>
-                                 @else
-                                     <span class="px-3 py-1 bg-green-100 text-green-700 border border-green-200 rounded-lg text-[10px] font-black uppercase">
-                                         Final Minggu
-                                     </span>
-                                 @endif
-                             </td>
-                            <td class="px-6 py-4 text-right">
-                                <div class="flex justify-end gap-1">
-                                    <button @click="openDetail({{ Js::from($m->load(['subkriteria', 'periode.tahunAjaran'])) }})" class="btn btn-xs btn-gray" title="Detail">Detail</button>
-                                    
-                                    <button @click="openEdit({{ Js::from($m->load('subkriteria')) }})" 
-                                            class="btn btn-xs {{ $m->status === 'draft' ? 'btn-blue' : 'btn-gray opacity-50 cursor-not-allowed' }}" 
-                                            :disabled="{{ $m->status !== 'draft' ? 'true' : 'false' }}"
-                                            title="Edit Data">Edit</button>
-                                    
-                                    <button @click="openDelete({{ Js::from($m) }})" class="btn btn-xs btn-gray text-red-500" title="Hapus Data">
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="7" class="px-6 py-12 text-center text-slate-400 text-sm italic">Belum ada jadwal minggu penilaian.</td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-        @if($minggu->hasPages())
-            <div class="px-6 py-4 border-t border-slate-50 text-xs">
-                {{ $minggu->links() }}
-            </div>
-        @endif
+                @empty
+                    <tr>
+                        <td colspan="7" class="text-center py-24 text-var(--text-3) font-medium italic text-sm">Belum ada agenda penilaian mingguan yang dijadwalkan.</td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
     </div>
 
     {{-- MODAL TAMBAH --}}
     <template x-teleport="body">
-    <div x-show="showAdd" x-transition.opacity class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4" x-cloak>
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-3xl overflow-hidden" @click.outside="showAdd = false" x-transition.scale.95>
-            <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-                <h3 class="text-lg font-black text-slate-800 tracking-tight">Tambah Minggu Baru</h3>
-                <button @click="showAdd = false" class="text-slate-400 hover:text-slate-600 transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                </button>
-            </div>
-            <form action="{{ route('admin.minggu.store') }}" method="POST" class="p-6 space-y-4">
+    <div x-show="showAdd" x-transition.opacity @keydown.escape.window="showAdd = false" class="modal-overlay" x-cloak>
+        <div class="modal-box w-full max-w-2xl" @click.stop x-transition.scale.95>
+            <form action="{{ route('admin.minggu.store') }}" method="POST">
                 @csrf
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="px-8 py-5 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+                    <h3 class="text-base font-bold text-gray-800">Tambah Agenda Minggu</h3>
+                    <button type="button" @click="showAdd = false" class="p-2 rounded-xl hover:bg-gray-200 text-var(--text-3) transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
+                </div>
+                <div class="px-8 py-6 space-y-5 max-h-[70vh] overflow-y-auto scrollbar-hide">
+                    <div class="grid grid-cols-2 gap-5">
+                        <div class="form-group">
+                            <label class="form-label text-[10px] font-bold">Periode Akademik <span class="text-red-500">*</span></label>
+                            <select name="periode_id" x-model="addPeriodeId" @change="suggestWeek()" required class="form-select rounded-xl bg-var(--bg) border-var(--border) font-bold text-xs">
+                                @foreach($periode as $p)
+                                    <option value="{{ $p->id }}">{{ $p->tahunAjaran->nama }} - Sem {{ $p->semester }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label text-[10px] font-bold">Minggu Ke- <span class="text-red-500">*</span></label>
+                            <input type="number" name="minggu_ke" x-model="addMingguKe" min="1" required class="form-input rounded-xl bg-var(--bg) border-var(--border) font-bold text-xs text-blue-600">
+                        </div>
+                    </div>
                     <div class="form-group">
-                        <label class="text-xs font-black text-slate-500 uppercase mb-2 block tracking-wider">Pilih Periode</label>
-                        <select name="periode_id" x-model="addPeriodeId" @change="suggestWeek()" required class="form-input w-full bg-slate-50 font-bold">
-                            @foreach($periode as $p)
-                                <option value="{{ $p->id }}">{{ $p->tahunAjaran->nama }} - Sem {{ $p->semester }} (AKTIF)</option>
+                        <label class="form-label text-[10px] font-bold">Tema Pembelajaran</label>
+                        <input type="text" name="tema" class="form-input rounded-xl bg-var(--bg) border-var(--border) font-bold text-xs" placeholder="Cth: Alam Semesta / Budaya Lokal">
+                    </div>
+                    <div class="grid grid-cols-2 gap-5">
+                        <div class="form-group">
+                            <label class="form-label text-[10px] font-bold">Tanggal Mulai</label>
+                            <input type="date" name="tanggal_mulai" required 
+                                   :min="allPeriodes[addPeriodeId]?.start" 
+                                   :max="allPeriodes[addPeriodeId]?.end"
+                                   class="form-input rounded-xl bg-var(--bg) border-var(--border) font-bold text-xs">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label text-[10px] font-bold">Tanggal Selesai</label>
+                            <input type="date" name="tanggal_selesai" required 
+                                   :min="allPeriodes[addPeriodeId]?.start" 
+                                   :max="allPeriodes[addPeriodeId]?.end"
+                                   class="form-input rounded-xl bg-var(--bg) border-var(--border) font-bold text-xs">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label text-[10px] font-bold mb-3 block">Subkriteria Target Penilaian</label>
+                        <div class="bg-var(--bg) rounded-2xl border border-var(--border) p-5 space-y-4">
+                            @php $currentKriteria = ''; @endphp
+                            @foreach($subkriteria as $s)
+                                @if($currentKriteria !== $s->kriteria->nama)
+                                    <div class="text-[9px] font-bold text-var(--accent) mt-4 first:mt-0 mb-2 pb-1 border-b border-var(--accent)/10">
+                                        {{ $s->kriteria->nama }}
+                                    </div>
+                                    @php $currentKriteria = $s->kriteria->nama; @endphp
+                                @endif
+                                <label class="flex items-center gap-3 group" :class="isSubDisabled({{ $s->id }}, 'add') ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer'">
+                                    <input type="checkbox" name="subkriteria_ids[]" value="{{ $s->id }}" 
+                                           :disabled="isSubDisabled({{ $s->id }}, 'add')"
+                                           class="w-4.5 h-4.5 text-var(--accent) border-var(--border) rounded-lg focus:ring-0">
+                                    <div class="flex flex-col">
+                                        <span class="text-[11px] font-bold text-var(--text-2) group-hover:text-var(--text-1) transition-colors">{{ $s->nama }}</span>
+                                        <template x-if="isSubDisabled({{ $s->id }}, 'add')">
+                                            <span class="text-[8px] font-bold text-amber-600 mt-0.5 tracking-tight">Terjadwal di minggu lain</span>
+                                        </template>
+                                    </div>
+                                </label>
                             @endforeach
-                            @if($periode->isEmpty())
-                                <option value="">Tidak ada periode aktif</option>
-                            @endif
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="text-xs font-black text-slate-500 uppercase mb-2 block tracking-wider">Minggu Ke-</label>
-                        <input type="number" name="minggu_ke" x-model="addMingguKe" min="1" required class="form-input w-full bg-slate-50 font-black text-blue-600">
-                    </div>
-                    <div class="form-group col-span-2">
-                        <label class="text-xs font-black text-slate-500 uppercase mb-2 block tracking-wider">Tema / Keterangan (Opsional)</label>
-                        <input type="text" name="tema" class="form-input w-full" placeholder="Contoh: Alam Semesta">
-                    </div>
-                    <div class="form-group">
-                        <label class="text-xs font-black text-slate-500 uppercase mb-2 block tracking-wider">Tanggal Mulai</label>
-                        <input type="date" name="tanggal_mulai" required class="form-input w-full">
-                    </div>
-                    <div class="form-group">
-                        <label class="text-xs font-black text-slate-500 uppercase mb-2 block tracking-wider">Tanggal Selesai</label>
-                        <input type="date" name="tanggal_selesai" required class="form-input w-full">
+                        </div>
                     </div>
                 </div>
+                <div class="px-8 py-5 border-t border-gray-100 flex gap-3 justify-end bg-gray-50/50">
+                    <button type="button" @click="showAdd = false" class="px-6 py-2 rounded-xl text-sm font-bold text-var(--text-3) hover:bg-gray-100 transition-colors">Batal</button>
+                    <button type="submit" class="btn btn-green px-8 py-2.5 rounded-xl font-bold text-sm shadow-lg shadow-green-100">Simpan Agenda</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    </template>
 
-                <div class="form-group">
-                    <label class="text-xs font-black text-slate-500 uppercase mb-2 block tracking-wider">Pilih Subkriteria yang Dinilai</label>
-                    <div class="bg-slate-50 rounded-xl border border-slate-100 p-4 max-h-64 overflow-y-auto">
-                        @php $currentKriteria = ''; @endphp
-                        @foreach($subkriteria as $s)
-                            @if($currentKriteria !== $s->kriteria->nama)
-                                <div class="text-[10px] font-black text-indigo-600 uppercase tracking-widest mt-4 first:mt-0 mb-2 pb-1 border-b border-indigo-100">
-                                    {{ $s->kriteria->nama }}
-                                </div>
-                                @php $currentKriteria = $s->kriteria->nama; @endphp
-                            @endif
-                            <label class="flex items-center space-x-3 cursor-pointer group mb-2 last:mb-0">
-                                <input type="checkbox" name="subkriteria_ids[]" value="{{ $s->id }}" class="w-4 h-4 text-green-600 border-slate-300 rounded focus:ring-green-500">
-                                <span class="text-[11px] font-bold text-slate-600 group-hover:text-slate-800 transition-colors">{{ $s->nama }}</span>
-                            </label>
-                        @endforeach
+    {{-- MODAL EDIT --}}
+    <template x-teleport="body">
+    <div x-show="showEdit" x-transition.opacity @keydown.escape.window="showEdit = false" class="modal-overlay" x-cloak>
+        <div class="modal-box w-full max-w-2xl" @click.stop x-transition.scale.95>
+            <form :action="'{{ route('admin.minggu.index') }}/' + editData.id" method="POST">
+                @csrf @method('PUT')
+                <div class="px-8 py-5 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+                    <h3 class="text-base font-bold text-gray-800">Edit Agenda Minggu</h3>
+                    <button type="button" @click="showEdit = false" class="p-2 rounded-xl hover:bg-gray-200 text-var(--text-3) transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
+                </div>
+                <div class="px-8 py-6 space-y-5 max-h-[70vh] overflow-y-auto scrollbar-hide">
+                    <div class="grid grid-cols-2 gap-5">
+                        <div class="form-group">
+                            <label class="form-label text-[10px] font-bold">Periode Akademik <span class="text-red-500">*</span></label>
+                            <select name="periode_id" x-model="editData.periode_id" required class="form-select rounded-xl bg-var(--bg) border-var(--border) font-bold text-xs">
+                                @foreach($periode as $p)
+                                    <option value="{{ $p->id }}">{{ $p->tahunAjaran->nama }} - Sem {{ $p->semester }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label text-[10px] font-bold">Minggu Ke- <span class="text-red-500">*</span></label>
+                            <input type="number" name="minggu_ke" x-model="editData.minggu_ke" min="1" required class="form-input rounded-xl bg-var(--bg) border-var(--border) font-bold text-xs text-blue-600">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label text-[10px] font-bold">Tema Pembelajaran</label>
+                        <input type="text" name="tema" x-model="editData.tema" class="form-input rounded-xl bg-var(--bg) border-var(--border) font-bold text-xs" placeholder="Cth: Alam Semesta / Budaya Lokal">
+                    </div>
+                    <div class="grid grid-cols-2 gap-5">
+                        <div class="form-group">
+                            <label class="form-label text-[10px] font-bold">Tanggal Mulai</label>
+                            <input type="date" name="tanggal_mulai" x-model="editData.tanggal_mulai" required 
+                                   :min="allPeriodes[editData.periode_id]?.start" 
+                                   :max="allPeriodes[editData.periode_id]?.end"
+                                   class="form-input rounded-xl bg-var(--bg) border-var(--border) font-bold text-xs">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label text-[10px] font-bold">Tanggal Selesai</label>
+                            <input type="date" name="tanggal_selesai" x-model="editData.tanggal_selesai" required 
+                                   :min="allPeriodes[editData.periode_id]?.start" 
+                                   :max="allPeriodes[editData.periode_id]?.end"
+                                   class="form-input rounded-xl bg-var(--bg) border-var(--border) font-bold text-xs">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label text-[10px] font-bold mb-3 block">Subkriteria Target Penilaian</label>
+                        <div class="bg-var(--bg) rounded-2xl border border-var(--border) p-5 space-y-4">
+                            @php $currentKriteria = ''; @endphp
+                            @foreach($subkriteria as $s)
+                                @if($currentKriteria !== $s->kriteria->nama)
+                                    <div class="text-[9px] font-bold text-var(--accent) mt-4 first:mt-0 mb-2 pb-1 border-b border-var(--accent)/10">
+                                        {{ $s->kriteria->nama }}
+                                    </div>
+                                    @php $currentKriteria = $s->kriteria->nama; @endphp
+                                @endif
+                                <label class="flex items-center gap-3 group" :class="isSubDisabled({{ $s->id }}, 'edit') ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer'">
+                                    <input type="checkbox" name="subkriteria_ids[]" value="{{ $s->id }}" 
+                                           x-model="editData.subkriteria_ids"
+                                           :disabled="isSubDisabled({{ $s->id }}, 'edit')"
+                                           class="w-4.5 h-4.5 text-var(--accent) border-var(--border) rounded-lg focus:ring-0">
+                                    <div class="flex flex-col">
+                                        <span class="text-[11px] font-bold text-var(--text-2) group-hover:text-var(--text-1) transition-colors">{{ $s->nama }}</span>
+                                        <template x-if="isSubDisabled({{ $s->id }}, 'edit')">
+                                            <span class="text-[8px] font-bold text-amber-600 mt-0.5 tracking-tight">Terjadwal di minggu lain</span>
+                                        </template>
+                                    </div>
+                                </label>
+                            @endforeach
+                        </div>
                     </div>
                 </div>
-
-                <div class="pt-4 flex justify-end gap-3">
-                    <button type="button" @click="showAdd = false" class="btn btn-gray">Batal</button>
-                    <button type="submit" class="btn btn-green shadow-lg shadow-green-100 px-8">Simpan Jadwal</button>
+                <div class="px-8 py-5 border-t border-gray-100 flex gap-3 justify-end bg-gray-50/50">
+                    <button type="button" @click="showEdit = false" class="px-6 py-2 rounded-xl text-sm font-bold text-var(--text-3) hover:bg-gray-100 transition-colors">Batal</button>
+                    <button type="submit" class="btn btn-green px-8 py-2.5 rounded-xl font-bold text-sm shadow-lg shadow-green-100">Simpan Perubahan</button>
                 </div>
             </form>
         </div>
@@ -298,142 +395,112 @@
 
     {{-- MODAL DETAIL --}}
     <template x-teleport="body">
-    <div x-show="showDetail" x-transition.opacity class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4" x-cloak>
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-2xl overflow-hidden" @click.outside="showDetail = false" x-transition.scale.95>
-            <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-blue-600 text-white">
-                <h3 class="text-lg font-black tracking-tight" x-text="'Detail Minggu Ke-' + detailData.minggu_ke"></h3>
-                <button @click="showDetail = false" class="hover:text-white/70 transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                </button>
+    <div x-show="showDetail" x-transition.opacity @keydown.escape.window="showDetail = false" class="modal-overlay" x-cloak>
+        <div class="modal-box w-full max-w-xl" @click.stop x-transition.scale.95>
+            <div class="px-8 py-5 border-b border-gray-100 flex items-center justify-between bg-white shadow-sm">
+                <div>
+                    <h3 class="text-base font-bold text-gray-800" x-text="'Agenda Minggu Ke-' + detailData.minggu_ke"></h3>
+                    <p class="text-[10px] text-var(--text-3) font-bold mt-0.5">Rincian Jadwal Penilaian</p>
+                </div>
+                <button @click="showDetail = false" class="p-2 rounded-xl hover:bg-gray-100 text-var(--text-3) transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
             </div>
-            <div class="p-6 overflow-y-auto max-h-[80vh]">
-                <div class="grid grid-cols-2 gap-6 mb-8 bg-slate-50 p-4 rounded-xl border border-slate-100 italic">
-                    <div>
-                        <p class="text-[10px] font-black uppercase text-slate-400 mb-1">Periode</p>
-                        <p class="text-sm font-bold text-slate-700" x-text="detailData.periode_label"></p>
+            <div class="px-8 py-6 space-y-8 max-h-[75vh] overflow-y-auto scrollbar-hide">
+                {{-- INFO SUMMARY --}}
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-blue-50/50 p-4 rounded-2xl border border-blue-100/50">
+                        <div class="flex items-center gap-3 mb-2">
+                            <div class="p-2 bg-blue-100 rounded-lg text-blue-600">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                            </div>
+                            <span class="text-[10px] font-bold text-blue-700 uppercase tracking-wider">Periode Aktif</span>
+                        </div>
+                        <p class="text-xs font-bold text-gray-800" x-text="detailData.periode_label"></p>
                     </div>
-                    <div>
-                        <p class="text-[10px] font-black uppercase text-slate-400 mb-1">Status</p>
-                        <span class="px-2 py-0.5 rounded-full text-[10px] font-black uppercase" 
-                              :class="{
-                                  'bg-amber-100 text-amber-600': detailData.status === 'draft',
-                                  'bg-blue-100 text-blue-600': detailData.status === 'aktif',
-                                  'bg-green-100 text-green-600': detailData.status === 'selesai'
-                              }" x-text="detailData.status === 'selesai' ? 'Final Minggu' : detailData.status"></span>
+                    <div class="bg-amber-50/50 p-4 rounded-2xl border border-amber-100/50">
+                        <div class="flex items-center gap-3 mb-2">
+                            <div class="p-2 bg-amber-100 rounded-lg text-amber-600">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                            </div>
+                            <span class="text-[10px] font-bold text-amber-700 uppercase tracking-wider">Tema Terpilih</span>
+                        </div>
+                        <p class="text-xs font-bold text-gray-800" x-text="detailData.tema"></p>
                     </div>
-                    <div>
-                        <p class="text-[10px] font-black uppercase text-slate-400 mb-1">Tema</p>
-                        <p class="text-sm font-bold text-slate-700" x-text="detailData.tema"></p>
-                    </div>
-                    <div>
-                        <p class="text-[10px] font-black uppercase text-slate-400 mb-1">Rentang Tanggal</p>
-                        <p class="text-sm font-bold text-slate-700" x-text="detailData.tanggal_mulai + ' s/d ' + detailData.tanggal_selesai"></p>
+                    <div class="col-span-2 bg-gray-50 p-4 rounded-2xl border border-gray-100">
+                        <div class="flex items-center justify-center gap-6">
+                            <div class="text-center">
+                                <span class="text-[9px] font-bold text-gray-400 uppercase block mb-1">Mulai</span>
+                                <span class="text-xs font-bold text-gray-700" x-text="detailData.tanggal_mulai"></span>
+                            </div>
+                            <div class="flex items-center text-gray-300">
+                                <div class="w-12 h-[2px] bg-gray-200"></div>
+                                <svg class="w-4 h-4 mx-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 5l7 7-7 7M5 5l7 7-7 7"/></svg>
+                                <div class="w-12 h-[2px] bg-gray-200"></div>
+                            </div>
+                            <div class="text-center">
+                                <span class="text-[9px] font-bold text-gray-400 uppercase block mb-1">Selesai</span>
+                                <span class="text-xs font-bold text-gray-700" x-text="detailData.tanggal_selesai"></span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
+                {{-- SUBKRITERIA LIST --}}
                 <div class="space-y-4">
-                    <h4 class="text-xs font-black uppercase text-slate-500 tracking-wider">Subkriteria yang Dijadwalkan:</h4>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
-                        <template x-for="s in detailData.subkriteria" :key="s.id">
-                            <div class="flex items-center p-3 bg-white border border-slate-100 rounded-lg shadow-sm">
-                                <div class="w-2 h-2 bg-green-500 rounded-full mr-3"></div>
-                                <span class="text-xs font-bold text-slate-700" x-text="s.nama"></span>
+                    <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+                        <h4 class="text-xs font-bold text-gray-800 flex items-center gap-2">
+                            <span class="w-2 h-5 bg-var(--accent) rounded-full"></span>
+                            Subkriteria Target Penilaian
+                        </h4>
+                        <span class="px-2 py-0.5 bg-gray-100 text-[10px] font-bold text-gray-500 rounded-lg" x-text="detailData.subkriteria.length + ' Item'"></span>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 gap-3">
+                        <template x-for="(s, index) in detailData.subkriteria" :key="s.id">
+                            <div class="group relative p-4 bg-white border border-gray-100 rounded-2xl hover:border-var(--accent) hover:shadow-md transition-all duration-300">
+                                <div class="flex items-start gap-4">
+                                    <div class="flex-shrink-0 w-8 h-8 rounded-xl bg-var(--bg) flex items-center justify-center text-[10px] font-bold text-var(--accent) border border-var(--border)" x-text="index + 1"></div>
+                                    <div class="flex-1 min-w-0">
+                                        <p class="text-[11px] font-bold text-gray-800 leading-relaxed" x-text="s.nama"></p>
+                                    </div>
+                                    <div class="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <div class="w-5 h-5 rounded-full bg-var(--accent-lt) flex items-center justify-center text-var(--accent)">
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </template>
                     </div>
                 </div>
             </div>
-            <div class="bg-slate-50 px-6 py-4 flex justify-end box-shadow border-t border-slate-100">
-                <button @click="showDetail = false" class="btn btn-gray px-12">Tutup</button>
+            <div class="px-8 py-5 border-t border-gray-100 flex justify-end bg-gray-50/50">
+                <button @click="showDetail = false" class="px-8 py-2.5 rounded-xl text-xs font-bold text-white bg-gray-800 hover:bg-black transition-all shadow-lg shadow-gray-200">Tutup Rincian</button>
             </div>
-        </div>
-    </div>
-    </template>
-
-    {{-- MODAL EDIT --}}
-    <template x-teleport="body">
-    <div x-show="showEdit" x-transition.opacity class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4" x-cloak>
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-3xl overflow-hidden" @click.outside="showEdit = false" x-transition.scale.95>
-            <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
-                <h3 class="text-lg font-black text-slate-800">Edit Minggu Penilaian</h3>
-                <button @click="showEdit = false" class="text-slate-400 hover:text-slate-600 transition-colors">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                </button>
-            </div>
-            <form :action="'{{ route('admin.minggu.index') }}/' + editData.id" method="POST" class="p-6 space-y-4">
-                @csrf @method('PUT')
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="form-group">
-                        <label class="text-xs font-black text-slate-500 uppercase mb-2 block tracking-wider">Pilih Periode</label>
-                        <select name="periode_id" x-model="editData.periode_id" required class="form-input w-full">
-                            @foreach($periode as $p)
-                                <option value="{{ $p->id }}">{{ $p->tahunAjaran->nama }} - Sem {{ $p->semester }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="text-xs font-black text-slate-500 uppercase mb-2 block tracking-wider">Minggu Ke-</label>
-                        <input type="number" name="minggu_ke" x-model="editData.minggu_ke" min="1" required class="form-input w-full bg-slate-50">
-                    </div>
-                    <div class="form-group col-span-2">
-                        <label class="text-xs font-black text-slate-500 uppercase mb-2 block tracking-wider">Tema / Keterangan</label>
-                        <input type="text" name="tema" x-model="editData.tema" class="form-input w-full">
-                    </div>
-                    <div class="form-group">
-                        <label class="text-xs font-black text-slate-500 uppercase mb-2 block tracking-wider">Tanggal Mulai</label>
-                        <input type="date" name="tanggal_mulai" x-model="editData.tanggal_mulai" required class="form-input w-full">
-                    </div>
-                    <div class="form-group">
-                        <label class="text-xs font-black text-slate-500 uppercase mb-2 block tracking-wider">Tanggal Selesai</label>
-                        <input type="date" name="tanggal_selesai" x-model="editData.tanggal_selesai" required class="form-input w-full">
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="text-xs font-black text-slate-500 uppercase mb-2 block tracking-wider">Pilih Subkriteria yang Dinilai</label>
-                    <div class="bg-slate-50 rounded-xl border border-slate-100 p-4 max-h-64 overflow-y-auto">
-                        @php $currentKriteria = ''; @endphp
-                        @foreach($subkriteria as $s)
-                            @if($currentKriteria !== $s->kriteria->nama)
-                                <div class="text-[10px] font-black text-indigo-600 uppercase tracking-widest mt-4 first:mt-0 mb-2 pb-1 border-b border-indigo-100">
-                                    {{ $s->kriteria->nama }}
-                                </div>
-                                @php $currentKriteria = $s->kriteria->nama; @endphp
-                            @endif
-                            <label class="flex items-center space-x-3 cursor-pointer group mb-2 last:mb-0">
-                                <input type="checkbox" name="subkriteria_ids[]" value="{{ $s->id }}" x-model="editData.subkriteria_ids" class="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500">
-                                <span class="text-[11px] font-bold text-slate-600 group-hover:text-slate-800 transition-colors">{{ $s->nama }}</span>
-                            </label>
-                        @endforeach
-                    </div>
-                </div>
-
-                <div class="pt-4 flex justify-end gap-3">
-                    <button type="button" @click="showEdit = false" class="btn btn-gray">Batal</button>
-                    <button type="submit" class="btn btn-blue shadow-lg shadow-blue-100 px-8">Simpan Perubahan</button>
-                </div>
-            </form>
         </div>
     </div>
     </template>
 
     {{-- MODAL HAPUS --}}
     <template x-teleport="body">
-    <div x-show="showDelete" x-transition.opacity class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-sm p-4" x-cloak>
-        <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden" @click.outside="showDelete = false" x-transition.scale.95>
-            <div class="p-6 text-center text-sm">
-                <div class="w-16 h-16 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce">
-                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+    <div x-show="showDelete" x-transition.opacity @keydown.escape.window="showDelete = false" class="modal-overlay" x-cloak>
+        <div class="modal-box w-full max-w-sm" @click.stop x-transition.scale.95>
+            <form :action="'{{ route('admin.minggu.index') }}/' + deleteData.id" method="POST">
+                @csrf @method('DELETE')
+                <div class="px-8 py-10 text-center">
+                    <div class="w-20 h-20 rounded-3xl bg-red-50 text-red-600 flex items-center justify-center mx-auto mb-6 shadow-sm border border-red-100">
+                        <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-var(--text-1) tracking-tight mb-2">Hapus Jadwal?</h3>
+                    <p class="text-sm text-var(--text-3) font-medium mb-6 tracking-tight" x-text="deleteData.nama"></p>
+                    <div class="p-4 rounded-xl bg-red-50/50 border border-red-100 text-[10px] font-bold text-red-700">
+                        ⚠️ Seluruh input guru pada minggu ini akan dihapus
+                    </div>
                 </div>
-                <h3 class="text-lg font-black text-slate-800 mb-2">Hapus Minggu?</h3>
-                <p class="text-slate-500 mb-6 font-medium leading-relaxed italic">Anda akan menghapus <span class="font-bold text-slate-900" x-text="deleteData.nama"></span>.</p>
-                
-                <form :action="'{{ route('admin.minggu.index') }}/' + deleteData.id" method="POST" class="flex flex-col gap-2">
-                    @csrf @method('DELETE')
-                    <button type="submit" class="btn btn-red w-full justify-center py-3">Hapus Selamanya</button>
-                    <button type="button" @click="showDelete = false" class="btn btn-gray w-full justify-center py-3">Kembali</button>
-                </form>
-            </div>
+                <div class="px-8 pb-8 flex gap-3">
+                    <button type="button" @click="showDelete = false" class="flex-1 px-4 py-3 rounded-xl text-xs font-bold text-var(--text-3) bg-gray-100 hover:bg-gray-200 transition-all">Batal</button>
+                    <button type="submit" class="flex-1 px-4 py-3 rounded-xl text-xs font-bold text-white bg-red-600 hover:bg-red-700 transition-all shadow-lg shadow-red-100">Ya, Hapus</button>
+                </div>
+            </form>
         </div>
     </div>
     </template>

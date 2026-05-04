@@ -4,20 +4,22 @@
 
 @section('content')
 <div class="space-y-6">
-    <div class="flex items-center justify-between">
-        <div class="flex items-center gap-4">
-            <a href="/admin/minggu?role=admin" class="p-2 bg-white rounded-lg border border-slate-200 text-slate-400 hover:text-emerald-600 transition-colors">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"></path></svg>
-            </a>
-            <div>
-                <h1 class="text-xl font-black text-slate-800 tracking-tight">M3: Tanaman Hias & Sayur</h1>
-                <p class="text-xs text-slate-500 font-medium">Pengaturan subkriteria yang dinilai pada minggu ini</p>
+    <div class="card p-5">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="flex items-center gap-4">
+                <a href="/admin/minggu?role=admin" class="p-2 bg-gray-50 rounded-lg hover:bg-gray-100 text-gray-500 transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"></path></svg>
+                </a>
+                <div>
+                    <h2 class="text-lg font-semibold" style="color: var(--text-1);">M3: Tanaman Hias & Sayur</h2>
+                    <p class="text-xs mt-0.5" style="color: var(--text-3);">Pengaturan subkriteria yang dinilai pada minggu ini</p>
+                </div>
             </div>
+            <button class="btn btn-primary">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                Tambah Subkriteria
+            </button>
         </div>
-        <button class="btn btn-success">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-            Tambah Subkriteria
-        </button>
     </div>
 
     <div class="card overflow-hidden">
@@ -33,7 +35,7 @@
             @foreach($jadwals as $j)
                 <tr>
                     <td><span class="text-xs font-bold text-slate-700">{{ $j[0] }}</span></td>
-                    <td><span class="text-[10px] font-black uppercase text-slate-400">{{ $j[1] }}</span></td>
+                    <td><span class="text-[10px] font-bold text-slate-400">{{ $j[1] }}</span></td>
                     <td><span class="text-xs font-bold text-slate-600">{{ $j[2] }}</span></td>
                     <td>
                         <x-badge :type="$j[3] == 'Ya' ? 'success' : 'default'">
@@ -52,7 +54,7 @@
             <div class="text-blue-600">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
             </div>
-            <p class="text-[10px] font-bold text-blue-700 uppercase tracking-tight">Subkriteria di atas akan muncul secara otomatis di form penilaian Guru pada minggu ke-3.</p>
+            <p class="text-[10px] font-bold text-blue-700 tracking-tight">Subkriteria di atas akan muncul secara otomatis di form penilaian Guru pada minggu ke-3.</p>
         </div>
     </div>
 </div>
