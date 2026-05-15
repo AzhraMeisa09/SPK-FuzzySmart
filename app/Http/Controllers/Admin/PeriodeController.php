@@ -36,13 +36,20 @@ class PeriodeController extends Controller
     {
         $request->validate([
             'nama_periode' => 'required|string|max:255',
-            'tahun_ajaran_id' => 'required|exists:tahun_ajaran,id',
+            'tahun_ajaran_id' => 'required|exists:tahun_ajaran,id_tahun_ajaran',
             'semester' => 'required|in:ganjil,genap',
             'tanggal_mulai' => 'required|date',
             'tanggal_selesai' => 'required|date|after:tanggal_mulai',
             'kelas_ids' => 'required|array',
-            'kelas_ids.*' => 'exists:kelas,id'
+            'kelas_ids.*' => 'exists:kelas,id_kelas'
         ]);
+
+        $tahunAjaran = TahunAjaran::findOrFail($request->tahun_ajaran_id);
+        if ($request->tanggal_mulai < $tahunAjaran->tanggal_mulai || $request->tanggal_selesai > $tahunAjaran->tanggal_selesai) {
+            $tglMulai = date('d-m-Y', strtotime($tahunAjaran->tanggal_mulai));
+            $tglSelesai = date('d-m-Y', strtotime($tahunAjaran->tanggal_selesai));
+            return back()->with('error', "Tanggal periode harus berada dalam rentang Tahun Ajaran {$tahunAjaran->nama} ({$tglMulai} s/d {$tglSelesai})")->withInput();
+        }
 
         // 1. Validasi Bisnis (Diluar Transaksi agar tidak mengunci DB jika gagal)
         foreach ($request->kelas_ids as $kelas_id) {
@@ -50,7 +57,7 @@ class PeriodeController extends Controller
             $exists = PeriodePenilaian::where('tahun_ajaran_id', $request->tahun_ajaran_id)
                 ->where('semester', $request->semester)
                 ->whereHas('kelas', function ($q) use ($kelas_id) {
-                    $q->where('kelas.id', $kelas_id);
+                    $q->where('kelas.id_kelas', $kelas_id);
                 })->exists();
 
             if ($exists) {
@@ -60,7 +67,7 @@ class PeriodeController extends Controller
 
             // Cek Overlap Tanggal
             $overlap = PeriodePenilaian::whereHas('kelas', function ($q) use ($kelas_id) {
-                    $q->where('kelas.id', $kelas_id);
+                    $q->where('kelas.id_kelas', $kelas_id);
                 })
                 ->where(function ($q) use ($request) {
                     $q->where('tanggal_mulai', '<', $request->tanggal_selesai)
@@ -101,21 +108,28 @@ class PeriodeController extends Controller
     {
         $request->validate([
             'nama_periode' => 'required|string|max:255',
-            'tahun_ajaran_id' => 'required|exists:tahun_ajaran,id',
+            'tahun_ajaran_id' => 'required|exists:tahun_ajaran,id_tahun_ajaran',
             'semester' => 'required|in:ganjil,genap',
             'tanggal_mulai' => 'required|date',
             'tanggal_selesai' => 'required|date|after:tanggal_mulai',
             'kelas_ids' => 'required|array',
-            'kelas_ids.*' => 'exists:kelas,id'
+            'kelas_ids.*' => 'exists:kelas,id_kelas'
         ]);
+
+        $tahunAjaran = TahunAjaran::findOrFail($request->tahun_ajaran_id);
+        if ($request->tanggal_mulai < $tahunAjaran->tanggal_mulai || $request->tanggal_selesai > $tahunAjaran->tanggal_selesai) {
+            $tglMulai = date('d-m-Y', strtotime($tahunAjaran->tanggal_mulai));
+            $tglSelesai = date('d-m-Y', strtotime($tahunAjaran->tanggal_selesai));
+            return back()->with('error', "Tanggal periode harus berada dalam rentang Tahun Ajaran {$tahunAjaran->nama} ({$tglMulai} s/d {$tglSelesai})")->withInput();
+        }
 
         // 1. Validasi Bisnis (Diluar Transaksi)
         foreach ($request->kelas_ids as $kelas_id) {
-            $exists = PeriodePenilaian::where('id', '!=', $periode->id)
+            $exists = PeriodePenilaian::where('id_periode', '!=', $periode->id_periode)
                 ->where('tahun_ajaran_id', $request->tahun_ajaran_id)
                 ->where('semester', $request->semester)
                 ->whereHas('kelas', function ($q) use ($kelas_id) {
-                    $q->where('kelas.id', $kelas_id);
+                    $q->where('kelas.id_kelas', $kelas_id);
                 })->exists();
 
             if ($exists) {
@@ -123,9 +137,9 @@ class PeriodeController extends Controller
                 return back()->with('error', "Kelas $nama_kelas sudah memiliki periode untuk semester ini.")->withInput();
             }
 
-            $overlap = PeriodePenilaian::where('id', '!=', $periode->id)
+            $overlap = PeriodePenilaian::where('id_periode', '!=', $periode->id_periode)
                 ->whereHas('kelas', function ($q) use ($kelas_id) {
-                    $q->where('kelas.id', $kelas_id);
+                    $q->where('kelas.id_kelas', $kelas_id);
                 })
                 ->where(function ($q) use ($request) {
                     $q->where('tanggal_mulai', '<', $request->tanggal_selesai)
@@ -202,11 +216,11 @@ class PeriodeController extends Controller
         }
 
         // 🔒 VALIDASI 3: pastikan setiap kelas sudah melakukan pengisian
-        $kelasIds = $periode->kelas->pluck('id');
+        $kelasIds = $periode->kelas->pluck('id_kelas');
         $kelasKosong = [];
 
         foreach ($kelasIds as $kelasId) {
-            $siswaIds = \App\Models\Siswa::where('kelas_id', $kelasId)->pluck('id');
+            $siswaIds = \App\Models\Siswa::where('kelas_id', $kelasId)->pluck('id_siswa');
             $namaKelas = \App\Models\Kelas::find($kelasId)->nama_kelas;
 
             if ($siswaIds->isEmpty()) {

@@ -14,11 +14,11 @@ class KriteriaController extends Controller
 
         if ($request->filled('search')) {
             $search = $request->get('search');
-            $query->where('nama', 'like', "%{$search}%");
+            $query->where('nama_kriteria', 'like', "%{$search}%");
         }
 
-        $kriterias = $query->orderBy('id')->get();
-        $totalBobot = Kriteria::sum('bobot'); // Tetap hitung total bobot asli untuk validasi UI
+        $kriterias = $query->orderByRaw("LENGTH(id_kriteria) ASC, id_kriteria ASC")->get();
+        $totalBobot = Kriteria::sum('bobot_kriteria'); // Tetap hitung total bobot asli untuk validasi UI
         
         return view('admin.kriteria', compact('kriterias', 'totalBobot'));
     }
@@ -26,19 +26,20 @@ class KriteriaController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nama' => 'required|string|max:100',
+            'nama_kriteria' => 'required|string|max:100',
             'bobot' => 'required|numeric|min:0|max:1'
         ]);
 
         // Check total weight
-        $currentTotal = Kriteria::sum('bobot');
+        $currentTotal = Kriteria::sum('bobot_kriteria');
         if (($currentTotal + $request->bobot) > 1.0001) { // Floating point buffer
             return redirect()->back()->with('error', 'Gagal! Total bobot melebihi 100% (saat ini: ' . ($currentTotal * 100) . '%)')->withInput();
         }
 
         Kriteria::create([
-            'nama' => $request->nama,
-            'bobot' => $request->bobot
+            'nama_kriteria' => $request->nama_kriteria,
+            'bobot_kriteria' => $request->bobot,
+            'is_aktif' => $request->has('is_aktif') ? $request->is_aktif : true
         ]);
 
         return redirect()->route('admin.kriteria.index')->with('success', 'Kriteria berhasil ditambahkan');
@@ -48,27 +49,31 @@ class KriteriaController extends Controller
     {
         try {
             $request->validate([
-                'nama' => 'required|string|max:100',
+                'nama_kriteria' => 'required|string|max:100',
                 'bobot' => 'required|numeric|min:0|max:1'
             ]);
 
             // Check total weight (excluding current kriteria weight)
-            $currentTotal = Kriteria::where('id', '!=', $kriteria->id)->sum('bobot');
+            $currentTotal = Kriteria::where('id_kriteria', '!=', $kriteria->id_kriteria)->sum('bobot_kriteria');
             if (($currentTotal + $request->bobot) > 1.0001) {
                 return redirect()->back()
                     ->with('error', 'Gagal! Total bobot melebihi 100% (saat ini: ' . ($currentTotal * 100) . '%)')
-                    ->with('edit_id', $kriteria->id)
+                    ->with('edit_id', $kriteria->id_kriteria)
                     ->with('edit_data', $request->all())
                     ->withInput();
             }
 
-            $kriteria->update($request->only('nama', 'bobot'));
+            $kriteria->update([
+                'nama_kriteria' => $request->nama_kriteria,
+                'bobot_kriteria' => $request->bobot,
+                'is_aktif' => $request->has('is_aktif') ? $request->is_aktif : $kriteria->is_aktif
+            ]);
 
             return redirect()->route('admin.kriteria.index')->with('success', 'Kriteria berhasil diperbarui');
         } catch (\Illuminate\Validation\ValidationException $e) {
             return redirect()->back()
                 ->withErrors($e->validator)
-                ->with('edit_id', $kriteria->id)
+                ->with('edit_id', $kriteria->id_kriteria)
                 ->with('edit_data', $request->all())
                 ->withInput();
         }
@@ -78,5 +83,15 @@ class KriteriaController extends Controller
     {
         $kriteria->delete();
         return redirect()->route('admin.kriteria.index')->with('success', 'Kriteria berhasil dihapus');
+    }
+
+    public function toggleStatus(Kriteria $kriteria)
+    {
+        $kriteria->update([
+            'is_aktif' => !$kriteria->is_aktif
+        ]);
+
+        $status = $kriteria->is_aktif ? 'diaktifkan' : 'dinonaktifkan';
+        return redirect()->route('admin.kriteria.index')->with('success', "Kriteria berhasil {$status}");
     }
 }

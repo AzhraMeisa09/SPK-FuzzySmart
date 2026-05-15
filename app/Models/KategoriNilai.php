@@ -4,11 +4,24 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+use App\Traits\HasCustomId;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+
 class KategoriNilai extends Model
 {
+    use HasFactory, HasCustomId;
+
     public $timestamps = false;
 
     protected $table = 'kategori_nilai';
+    protected $primaryKey = 'id_kategori';
+    public $incrementing = false;
+    protected $keyType = 'string';
+
+    public function getPrefix()
+    {
+        return 'KN';
+    }
 
     protected $fillable = [
         'nama',

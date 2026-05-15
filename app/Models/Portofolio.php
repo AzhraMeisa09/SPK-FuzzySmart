@@ -4,12 +4,24 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+use App\Traits\HasCustomId;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+
 class Portofolio extends Model
 {
+    use HasFactory, HasCustomId;
     public $timestamps = true;
     const UPDATED_AT = null;
 
     protected $table = 'portofolio';
+    protected $primaryKey = 'id_portofolio';
+    public $incrementing = false;
+    protected $keyType = 'string';
+
+    public function getPrefix()
+    {
+        return 'PF';
+    }
 
     protected $fillable = [
         'siswa_id',

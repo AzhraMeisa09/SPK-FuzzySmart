@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Detail Evaluasi SPK — ' . $siswa->nama)
+@section('title', 'Detail Evaluasi SPK — ' . $siswa->name)
 @section('page-title', 'Detail hasil evaluasi')
 
 @section('content')
@@ -14,7 +14,7 @@
             <span class="text-xs font-semibold uppercase tracking-widest group-hover:text-gray-900">Kembali ke daftar</span>
         </a>
         <div class="flex items-center gap-2">
-            <a href="{{ route('guru.hasil-evaluasi.cetak', $siswa->id) }}" target="_blank" class="btn btn-green btn-sm flex items-center gap-2">
+            <a href="{{ route('guru.hasil-evaluasi.cetak', $siswa->id_siswa) }}" target="_blank" class="btn btn-green btn-sm flex items-center gap-2">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
                 Cetak laporan
             </a>
@@ -36,14 +36,14 @@
         </div>
     @else
         {{-- ── ANALYTIC HERO SECTION ── --}}
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
             
             {{-- Profile Card --}}
             <div class="lg:col-span-8">
-                <div class="card h-full flex flex-col overflow-hidden">
+                <div class="card flex flex-col overflow-hidden">
                     <div class="p-5 flex flex-col md:flex-row items-center gap-5" style="border-bottom: 1px solid var(--border); background: var(--bg);">
                         <div class="w-20 h-20 rounded-xl flex items-center justify-center text-2xl font-black shadow-inner" style="background: var(--accent-lt); color: var(--accent);">
-                            {{ strtoupper(substr($siswa->nama, 0, 1)) }}
+                            {{ strtoupper(substr($siswa->name, 0, 1)) }}
                         </div>
                         <div class="flex-1 text-center md:text-left">
                             <div class="flex flex-wrap items-center justify-center md:justify-start gap-2 mb-1.5">
@@ -52,25 +52,25 @@
                                     <span class="badge badge-blue text-[9px]">{{ $periode->nama_periode }}</span>
                                 @endif
                             </div>
-                            <h1 class="text-lg font-bold tracking-tight leading-tight" style="color: var(--text-1);">{{ $siswa->nama }}</h1>
+                            <h1 class="text-lg font-bold tracking-tight leading-tight" style="color: var(--text-1);">{{ $siswa->name }}</h1>
                             <p class="text-[10px] font-bold uppercase tracking-widest mt-1" style="color: var(--text-3);">Kelas: {{ $siswa->kelas->nama_kelas ?? '—' }}</p>
                         </div>
                     </div>
                     
-                    <div class="flex-1 grid grid-cols-1 md:grid-cols-2">
-                        <div class="p-5" style="border-right: 1px solid var(--border);">
+                    <div class="flex-1 flex flex-col">
+                        <div class="p-5" style="border-bottom: 1px solid var(--border);">
                             <div class="flex items-start gap-3">
                                 <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style="background: var(--accent-lt); color: var(--accent);">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                 </div>
                                 <div>
                                     <h4 class="text-[10px] font-bold uppercase tracking-widest mb-1.5" style="color: var(--text-3);">Rekomendasi utama (SPK)</h4>
-                                    <p class="text-sm font-semibold leading-relaxed italic" style="color: var(--text-1);">&ldquo;{{ $evaluasi->rekomendasi ?? '—' }}&rdquo;</p>
+                                    <p class="text-sm font-semibold leading-relaxed italic text-justify" style="color: var(--text-1);">&ldquo;{{ $evaluasi->rekomendasi ?? '—' }}&rdquo;</p>
                                 </div>
                             </div>
                         </div>
                         <div class="p-5">
-                            <form action="{{ route('guru.hasil-eval-catatan.update', $evaluasi->id) }}" method="POST" class="no-print space-y-3">
+                            <form action="{{ route('guru.hasil-eval-catatan.update', $evaluasi->id_evaluasi) }}" method="POST" class="no-print space-y-3">
                                 @csrf
                                 <div class="flex items-center justify-between">
                                     <h4 class="text-[10px] font-bold uppercase tracking-widest" style="color: var(--text-3);">Catatan guru (umum)</h4>
@@ -89,11 +89,28 @@
     
             {{-- Score Matrix --}}
             <div class="lg:col-span-4">
-                <div class="card h-full p-6 flex flex-col justify-center">
+                <div class="card p-6 flex flex-col justify-center">
                     <div class="text-center mb-6">
-                        <p class="text-[10px] font-bold uppercase tracking-widest mb-2" style="color: var(--text-3);">Indeks capaian akhir (V)</p>
-                        <div class="inline-flex items-center justify-center p-4 rounded-xl shadow-inner" style="background: var(--bg); border: 1px solid var(--border);">
-                            <span class="text-3xl font-bold tracking-tight" style="color: var(--text-1);">{{ number_format($evaluasi->nilai_akhir, 3) }}</span>
+                        <p class="text-[10px] font-bold uppercase tracking-widest mb-4" style="color: var(--text-3);">Indeks capaian akhir (V)</p>
+                        <div class="relative flex justify-center">
+                            <svg class="w-32 h-32 transform -rotate-90" viewBox="0 0 100 100">
+                                <!-- Background Circle -->
+                                <circle cx="50" cy="50" r="44" stroke="var(--border)" stroke-width="6" fill="transparent"/>
+                                <!-- Progress Circle -->
+                                @php 
+                                    $circumference = 2 * pi() * 44;
+                                    $offset = $circumference - ($evaluasi->nilai_akhir * $circumference);
+                                    $strokeColor = $evaluasi->kategori_akhir === 'BSB' ? '#10b981' : ($evaluasi->kategori_akhir === 'BSH' ? '#f59e0b' : '#f43f5e');
+                                @endphp
+                                <circle cx="50" cy="50" r="44" stroke="{{ $strokeColor }}" stroke-width="8" fill="transparent" 
+                                        stroke-dasharray="{{ $circumference }}" 
+                                        stroke-dashoffset="{{ $offset }}"
+                                        stroke-linecap="round"
+                                        class="transition-all duration-1000"/>
+                            </svg>
+                            <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                <span class="text-2xl font-black tracking-tight" style="color: var(--text-1);">{{ number_format($evaluasi->nilai_akhir, 3) }}</span>
+                            </div>
                         </div>
                     </div>
                     <div class="space-y-4">
@@ -141,7 +158,7 @@
                         @endphp
                         <div class="p-4 rounded-xl flex flex-col" style="background: var(--bg); border: 1px solid var(--border);">
                             <div class="flex items-center justify-between mb-3">
-                                <span class="badge badge-blue font-mono text-[9px]">{{ $first->subkriteria->kriteria->kode }}</span>
+                                <span class="badge badge-blue font-mono text-[9px]">{{ $first->subkriteria->kriteria->id_kriteria }}</span>
                                 <span class="badge {{ $kBadge }} font-bold text-[9px]">{{ number_format($cout, 1) }}%</span>
                             </div>
                             <h5 class="text-[10px] font-bold uppercase tracking-wider mb-3 flex-1" style="color: var(--text-1);">{{ $kriteriaName }}</h5>
@@ -187,17 +204,17 @@
                                     $rubrikKey = 'rubrik_' . strtolower($d->kategori);
                                     $rubrikText = $d->subkriteria->$rubrikKey ?? null;
                                     if($rubrikText) {
-                                        $rubrikText = str_replace('{{nama_siswa}}', $siswa->nama, $rubrikText);
+                                        $rubrikText = str_replace('{{nama_siswa}}', $siswa->name, $rubrikText);
                                     }
                                 @endphp
                                 <tr>
-                                    <td class="text-center font-mono text-[9px]" style="color: var(--text-3);">{{ $d->subkriteria->kode }}</td>
+                                    <td class="text-center font-mono text-[9px]" style="color: var(--text-3);">{{ $d->subkriteria->id_subkriteria }}</td>
                                     <td class="py-3">
-                                        <p class="text-xs font-semibold leading-snug" style="color: var(--text-1);">{{ $d->subkriteria->nama }}</p>
+                                        <p class="text-xs font-semibold leading-snug" style="color: var(--text-1);">{{ $d->subkriteria->nama_subkriteria }}</p>
                                         @if($rubrikText)
                                             <p class="text-[10px] text-gray-500 italic mb-1.5 mt-0.5">&ldquo;{{ $rubrikText }}&rdquo;</p>
                                         @endif
-                                        <p class="text-[9px] font-bold uppercase tracking-widest mt-0.5" style="color: var(--text-3);">{{ $d->subkriteria->kriteria->nama }}</p>
+                                        <p class="text-[9px] font-bold uppercase tracking-widest mt-0.5" style="color: var(--text-3);">{{ $d->subkriteria->kriteria->nama_kriteria }}</p>
                                     </td>
                                     <td class="text-center font-mono text-xs font-bold" style="color: var(--text-2);">{{ number_format($d->nilai_crisp, 1) }}</td>
                                     <td class="text-center">

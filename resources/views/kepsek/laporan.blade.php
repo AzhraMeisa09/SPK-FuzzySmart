@@ -42,7 +42,7 @@
         {{-- Header KOP --}}
         <div class="relative flex flex-col md:flex-row items-center justify-between border-b-2 border-gray-100 pb-10 mb-10 gap-8">
             <div class="flex items-center gap-8">
-                <div class="w-20 h-20 rounded-2xl bg-gray-900 text-white flex items-center justify-center text-2xl font-black shadow-xl">TK</div>
+                <img src="{{ asset('images/logotutwuri.jpg') }}" alt="Logo Tut Wuri" class="w-20 h-20 object-contain drop-shadow-md">
                 <div class="text-center md:text-left">
                     <h2 class="text-xl font-black text-gray-900 tracking-tight leading-none mb-2">Rekapitulasi Hasil Evaluasi Siswa</h2>
                     <p class="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">TK Negeri Pembina Kota Padang Panjang</p>
@@ -53,6 +53,16 @@
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
                     Cetak Laporan
                 </button>
+
+                <form action="{{ route('kepsek.laporan.generate-global-word') }}" method="POST" class="inline-block">
+                    @csrf
+                    <input type="hidden" name="periode_id" value="{{ $selectedPeriodeId }}">
+                    <input type="hidden" name="kelas_id" value="{{ $selectedKelasId }}">
+                    <button type="submit" class="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-indigo-600 text-white text-[10px] font-black uppercase tracking-widest hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-600/20">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                        Unduh Word (Rekap)
+                    </button>
+                </form>
             </div>
         </div>
 
@@ -86,7 +96,7 @@
                     <h4 class="text-[10px] font-black text-[#84934A] uppercase tracking-[0.3em]">Kesimpulan Global</h4>
                 </div>
                 <p class="text-xl font-black text-white leading-relaxed italic tracking-tight">
-                    "Area prioritas peningkatan saat ini tertuju pada <span class="text-[#C5CF8E]">Berdoa dengan tertib</span>. Dibutuhkan penguatan kurikulum dan pendampingan intensif pada indikator ini."
+                    "{!! $globalInsight !!}"
                 </p>
                 <div class="mt-8 flex items-center gap-4 text-[9px] font-black text-white/30 uppercase tracking-[0.25em]">
                     <div class="flex items-center gap-2">
@@ -118,12 +128,16 @@
                             <td class="text-center text-[10px] font-mono font-bold text-gray-300">{{ $index + 1 }}</td>
                             <td class="py-5">
                                 <div class="flex items-center gap-3">
-                                    <div class="w-8 h-8 rounded-lg bg-white border border-gray-100 flex items-center justify-center font-black text-[10px] text-gray-400 group-hover:text-indigo-600 transition-colors">
-                                        {{ strtoupper(substr($eval->siswa->nama, 0, 1)) }}
-                                    </div>
+                                    @if($eval->siswa->foto)
+                                        <img src="{{ asset('storage/' . $eval->siswa->foto) }}" alt="{{ $eval->siswa->name }}" class="w-8 h-8 rounded-lg object-cover border border-gray-100 shadow-sm">
+                                    @else
+                                        <div class="w-8 h-8 rounded-lg bg-white border border-gray-100 flex items-center justify-center font-black text-[10px] text-gray-400 group-hover:text-indigo-600 transition-colors">
+                                            {{ strtoupper(substr($eval->siswa->name, 0, 1)) }}
+                                        </div>
+                                    @endif
                                     <div>
-                                        <p class="text-xs font-black text-gray-800 tracking-tight leading-none mb-1">{{ $eval->siswa->nama }}</p>
-                                        <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{{ $eval->siswa->kode ?: '—' }}</p>
+                                        <p class="text-xs font-black text-gray-800 tracking-tight leading-none mb-1">{{ $eval->siswa->name }}</p>
+                                        <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">NISN: {{ $eval->siswa->id_siswa ?: '—' }}</p>
                                     </div>
                                 </div>
                             </td>
@@ -134,7 +148,7 @@
                                 <span class="text-sm font-black text-gray-900 tracking-tighter">{{ number_format($eval->nilai_akhir * 100, 1) }}%</span>
                             </td>
                             <td class="text-center">
-                                @php $color = $eval->kategori_akhir === 'BSB' ? 'emerald' : ($eval->kategori_akhir === 'BSH' ? 'amber' : 'rose'); @endphp
+                                @php $color = $eval->kategori_akhir === 'BSB' ? 'bsb' : ($eval->kategori_akhir === 'BSH' ? 'bsh' : 'mb'); @endphp
                                 <div class="flex flex-col items-center gap-1.5">
                                     <span class="badge badge-{{ $color }} px-4 py-0.5 text-[8px] font-black shadow-sm uppercase">{{ $eval->kategori_akhir }}</span>
                                     @if(isset($eval->is_draft))

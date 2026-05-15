@@ -13,23 +13,23 @@
 @endphp
 
 <div x-data="{
-    showAdd: {{ $errors->any() && !session('edit_id') ? 'true' : 'false' }},
-    showEdit: {{ session('edit_id') ? 'true' : 'false' }},
+    showAdd: {{ ($errors->any() && !old('id_user')) ? 'true' : 'false' }},
+    showEdit: {{ (session('edit_id') || old('id_user')) ? 'true' : 'false' }},
     showDelete: false,
     editData: {
-        id: '{{ old('id', session('edit_data.id')) }}',
+        id: '{{ old('id_user', session('edit_data.id_user')) }}',
         nama: '{{ old('nama_lengkap', session('edit_data.nama_lengkap')) }}',
         username: '{{ old('username', session('edit_data.username')) }}',
         email: '{{ old('email', session('edit_data.email')) }}',
         role: '{{ old('role', session('edit_data.role')) }}',
-        is_active: '{{ old('is_active', session('edit_data.is_active')) }}',
+        is_active: '{{ old('is_active', session('edit_data.is_active') ?? '1') }}',
         no_hp: '{{ old('no_hp', session('edit_data.no_hp')) }}',
         alamat: '{{ old('alamat', session('edit_data.alamat')) }}'
     },
     deleteData: {},
     openEdit(u) { 
         this.editData = {
-            id: u.id,
+            id: u.id_user,
             nama: u.nama_lengkap,
             username: u.username,
             email: u.email,
@@ -105,6 +105,13 @@
         </div>
     @endif
 
+    @if(session('error'))
+        <div class="p-4 bg-red-50/50 border border-red-100 text-red-700 rounded-2xl text-[10px] font-bold flex items-center animate-fade-in shadow-sm">
+            <svg class="w-5 h-5 mr-3 text-red-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clip-rule="evenodd"/></svg>
+            {{ session('error') }}
+        </div>
+    @endif
+
     {{-- ── TABLE CARD ── --}}
     <div class="card overflow-hidden shadow-xl border-none">
         <table class="tbl">
@@ -151,22 +158,22 @@
                             </span>
                         </td>
                         <td class="text-center py-4">
-                            <form action="{{ route('admin.user.toggle', $u->id) }}" method="POST">
+                            <form action="{{ route('admin.user.toggle', $u) }}" method="POST">
                                 @csrf @method('PATCH')
-                                <button type="submit" class="badge {{ $u->is_active ? 'badge-aktif shadow-[0_0_8px_rgba(132,147,74,0.15)]' : 'badge-nonaktif' }} transition-all hover:scale-105 active:scale-95" {{ auth()->id() == $u->id ? 'disabled' : '' }}>
+                                <button type="submit" class="badge {{ $u->is_active ? 'badge-aktif shadow-[0_0_8px_rgba(132,147,74,0.15)]' : 'badge-nonaktif' }} transition-all hover:scale-105 active:scale-95" {{ auth()->id() == $u->id_user ? 'disabled' : '' }}>
                                     {{ $u->is_active ? 'Aktif' : 'Terblokir' }}
                                 </button>
                             </form>
                         </td>
                         <td class="text-center py-4">
                             <div class="flex items-center justify-center gap-2">
-                                <a href="{{ route('admin.user.show', $u->id) }}" class="p-2 rounded-xl bg-white border border-var(--border) text-var(--text-2) hover:text-var(--accent) hover:border-var(--accent) transition-all shadow-sm group" title="Detail Profil">
+                                <a href="{{ route('admin.user.show', $u) }}" class="p-2 rounded-xl bg-white border border-var(--border) text-var(--text-2) hover:text-var(--accent) hover:border-var(--accent) transition-all shadow-sm group" title="Detail Profil">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg> 
                                 </a>
                                 <button @click="openEdit({{ Js::from($u) }})" class="p-2 rounded-xl bg-blue-50 border border-blue-100 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                 </button>
-                                <button @click="openDelete({{ Js::from($u) }})" class="p-2 rounded-xl bg-red-50 border border-red-100 text-red-600 hover:bg-red-600 hover:text-white transition-all shadow-sm" {{ auth()->id() == $u->id ? 'disabled' : '' }}>
+                                <button @click="openDelete({{ Js::from($u) }})" class="p-2 rounded-xl bg-red-50 border border-red-100 text-red-600 hover:bg-red-600 hover:text-white transition-all shadow-sm" {{ auth()->id() == $u->id_user ? 'disabled' : '' }}>
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                 </button>
                             </div>
@@ -202,25 +209,25 @@
                 <div class="px-8 py-6 space-y-5">
                     <div class="form-group">
                         <label class="form-label text-[10px] font-bold text-gray-500 mb-1.5 block">Nama Lengkap <span class="text-red-500">*</span></label>
-                        <input type="text" name="nama_lengkap" required class="form-input rounded-xl bg-var(--bg) border-var(--border) font-bold text-xs" placeholder="Contoh: Ahmad Subardjo, S.Pd">
+                        <input type="text" name="nama_lengkap" value="{{ old('nama_lengkap') }}" required class="form-input rounded-xl bg-var(--bg) border-var(--border) font-bold text-xs" placeholder="Contoh: Ahmad Subardjo, S.Pd">
                     </div>
                     <div class="grid grid-cols-2 gap-5">
                         <div class="form-group">
                             <label class="form-label text-[10px] font-bold text-gray-500 mb-1.5 block">Username <span class="text-red-500">*</span></label>
-                            <input type="text" name="username" required class="form-input rounded-xl bg-var(--bg) border-var(--border) font-bold text-xs" placeholder="ahmad_subardjo">
+                            <input type="text" name="username" value="{{ old('username') }}" required class="form-input rounded-xl bg-var(--bg) border-var(--border) font-bold text-xs" placeholder="ahmad_subardjo">
                         </div>
                         <div class="form-group">
                             <label class="form-label text-[10px] font-bold text-gray-500 mb-1.5 block">Email Aktif <span class="text-red-500">*</span></label>
-                            <input type="email" name="email" required class="form-input rounded-xl bg-var(--bg) border-var(--border) font-bold text-xs" placeholder="ahmad@example.com">
+                            <input type="email" name="email" value="{{ old('email') }}" required class="form-input rounded-xl bg-var(--bg) border-var(--border) font-bold text-xs" placeholder="ahmad@example.com">
                         </div>
                     </div>
                     <div class="form-group">
                         <label class="form-label text-[10px] font-bold text-gray-500 mb-1.5 block">Otoritas / Role <span class="text-red-500">*</span></label>
                         <select name="role" required class="form-select rounded-xl bg-var(--bg) border-var(--border) font-bold text-xs">
-                            <option value="guru">Guru / Pendidik</option>
-                            <option value="admin">Administrator</option>
-                            <option value="kepala_sekolah">Kepala Sekolah</option>
-                            <option value="wali_murid">Wali Murid</option>
+                            <option value="guru" {{ old('role') == 'guru' ? 'selected' : '' }}>Guru / Pendidik</option>
+                            <option value="admin" {{ old('role') == 'admin' ? 'selected' : '' }}>Administrator</option>
+                            <option value="kepala_sekolah" {{ old('role') == 'kepala_sekolah' ? 'selected' : '' }}>Kepala Sekolah</option>
+                            <option value="wali_murid" {{ old('role') == 'wali_murid' ? 'selected' : '' }}>Wali Murid</option>
                         </select>
                     </div>
                     <div class="grid grid-cols-2 gap-5">
@@ -235,11 +242,11 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label text-[10px] font-bold text-gray-500 mb-1.5 block">Nomor WhatsApp</label>
-                        <input type="text" name="no_hp" class="form-input rounded-xl bg-var(--bg) border-var(--border) font-bold text-xs" placeholder="08xxxxxxxx">
+                        <input type="text" name="no_hp" value="{{ old('no_hp') }}" class="form-input rounded-xl bg-var(--bg) border-var(--border) font-bold text-xs" placeholder="08xxxxxxxx">
                     </div>
                     <div class="form-group">
                         <label class="form-label text-[10px] font-bold text-gray-500 mb-1.5 block">Alamat Tinggal</label>
-                        <textarea name="alamat" class="form-input rounded-xl bg-var(--bg) border-var(--border) font-bold text-xs h-24 resize-none p-4" placeholder="Alamat lengkap..."></textarea>
+                        <textarea name="alamat" class="form-input rounded-xl bg-var(--bg) border-var(--border) font-bold text-xs h-24 resize-none p-4" placeholder="Alamat lengkap...">{{ old('alamat') }}</textarea>
                     </div>
                 </div>
                 <div class="px-8 py-5 border-t border-gray-100 flex gap-3 justify-end bg-gray-50/50">
@@ -257,6 +264,7 @@
         <div class="modal-box w-full max-w-lg" @click.stop x-transition.scale.95>
             <form :action="'{{ route('admin.user.index') }}/' + editData.id" method="POST">
                 @csrf @method('PUT')
+                <input type="hidden" name="id_user" :value="editData.id">
                 <div class="px-8 py-5 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
                     <h3 class="text-base font-bold text-gray-800">Edit Profil Pengguna</h3>
                     <button type="button" @click="showEdit = false" class="p-2 rounded-xl hover:bg-gray-200 text-var(--text-3) transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
@@ -295,6 +303,14 @@
                         </div>
                     </div>
                     <div class="form-group">
+                        <label class="form-label text-[10px] font-bold text-gray-500 mb-1.5 block">Nomor WhatsApp</label>
+                        <input type="text" name="no_hp" x-model="editData.no_hp" class="form-input rounded-xl bg-var(--bg) border-var(--border) font-bold text-xs" placeholder="08xxxxxxxx">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label text-[10px] font-bold text-gray-500 mb-1.5 block">Alamat Tinggal</label>
+                        <textarea name="alamat" x-model="editData.alamat" class="form-input rounded-xl bg-var(--bg) border-var(--border) font-bold text-xs h-24 resize-none p-4" placeholder="Alamat lengkap..."></textarea>
+                    </div>
+                    <div class="form-group">
                         <label class="form-label text-[10px] font-bold text-gray-500 mb-1.5 block">Update Password <span class="text-gray-400 font-normal lowercase">(opsional)</span></label>
                         <input type="password" name="password" class="form-input rounded-xl bg-var(--bg) border-var(--border) font-bold text-xs" placeholder="Biarkan kosong jika tidak ingin mengubah">
                     </div>
@@ -312,7 +328,7 @@
     <template x-teleport="body">
     <div x-show="showDelete" x-transition.opacity @keydown.escape.window="showDelete = false" class="modal-overlay" x-cloak>
         <div class="modal-box w-full max-w-sm" @click.stop x-transition.scale.95>
-            <form :action="'{{ route('admin.user.index') }}/' + deleteData.id" method="POST">
+            <form :action="'{{ route('admin.user.index') }}/' + deleteData.id_user" method="POST">
                 @csrf @method('DELETE')
                 <div class="px-8 py-10 text-center">
                     <div class="w-20 h-20 rounded-3xl bg-red-50 text-red-600 flex items-center justify-center mx-auto mb-6 shadow-sm border border-red-100">

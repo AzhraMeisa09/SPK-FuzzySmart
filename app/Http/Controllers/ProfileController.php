@@ -28,8 +28,8 @@ class ProfileController extends Controller
 
         $request->validate([
             'nama_lengkap' => ['required', 'string', 'max:255'],
-            'username' => ['required', 'string', 'max:255', 'unique:users,username,' . $user->id],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id],
+            'username' => ['required', 'string', 'max:255', 'unique:users,username,' . $user->id_user . ',id_user'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email,' . $user->id_user . ',id_user'],
         ]);
 
         $data = [

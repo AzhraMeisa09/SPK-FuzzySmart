@@ -4,9 +4,21 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+use App\Traits\HasCustomId;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+
 class TemplateRekomendasi extends Model
 {
+    use HasFactory, HasCustomId;
     protected $table = 'template_rekomendasi';
+    protected $primaryKey = 'id_template';
+    public $incrementing = false;
+    protected $keyType = 'string';
+
+    public function getPrefix()
+    {
+        return 'TR';
+    }
 
     protected $fillable = [
         'subkriteria_id',

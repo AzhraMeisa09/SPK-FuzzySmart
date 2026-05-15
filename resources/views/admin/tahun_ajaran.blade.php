@@ -18,7 +18,7 @@
     deleteData: {},
     openEdit(t) { 
         this.editData = {
-            id: t.id,
+            id: t.id_tahun_ajaran,
             nama: t.nama,
             mulai: t.tanggal_mulai.split('T')[0],
             selesai: t.tanggal_selesai.split('T')[0],
@@ -86,7 +86,7 @@
                             </div>
                         </td>
                         <td class="text-center py-4">
-                            <form action="{{ route('admin.tahun_ajaran.toggle', $t->id) }}" method="POST">
+                            <form action="{{ route('admin.tahun_ajaran.toggle', $t) }}" method="POST">
                                 @csrf @method('PATCH')
                                 <button type="submit" class="badge {{ $t->is_aktif ? 'badge-aktif shadow-[0_0_8px_rgba(34,197,94,0.2)]' : 'badge-nonaktif' }} transition-all hover:scale-105 active:scale-95">
                                     {{ $t->is_aktif ? 'Aktif' : 'Nonaktif' }}
@@ -98,7 +98,7 @@
                                 <button @click="openEdit({{ json_encode($t) }})" class="p-2 rounded-xl bg-blue-50 border border-blue-100 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm" title="Edit">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                 </button>
-                                <button @click="openDelete({ id: {{ $t->id }}, nama: '{{ addslashes($t->nama) }}' })" class="p-2 rounded-xl bg-red-50 border border-red-100 text-red-600 hover:bg-red-600 hover:text-white transition-all shadow-sm" title="Hapus">
+                                <button @click="openDelete({ id: '{{ $t->id_tahun_ajaran }}', nama: '{{ addslashes($t->nama) }}' })" class="p-2 rounded-xl bg-red-50 border border-red-100 text-red-600 hover:bg-red-600 hover:text-white transition-all shadow-sm" title="Hapus">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                 </button>
                             </div>
@@ -170,6 +170,7 @@
         <div class="modal-box w-full max-w-lg" @click.stop x-transition.scale.95>
             <form :action="'{{ route('admin.tahun_ajaran.index') }}/' + editData.id" method="POST">
                 @csrf @method('PUT')
+                <input type="hidden" name="id" :value="editData.id">
                 <div class="px-8 py-5 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
                     <h3 class="text-base font-bold text-gray-800">Edit Tahun Ajaran</h3>
                     <button type="button" @click="showEdit = false" class="p-2 rounded-xl hover:bg-gray-200 text-var(--text-3) transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg></button>

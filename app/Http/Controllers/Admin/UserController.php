@@ -99,13 +99,16 @@ class UserController extends Controller
     {
         $user = User::findOrFail($id);
 
-        if (auth()->id() == $user->id) {
+        if (auth()->id() == $user->id_user) {
             return redirect()->back()->with('error', 'Tidak bisa menghapus akun sendiri');
         }
 
-        $user->delete();
-
-        return redirect()->route('admin.user.index')->with('success', 'User berhasil dihapus');
+        try {
+            $user->delete();
+            return redirect()->route('admin.user.index')->with('success', 'User berhasil dihapus');
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal menghapus user. Pastikan user tidak memiliki data terkait (seperti penilaian atau portofolio).');
+        }
     }
 
     /**
@@ -115,7 +118,7 @@ class UserController extends Controller
     {
         $user = User::findOrFail($id);
 
-        if (auth()->id() == $user->id) {
+        if (auth()->id() == $user->id_user) {
             return redirect()->back()->with('error', 'Tidak bisa menonaktifkan akun sendiri');
         }
 

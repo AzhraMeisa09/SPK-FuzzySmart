@@ -48,7 +48,7 @@ class TemplateRekomendasiUmumSeeder extends Seeder
         ];
 
         // Kosongkan dulu agar bersih
-        TemplateRekomendasiUmum::truncate();
+        TemplateRekomendasiUmum::query()->delete();
 
         foreach ($data as $item) {
             TemplateRekomendasiUmum::create($item);

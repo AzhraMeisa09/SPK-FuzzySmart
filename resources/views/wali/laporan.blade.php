@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Laporan Perkembangan — ' . $siswa->nama)
+@section('title', 'Laporan Perkembangan — ' . $siswa->name)
 @section('page-title', 'Pratinjau Laporan')
 
 @section('content')
@@ -10,14 +10,14 @@
         <div class="flex flex-col md:flex-row items-center gap-6">
             <div class="w-20 h-20 rounded-2xl flex items-center justify-center text-[#84934A] font-black text-3xl shadow-xl bg-white/90 backdrop-blur-sm transform hover:scale-105 transition-transform overflow-hidden">
                 @if($siswa->foto)
-                    <img src="{{ asset('storage/' . $siswa->foto) }}" class="w-full h-full object-cover" alt="{{ $siswa->nama }}">
+                    <img src="{{ asset('storage/' . $siswa->foto) }}" class="w-full h-full object-cover" alt="{{ $siswa->name }}">
                 @else
                     📄
                 @endif
             </div>
             <div class="text-center md:text-left">
                 <p class="text-[10px] font-bold uppercase tracking-[0.2em] mb-1.5" style="color: rgba(255,255,255,.7);">Pratinjau Laporan Akhir</p>
-                <h1 class="text-2xl font-black tracking-tight text-white">{{ $siswa->nama }}</h1>
+                <h1 class="text-2xl font-black tracking-tight text-white">{{ $siswa->name }}</h1>
                 <p class="text-[11px] mt-2 font-medium text-white/80">Laporan ini menggabungkan hasil evaluasi SPK dan portofolio kegiatan.</p>
             </div>
         </div>
@@ -28,7 +28,7 @@
             </button>
             <form action="{{ route('wali.laporan.generate-word') }}" method="POST">
                 @csrf
-                <input type="hidden" name="siswa_id" value="{{ $siswa->id }}">
+                <input type="hidden" name="siswa_id" value="{{ $siswa->id_siswa }}">
                 <button type="submit" class="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold bg-white text-[#84934A] hover:bg-[#F1F4E9] transition-all shadow-lg shadow-black/5">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                     Cetak Word
@@ -41,16 +41,16 @@
     @if(count($anak) > 1)
         <div class="flex flex-wrap items-center gap-3 no-print">
             @foreach($anak as $a)
-                <a href="{{ route('wali.laporan', ['siswa_id' => $a->id]) }}" 
-                   class="group flex items-center gap-3 px-4 py-2.5 rounded-2xl transition-all border {{ $siswa->id == $a->id ? 'bg-white border-var(--accent) shadow-md ring-4 ring-var(--accent-lt)' : 'bg-white border-gray-100 opacity-60 hover:opacity-100 hover:border-gray-200 shadow-sm' }}">
-                    <div class="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black transition-transform group-hover:scale-110 {{ $siswa->id == $a->id ? 'bg-var(--accent) text-white shadow-lg shadow-var(--accent-lt)' : 'bg-gray-100 text-gray-400' }} overflow-hidden">
+                <a href="{{ route('wali.laporan', ['siswa_id' => $a->id_siswa]) }}" 
+                   class="group flex items-center gap-3 px-4 py-2.5 rounded-2xl transition-all border {{ $siswa->id_siswa == $a->id_siswa ? 'bg-white border-var(--accent) shadow-md ring-4 ring-var(--accent-lt)' : 'bg-white border-gray-100 opacity-60 hover:opacity-100 hover:border-gray-200 shadow-sm' }}">
+                    <div class="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black transition-transform group-hover:scale-110 {{ $siswa->id_siswa == $a->id_siswa ? 'bg-var(--accent) text-white shadow-lg shadow-var(--accent-lt)' : 'bg-gray-100 text-gray-400' }} overflow-hidden">
                         @if($a->foto)
-                            <img src="{{ asset('storage/' . $a->foto) }}" class="w-full h-full object-cover" alt="{{ $a->nama }}">
+                            <img src="{{ asset('storage/' . $a->foto) }}" class="w-full h-full object-cover" alt="{{ $a->name }}">
                         @else
-                            {{ strtoupper(substr($a->nama, 0, 1)) }}
+                            {{ strtoupper(substr($a->name, 0, 1)) }}
                         @endif
                     </div>
-                    <span class="text-[11px] font-bold {{ $siswa->id == $a->id ? 'text-var(--text-1)' : 'text-gray-500' }}">{{ $a->nama }}</span>
+                    <span class="text-[11px] font-bold {{ $siswa->id_siswa == $a->id_siswa ? 'text-var(--text-1)' : 'text-gray-500' }}">{{ $a->name }}</span>
                 </a>
             @endforeach
         </div>
@@ -63,7 +63,7 @@
             </div>
             <h3 class="font-semibold text-sm" style="color: var(--text-2);">Laporan Belum Tersedia</h3>
             <p class="text-xs mt-2 max-w-sm mx-auto" style="color: var(--text-3);">
-                Pratinjau laporan akhir untuk {{ $siswa->nama }} belum dapat ditampilkan karena periode penilaian belum difinalisasi oleh pihak sekolah.
+                Pratinjau laporan akhir untuk {{ $siswa->name }} belum dapat ditampilkan karena periode penilaian belum difinalisasi oleh pihak sekolah.
             </p>
             <div class="mt-8">
                 <a href="{{ route('wali.dashboard') }}" class="btn btn-gray py-2.5 px-8 text-xs font-bold">Kembali ke Dashboard</a>
@@ -93,7 +93,7 @@
                     <div class="hidden md:block text-right">
                         <div class="inline-block p-4 bg-gray-50 rounded-2xl border border-gray-100">
                             <p class="text-[9px] font-black text-gray-400 uppercase tracking-widest mb-1">ID Dokumen</p>
-                            <p class="text-xs font-mono font-bold text-gray-700">RPT-{{ date('Ymd') }}-{{ $siswa->id }}</p>
+                            <p class="text-xs font-mono font-bold text-gray-700">RPT-{{ date('Ymd') }}-{{ $siswa->id_siswa }}</p>
                         </div>
                     </div>
                 </div>
@@ -105,18 +105,18 @@
                     <div class="flex items-center gap-6">
                         <div class="w-20 h-20 rounded-3xl bg-white border-4 border-white shadow-xl overflow-hidden flex-shrink-0 ring-1 ring-gray-100">
                             @if($siswa->foto)
-                                <img src="{{ asset('storage/' . $siswa->foto) }}" class="w-full h-full object-cover" alt="{{ $siswa->nama }}">
+                                <img src="{{ asset('storage/' . $siswa->foto) }}" class="w-full h-full object-cover" alt="{{ $siswa->name }}">
                             @else
                                 <div class="w-full h-full bg-var(--accent-lt) flex items-center justify-center text-3xl font-black text-var(--accent)">
-                                    {{ strtoupper(substr($siswa->nama, 0, 1)) }}
+                                    {{ strtoupper(substr($siswa->name, 0, 1)) }}
                                 </div>
                             @endif
                         </div>
                         <div>
-                            <h3 class="text-xl font-bold text-gray-900 tracking-tight">{{ $siswa->nama }}</h3>
+                            <h3 class="text-xl font-bold text-gray-900 tracking-tight">{{ $siswa->name }}</h3>
                             <div class="flex flex-wrap items-center gap-3 mt-2">
                                 <span class="badge badge-blue text-[9px] px-3 font-bold">{{ $siswa->kelas->nama_kelas ?? '—' }}</span>
-                                <span class="text-[10px] font-bold text-gray-400">NISN: {{ $siswa->kode ?: '—' }}</span>
+                                <span class="text-[10px] font-bold text-gray-400">ID: {{ $siswa->id_siswa }}</span>
                                 <span class="w-1 h-1 rounded-full bg-gray-300"></span>
                                 <span class="text-[9px] font-bold text-gray-900 uppercase">Laporan Perkembangan</span>
                             </div>
@@ -146,7 +146,7 @@
                 <div class="p-8 bg-gray-50 rounded-[2rem] border-2 border-gray-100 relative overflow-hidden">
                     <div class="relative z-10">
                         <h4 class="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 mb-4">Ringkasan Rekomendasi Pengembangan</h4>
-                        <p class="text-lg font-black leading-relaxed italic text-gray-900" style="white-space: pre-wrap;">"{{ $evaluasi->rekomendasi ?? 'Belum ada rekomendasi final untuk periode ini.' }}"</p>
+                        <p class="text-lg font-medium leading-relaxed italic text-gray-900 text-justify" style="white-space: pre-wrap;">"{{ $evaluasi->rekomendasi ?? 'Belum ada rekomendasi final untuk periode ini.' }}"</p>
                     </div>
                 </div>
     
@@ -206,17 +206,17 @@
                                         $rubrikKey = 'rubrik_' . strtolower($d->kategori);
                                         $rubrikText = $d->subkriteria->$rubrikKey ?? null;
                                         if($rubrikText) {
-                                            $rubrikText = str_replace('{{nama_siswa}}', $siswa->nama, $rubrikText);
+                                            $rubrikText = str_replace('{{nama_siswa}}', $siswa->name, $rubrikText);
                                         }
                                     @endphp
                                     <tr class="hover:bg-blue-50/20 transition-colors">
-                                        <td class="text-center"><span class="badge badge-blue font-mono text-[9px]">{{ $d->subkriteria->kode }}</span></td>
+                                        <td class="text-center"><span class="badge badge-blue font-mono text-[9px]">{{ $d->subkriteria->id_subkriteria }}</span></td>
                                         <td class="py-5">
-                                            <p class="text-sm font-bold text-gray-800 leading-snug">{{ $d->subkriteria->nama }}</p>
+                                            <p class="text-sm font-bold text-gray-800 leading-snug">{{ $d->subkriteria->nama_subkriteria }}</p>
                                             @if($rubrikText)
                                                 <p class="text-[11px] text-gray-500 italic mt-1.5 leading-relaxed">&ldquo;{{ $rubrikText }}&rdquo;</p>
                                             @endif
-                                            <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1">{{ $d->subkriteria->kriteria->nama }}</p>
+                                            <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1">{{ $d->subkriteria->kriteria->nama_kriteria }}</p>
                                         </td>
                                         <td class="text-center">
                                             @php $sColor = match($d->kategori) { 'BSB'=>'badge-bsb', 'BSH'=>'badge-bsh', 'MB'=>'badge-mb', default=>'badge-gray' }; @endphp
@@ -255,8 +255,8 @@
                                         @foreach($rekList as $item)
                                             <div class="p-5 rounded-2xl bg-white border border-gray-100 shadow-sm">
                                                 <div class="flex items-start gap-3 mb-2">
-                                                    <span class="text-[9px] font-bold text-gray-400 uppercase">{{ $item->subkriteria->kode }}</span>
-                                                    <p class="text-[10px] font-black text-gray-700 uppercase tracking-tight">{{ $item->subkriteria->nama }}</p>
+                                                    <span class="text-[9px] font-bold text-gray-400 uppercase">{{ $item->subkriteria->id_subkriteria }}</span>
+                                                    <p class="text-[10px] font-black text-gray-700 uppercase tracking-tight">{{ $item->subkriteria->nama_subkriteria }}</p>
                                                 </div>
                                                 <p class="text-xs font-bold text-gray-600 leading-relaxed italic">&ldquo;{{ $item->rekomendasi_detail }}&rdquo;</p>
                                             </div>

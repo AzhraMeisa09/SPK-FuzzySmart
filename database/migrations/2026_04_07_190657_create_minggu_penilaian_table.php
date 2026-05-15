@@ -12,13 +12,15 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('minggu_penilaian', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('periode_id')->constrained('periode_penilaian')->onDelete('cascade');
+            $table->string('id_minggu', 10)->primary();
+            $table->string('periode_id', 10);
+            $table->foreign('periode_id')->references('id_periode')->on('periode_penilaian')->cascadeOnDelete();
+            
             $table->integer('minggu_ke');
-            $table->string('tema')->nullable();
+            $table->string('tema', 100)->nullable();
             $table->date('tanggal_mulai');
             $table->date('tanggal_selesai');
-            $table->enum('status', ['draft', 'aktif', 'selesai'])->default('draft');
+            $table->string('status', 20)->default('draft');
             $table->timestamps();
 
             $table->unique(['periode_id', 'minggu_ke']);

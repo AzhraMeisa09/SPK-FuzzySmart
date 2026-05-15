@@ -129,7 +129,7 @@
                         <img src="{{ asset('images/logotutwuri.jpg') }}" alt="Logo" class="w-full h-full object-contain p-2">
                     </div>
                     <div>
-                        <h3 class="text-white font-black text-2xl tracking-tighter leading-none mb-1.5">TK Negeri Pembina</h3>
+                        <h3 class="text-white font-black text-2xl tracking-tighter leading-none mb-1.5">TK NEGERI PEMBINA</h3>
                         <p class="text-white/40 text-xs font-bold uppercase tracking-[0.2em]">Kota Padang Panjang</p>
                     </div>
                 </div>
@@ -149,10 +149,17 @@
                     </p>
                     
                     <div class="grid grid-cols-3 gap-8">
-                        @foreach([['Pencatatan', '📋'], ['Pemantauan', '📊'], ['Laporan', '📄']] as $item)
+                        @php
+                            $loginFeatures = [
+                                ['Pencatatan', '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-white"><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path></svg>'],
+                                ['Pemantauan', '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-white"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>'],
+                                ['Laporan', '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-white"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>']
+                            ];
+                        @endphp
+                        @foreach($loginFeatures as $item)
                             <div class="flex flex-col gap-3">
-                                <div class="text-2xl">{{ $item[1] }}</div>
-                                <span class="text-white/60 text-xs font-bold uppercase tracking-wider">{{ $item[0] }}</span>
+                                <div>{!! $item[1] !!}</div>
+                                <span class="text-white/60 text-[10px] font-bold uppercase tracking-wider">{{ $item[0] }}</span>
                             </div>
                         @endforeach
                     </div>

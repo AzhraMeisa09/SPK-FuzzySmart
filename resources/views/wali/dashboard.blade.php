@@ -11,19 +11,19 @@
         <div class="flex flex-col md:flex-row items-center gap-6">
             <div class="w-20 h-20 rounded-2xl flex items-center justify-center text-[#84934A] font-black text-3xl shadow-xl bg-white/90 backdrop-blur-sm transform hover:scale-105 transition-transform overflow-hidden">
                 @if($selectedAnak->foto)
-                    <img src="{{ asset('storage/' . $selectedAnak->foto) }}" class="w-full h-full object-cover" alt="{{ $selectedAnak->nama }}">
+                    <img src="{{ asset('storage/' . $selectedAnak->foto) }}" class="w-full h-full object-cover" alt="{{ $selectedAnak->name }}">
                 @else
-                    {{ strtoupper(substr($selectedAnak->nama, 0, 1)) }}
+                    {{ strtoupper(substr($selectedAnak->name, 0, 1)) }}
                 @endif
             </div>
             <div class="text-center md:text-left">
                 <p class="text-[10px] font-bold uppercase tracking-[0.2em] mb-1.5" style="color: rgba(255,255,255,.7);">Informasi Siswa Aktif</p>
-                <h1 class="text-2xl font-black tracking-tight text-white">{{ $selectedAnak->nama }}</h1>
+                <h1 class="text-2xl font-black tracking-tight text-white">{{ $selectedAnak->name }}</h1>
                 <div class="flex flex-wrap items-center justify-center md:justify-start gap-3 mt-3">
                     <span class="px-3 py-1 text-[10px] font-bold rounded-lg bg-white/20 text-white backdrop-blur-sm">
                         {{ $selectedAnak->kelas->nama_kelas ?? 'Tanpa Kelas' }}
                     </span>
-                    <span class="text-[10px] font-mono font-bold text-white/60">NISN: {{ $selectedAnak->kode ?: '—' }}</span>
+                    <span class="text-[10px] font-mono font-bold text-white/60">ID: {{ $selectedAnak->id_siswa }}</span>
                 </div>
             </div>
         </div>
@@ -40,21 +40,21 @@
                          x-transition:enter-end="transform opacity-100 scale-100"
                          class="absolute right-0 mt-2 w-56 rounded-xl shadow-2xl bg-white border border-gray-100 z-50 p-2" x-cloak>
                         @foreach($anak as $a)
-                            <a href="?siswa_id={{ $a->id }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[11px] font-bold transition-all {{ $selectedAnak->id == $a->id ? 'bg-var(--accent-lt) text-var(--accent)' : 'text-gray-600 hover:bg-gray-50' }}">
-                                <div class="w-7 h-7 rounded-lg flex items-center justify-center {{ $selectedAnak->id == $a->id ? 'bg-var(--accent) text-white' : 'bg-gray-100 text-gray-400' }} overflow-hidden">
+                            <a href="?siswa_id={{ $a->id_siswa }}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[11px] font-bold transition-all {{ $selectedAnak->id_siswa == $a->id_siswa ? 'bg-var(--accent-lt) text-var(--accent)' : 'text-gray-600 hover:bg-gray-50' }}">
+                                <div class="w-7 h-7 rounded-lg flex items-center justify-center {{ $selectedAnak->id_siswa == $a->id_siswa ? 'bg-var(--accent) text-white' : 'bg-gray-100 text-gray-400' }} overflow-hidden">
                                     @if($a->foto)
-                                        <img src="{{ asset('storage/' . $a->foto) }}" class="w-full h-full object-cover" alt="{{ $a->nama }}">
+                                        <img src="{{ asset('storage/' . $a->foto) }}" class="w-full h-full object-cover" alt="{{ $a->name }}">
                                     @else
-                                        {{ strtoupper(substr($a->nama, 0, 1)) }}
+                                        {{ strtoupper(substr($a->name, 0, 1)) }}
                                     @endif
                                 </div>
-                                {{ $a->nama }}
+                                {{ $a->name }}
                             </a>
                         @endforeach
                     </div>
                 </div>
             @endif
-            <a href="{{ route('wali.laporan', ['siswa_id' => $selectedAnak->id]) }}" 
+            <a href="{{ route('wali.laporan', ['siswa_id' => $selectedAnak->id_siswa]) }}" 
                class="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold bg-white text-[#84934A] hover:bg-[#F1F4E9] transition-all shadow-lg shadow-black/5">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                 Download Rapor
@@ -106,7 +106,7 @@
                         <h3 class="text-sm font-bold" style="color: var(--text-1);">Aktivitas & Penilaian Terbaru</h3>
                         <p class="text-[10px] mt-0.5 font-medium" style="color: var(--text-3);">Data capaian mingguan yang telah diverifikasi</p>
                     </div>
-                    <a href="{{ route('wali.perkembangan', ['siswa_id' => $selectedAnak->id]) }}" class="text-[11px] font-bold text-var(--accent) hover:underline flex items-center gap-1">
+                    <a href="{{ route('wali.perkembangan', ['siswa_id' => $selectedAnak->id_siswa]) }}" class="text-[11px] font-bold text-var(--accent) hover:underline flex items-center gap-1">
                         Lihat Semua
                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path d="M9 5l7 7-7 7"/></svg>
                     </a>
@@ -119,7 +119,7 @@
                                 {{ $pt->kategori->nama }}
                             </div>
                             <div class="flex-1 min-w-0">
-                                <p class="text-xs font-bold truncate leading-tight" style="color: var(--text-1);">{{ $pt->jadwalSubkriteria->subkriteria->nama }}</p>
+                                <p class="text-xs font-bold truncate leading-tight" style="color: var(--text-1);">{{ $pt->jadwalSubkriteria->subkriteria->nama_subkriteria }}</p>
                                 <div class="flex items-center gap-2 mt-1.5">
                                     <span class="text-[9px] font-black text-gray-400 uppercase tracking-widest">{{ $pt->jadwalSubkriteria->minggu->tema }}</span>
                                     <span class="w-1 h-1 rounded-full bg-gray-200"></span>
@@ -182,9 +182,9 @@
                 </h4>
                 <div class="grid grid-cols-1 gap-2.5">
                     @foreach([
-                        ['Laporan Perkembangan', route('wali.perkembangan', ['siswa_id' => $selectedAnak->id]), 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', 'blue'],
-                        ['Portofolio Karya', route('wali.portofolio', ['siswa_id' => $selectedAnak->id]), 'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z', 'purple'],
-                        ['Hasil Evaluasi (SPK)', route('wali.evaluasi', ['siswa_id' => $selectedAnak->id]), 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z', 'indigo'],
+                        ['Laporan Perkembangan', route('wali.perkembangan', ['siswa_id' => $selectedAnak->id_siswa]), 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', 'blue'],
+                        ['Portofolio Karya', route('wali.portofolio', ['siswa_id' => $selectedAnak->id_siswa]), 'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z', 'purple'],
+                        ['Hasil Evaluasi (SPK)', route('wali.evaluasi', ['siswa_id' => $selectedAnak->id_siswa]), 'M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z', 'indigo'],
                     ] as $link)
                         <a href="{{ $link[1] }}" class="group flex items-center gap-4 p-3 rounded-2xl hover:bg-var(--bg) transition-all duration-300 border border-transparent hover:border-gray-100">
                             <div class="w-10 h-10 rounded-xl flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform bg-white border border-gray-100" style="color: var(--accent);">

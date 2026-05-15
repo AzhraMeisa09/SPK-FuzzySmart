@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Detail Siswa: ' . $siswa->nama)
+@section('title', 'Detail Siswa: ' . $siswa->name)
 @section('page-title', 'Profil Siswa')
 
 @section('content')
@@ -14,7 +14,7 @@
                     @if($siswa->foto)
                         <img src="{{ asset('storage/' . $siswa->foto) }}" class="w-full h-full object-cover">
                     @else
-                        {{ strtoupper(substr($siswa->nama, 0, 1)) }}
+                        {{ strtoupper(substr($siswa->name, 0, 1)) }}
                     @endif
                 </div>
                 {{-- Name & Meta --}}
@@ -23,7 +23,7 @@
                         <span class="badge badge-blue text-[9px] uppercase tracking-widest">{{ $siswa->kelas->nama_kelas ?? 'Belum ditempatkan' }}</span>
                         <span class="text-[10px] font-bold uppercase tracking-widest" style="color: var(--text-3);">NISN: {{ $siswa->kode ?: '—' }}</span>
                     </div>
-                    <h1 class="text-lg font-semibold leading-tight" style="color: var(--text-1);">{{ $siswa->nama }}</h1>
+                    <h1 class="text-lg font-semibold leading-tight" style="color: var(--text-1);">{{ $siswa->name }}</h1>
                 </div>
             </div>
 
@@ -33,10 +33,10 @@
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
                     Kembali
                 </a>
-                <a href="{{ route('guru.riwayat.detail', $siswa->id) }}" class="btn btn-green btn-sm">
+                <a href="{{ route('guru.riwayat.detail', $siswa->id_siswa) }}" class="btn btn-green btn-sm">
                     Riwayat nilai
                 </a>
-                <a href="{{ route('guru.portofolio.index', ['siswa_id' => $siswa->id]) }}" class="btn btn-purple btn-sm">
+                <a href="{{ route('guru.portofolio.index', ['siswa_id' => $siswa->id_siswa]) }}" class="btn btn-purple btn-sm">
                     Portofolio
                 </a>
             </div>

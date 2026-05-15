@@ -6,10 +6,20 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use App\Traits\HasCustomId;
 
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, HasCustomId;
+
+    protected $primaryKey = 'id_user';
+    public $incrementing = false;
+    protected $keyType = 'string';
+
+    public function getPrefix()
+    {
+        return 'U';
+    }
 
     /**
      * Field yang boleh diisi (sesuai ERD)
@@ -49,7 +59,7 @@ class User extends Authenticatable
     // guru mengajar kelas
     public function kelas()
     {
-        return $this->belongsToMany(Kelas::class, 'kelas_guru', 'guru_id', 'kelas_id');
+        return $this->belongsToMany(Kelas::class, 'kelas_guru', 'guru_id', 'kelas_id')->using(KelasGuru::class);
     }
 
     // guru memberi penilaian
@@ -61,7 +71,7 @@ class User extends Authenticatable
     // wali murid punya siswa
     public function siswaWali()
     {
-        return $this->belongsToMany(Siswa::class, 'wali_siswa', 'user_id', 'siswa_id');
+        return $this->belongsToMany(Siswa::class, 'wali_siswa', 'user_id', 'siswa_id')->using(WaliSiswa::class);
     }
 
     // guru upload portofolio

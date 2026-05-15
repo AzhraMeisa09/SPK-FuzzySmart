@@ -24,7 +24,7 @@
             <form action="{{ route('kepsek.dashboard') }}" method="GET" id="periodForm">
                 <select name="periode_id" class="w-full bg-white/10 backdrop-blur-md border border-white/20 text-white text-xs font-black rounded-xl px-4 py-2.5 focus:ring-0 focus:border-white/40 cursor-pointer appearance-none" onchange="this.form.submit()">
                     @foreach($periodeList as $p)
-                        <option value="{{ $p->id }}" {{ $selectedPeriodeId == $p->id ? 'selected' : '' }} class="text-gray-900">{{ $p->nama_periode }}</option>
+                        <option value="{{ $p->id_periode }}" {{ $selectedPeriodeId == $p->id_periode ? 'selected' : '' }} class="text-gray-900">{{ $p->nama_periode }}</option>
                     @endforeach
                 </select>
             </form>

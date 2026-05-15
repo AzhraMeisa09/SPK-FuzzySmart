@@ -20,19 +20,19 @@
     
     openEdit(p) {
         this.editData = {
-            id: p.id,
+            id: p.id_periode,
             nama_periode: p.nama_periode,
             tahun_ajaran_id: p.tahun_ajaran_id,
             semester: p.semester,
             tanggal_mulai: p.tanggal_mulai ? p.tanggal_mulai.split('T')[0] : '',
             tanggal_selesai: p.tanggal_selesai ? p.tanggal_selesai.split('T')[0] : '',
-            kelas_ids: p.kelas ? p.kelas.map(k => k.id) : []
+            kelas_ids: p.kelas ? p.kelas.map(k => k.id_kelas) : []
         };
         this.showEdit = true;
     },
     
     openDelete(p) {
-        this.deleteData = { id: p.id, nama: p.nama_periode };
+        this.deleteData = { id: p.id_periode, nama: p.nama_periode };
         this.showDelete = true;
     }
 }" class="space-y-6">
@@ -189,7 +189,7 @@
                             <select name="tahun_ajaran_id" required class="form-select rounded-xl bg-var(--bg) border-var(--border) font-bold text-xs">
                                 <option value="">Pilih Tahun Ajaran</option>
                                 @foreach($tahun_ajaran as $ta)
-                                    <option value="{{ $ta->id }}">{{ $ta->nama }}</option>
+                                    <option value="{{ $ta->id_tahun_ajaran }}">{{ $ta->nama }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -217,7 +217,7 @@
                         <div class="grid grid-cols-2 md:grid-cols-3 gap-3 p-5 bg-var(--bg) rounded-2xl border border-var(--border)">
                             @foreach($kelas as $k)
                                 <label class="flex items-center gap-3 cursor-pointer group">
-                                    <input type="checkbox" name="kelas_ids[]" value="{{ $k->id }}" class="w-4.5 h-4.5 text-var(--accent) border-var(--border) rounded-lg focus:ring-0">
+                                    <input type="checkbox" name="kelas_ids[]" value="{{ $k->id_kelas }}" class="w-4.5 h-4.5 text-var(--accent) border-var(--border) rounded-lg focus:ring-0">
                                     <span class="text-[11px] font-bold text-var(--text-2) group-hover:text-var(--text-1) transition-colors">{{ $k->nama_kelas }}</span>
                                 </label>
                             @endforeach
@@ -253,7 +253,7 @@
                             <label class="form-label text-[10px] font-bold">Tahun Ajaran</label>
                             <select name="tahun_ajaran_id" x-model="editData.tahun_ajaran_id" required class="form-select rounded-xl bg-var(--bg) border-var(--border) font-bold text-xs">
                                 @foreach($tahun_ajaran as $ta)
-                                    <option value="{{ $ta->id }}">{{ $ta->nama }}</option>
+                                    <option value="{{ $ta->id_tahun_ajaran }}">{{ $ta->nama }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -281,7 +281,7 @@
                         <div class="grid grid-cols-2 md:grid-cols-3 gap-3 p-5 bg-var(--bg) rounded-2xl border border-var(--border)">
                             @foreach($kelas as $k)
                                 <label class="flex items-center gap-3 cursor-pointer group">
-                                    <input type="checkbox" name="kelas_ids[]" value="{{ $k->id }}" x-model="editData.kelas_ids" class="w-4.5 h-4.5 text-var(--accent) border-var(--border) rounded-lg focus:ring-0">
+                                    <input type="checkbox" name="kelas_ids[]" value="{{ $k->id_kelas }}" x-model="editData.kelas_ids" class="w-4.5 h-4.5 text-var(--accent) border-var(--border) rounded-lg focus:ring-0">
                                     <span class="text-[11px] font-bold text-var(--text-2) group-hover:text-var(--text-1) transition-colors">{{ $k->nama_kelas }}</span>
                                 </label>
                             @endforeach

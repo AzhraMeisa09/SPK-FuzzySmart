@@ -61,7 +61,7 @@ class TahunAjaranController extends Controller
         $request->merge(['nama' => trim($request->nama)]);
 
         $request->validate([
-            'nama' => ['required', 'regex:/^\d{4}\/\d{4}$/', 'unique:tahun_ajaran,nama,' . $id],
+            'nama' => ['required', 'regex:/^\d{4}\/\d{4}$/', 'unique:tahun_ajaran,nama,' . $id . ',id_tahun_ajaran'],
             'tanggal_mulai' => 'required|date',
             'tanggal_selesai' => 'required|date|after:tanggal_mulai',
         ], [

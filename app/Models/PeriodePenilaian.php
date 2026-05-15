@@ -4,10 +4,21 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+use App\Traits\HasCustomId;
+
 class PeriodePenilaian extends Model
 {
+    use HasCustomId;
     public $timestamps = true;
     protected $table = 'periode_penilaian';
+    protected $primaryKey = 'id_periode';
+    public $incrementing = false;
+    protected $keyType = 'string';
+
+    public function getPrefix()
+    {
+        return 'P';
+    }
 
     protected $fillable = [
         'tahun_ajaran_id',
@@ -18,6 +29,7 @@ class PeriodePenilaian extends Model
         'is_aktif',
         'status',
         'finalized_at',
+        'created_by',
     ];
 
     const STATUS_DRAFT = 'draft';
@@ -40,7 +52,7 @@ class PeriodePenilaian extends Model
             // Jika satu periode diaktifkan, maka semua periode lain otomatis nonaktif
             if ($periode->is_aktif) {
                 // Nonaktifkan periode lain yang saat ini aktif
-                static::where('id', '!=', $periode->id)
+                static::where('id_periode', '!=', $periode->id_periode)
                     ->where('is_aktif', true)
                     ->update([
                         'is_aktif' => false,

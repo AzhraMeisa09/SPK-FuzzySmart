@@ -16,10 +16,10 @@
         rentang_min: '{{ old('rentang_min') }}',
         rentang_max: '{{ old('rentang_max') }}'
     },
-    deleteData: {},
+    deleteData: { id: '', nama: '' },
     openEdit(k) {
         this.editData = {
-            id: k.id,
+            id: k.id_kategori,
             nama: k.nama,
             nilai_l: parseFloat(k.nilai_l).toFixed(2),
             nilai_m: parseFloat(k.nilai_m).toFixed(2),
@@ -30,7 +30,7 @@
         this.showEdit = true;
     },
     openDelete(k) {
-        this.deleteData = k;
+        this.deleteData = { id: k.id_kategori, nama: k.nama };
         this.showDelete = true;
     }
 }" class="space-y-5">
@@ -210,6 +210,7 @@
             <form :action="'{{ url('admin/kategori-nilai') }}/' + editData.id" method="POST">
                 @csrf
                 @method('PUT')
+                <input type="hidden" name="id" :value="editData.id">
                 <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
                     <h3 class="text-base font-semibold" style="color: var(--text-1);">Edit Parameter</h3>
                     <button type="button" @click="showEdit = false" class="p-2 rounded-lg hover:bg-gray-100 text-gray-400"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg></button>

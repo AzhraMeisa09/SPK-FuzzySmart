@@ -21,10 +21,10 @@ class PortofolioController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        $kelasIds = $user->kelas()->pluck('kelas.id');
+        $kelasIds = $user->kelas()->pluck('kelas.id_kelas');
 
         $query = Portofolio::whereIn('siswa_id', function($q) use ($kelasIds) {
-                $q->select('id')->from('siswa')->whereIn('kelas_id', $kelasIds);
+                $q->select('id_siswa')->from('siswa')->whereIn('kelas_id', $kelasIds);
             })
             ->with(['siswa.kelas', 'minggu', 'images'])
             ->latest();
@@ -41,7 +41,7 @@ class PortofolioController extends Controller
 
         $portofolio = $query->paginate(12);
 
-        $siswa = Siswa::with('kelas')->whereIn('kelas_id', $kelasIds)->orderBy('kelas_id')->orderBy('nama')->get();
+        $siswa = Siswa::with('kelas')->whereIn('kelas_id', $kelasIds)->orderBy('kelas_id')->orderBy('name')->get();
         $minggu = MingguPenilaian::whereHas('periode', function($q) {
                 $q->where('is_aktif', true);
             })->get();
@@ -63,8 +63,8 @@ class PortofolioController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'siswa_id' => 'required|exists:siswa,id',
-            'minggu_id' => 'required|exists:minggu_penilaian,id',
+            'siswa_id' => 'required|exists:siswa,id_siswa',
+            'minggu_id' => 'required|exists:minggu_penilaian,id_minggu',
             'judul' => 'required|string|max:255',
             'deskripsi' => 'nullable|string',
             'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:10240'
@@ -109,7 +109,7 @@ class PortofolioController extends Controller
 
             foreach ($paths as $path) {
                 PortofolioImage::create([
-                    'portofolio_id' => $portofolio->id,
+                    'portofolio_id' => $portofolio->id_portofolio,
                     'file_path' => $path
                 ]);
             }
@@ -147,8 +147,8 @@ class PortofolioController extends Controller
         $portofolio = Portofolio::with(['siswa', 'minggu.periode', 'images'])->findOrFail($id);
         
         $user = Auth::user();
-        $kelasIds = $user->kelas()->pluck('kelas.id');
-        $siswa = Siswa::with('kelas')->whereIn('kelas_id', $kelasIds)->orderBy('kelas_id')->orderBy('nama')->get();
+        $kelasIds = $user->kelas()->pluck('kelas.id_kelas');
+        $siswa = Siswa::with('kelas')->whereIn('kelas_id', $kelasIds)->orderBy('kelas_id')->orderBy('name')->get();
         $minggu = MingguPenilaian::whereHas('periode', function($q) {
                 $q->where('is_aktif', true);
             })->get();
@@ -170,8 +170,8 @@ class PortofolioController extends Controller
     public function update(Request $request, $id)
     {
         $request->validate([
-            'siswa_id' => 'required|exists:siswa,id',
-            'minggu_id' => 'required|exists:minggu_penilaian,id',
+            'siswa_id' => 'required|exists:siswa,id_siswa',
+            'minggu_id' => 'required|exists:minggu_penilaian,id_minggu',
             'judul' => 'required|string|max:255',
             'deskripsi' => 'nullable|string',
             'images.*' => 'image|mimes:jpeg,png,jpg,gif|max:10240'
@@ -187,7 +187,7 @@ class PortofolioController extends Controller
         // CEK DUPLIKASI
         $existing = Portofolio::where('siswa_id', $request->siswa_id)
             ->where('minggu_id', $request->minggu_id)
-            ->where('id', '!=', $id)
+            ->where('id_portofolio', '!=', $id)
             ->exists();
         if ($existing) {
             $msg = 'Siswa tersebut sudah memiliki portofolio di minggu ini.';
@@ -216,7 +216,7 @@ class PortofolioController extends Controller
 
             foreach ($paths as $path) {
                 PortofolioImage::create([
-                    'portofolio_id' => $portofolio->id,
+                    'portofolio_id' => $portofolio->id_portofolio,
                     'file_path' => $path
                 ]);
             }

@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Laporan Perkembangan — ' . $siswa->nama)
+@section('title', 'Laporan Perkembangan — ' . $siswa->name)
 @section('page-title', 'Perkembangan')
 
 @section('content')
@@ -10,19 +10,19 @@
         <div class="flex flex-col md:flex-row items-center gap-6">
             <div class="w-20 h-20 rounded-2xl flex items-center justify-center text-[#84934A] font-black text-3xl shadow-xl bg-white/90 backdrop-blur-sm transform hover:scale-105 transition-transform overflow-hidden">
                 @if($siswa->foto)
-                    <img src="{{ asset('storage/' . $siswa->foto) }}" class="w-full h-full object-cover" alt="{{ $siswa->nama }}">
+                    <img src="{{ asset('storage/' . $siswa->foto) }}" class="w-full h-full object-cover" alt="{{ $siswa->name }}">
                 @else
                     📈
                 @endif
             </div>
             <div class="text-center md:text-left">
                 <p class="text-[10px] font-bold uppercase tracking-[0.2em] mb-1.5" style="color: rgba(255,255,255,.7);">Analisis Riwayat Mingguan</p>
-                <h1 class="text-2xl font-black tracking-tight text-white">{{ $siswa->nama }}</h1>
+                <h1 class="text-2xl font-black tracking-tight text-white">{{ $siswa->name }}</h1>
                 <p class="text-[11px] mt-2 font-medium text-white/80">Pantau grafik dan detail perkembangan anak setiap minggunya.</p>
             </div>
         </div>
         <div class="flex flex-wrap justify-center md:justify-end gap-3">
-            <a href="{{ route('wali.evaluasi', ['siswa_id' => $siswa->id]) }}" class="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold bg-white/10 hover:bg-white/20 text-white transition-all backdrop-blur-sm">
+            <a href="{{ route('wali.evaluasi', ['siswa_id' => $siswa->id_siswa]) }}" class="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold bg-white/10 hover:bg-white/20 text-white transition-all backdrop-blur-sm">
                 Hasil Evaluasi Final
             </a>
             <button onclick="window.print()" class="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold bg-white text-[#84934A] hover:bg-[#F1F4E9] transition-all shadow-lg shadow-black/5">
@@ -36,16 +36,16 @@
     @if(count($anak) > 1)
         <div class="flex flex-wrap items-center gap-3 no-print">
             @foreach($anak as $a)
-                <a href="{{ route('wali.perkembangan', ['siswa_id' => $a->id]) }}" 
-                   class="group flex items-center gap-3 px-4 py-2.5 rounded-2xl transition-all border {{ $siswa->id == $a->id ? 'bg-white border-var(--accent) shadow-md ring-4 ring-var(--accent-lt)' : 'bg-white border-gray-100 opacity-60 hover:opacity-100 hover:border-gray-200 shadow-sm' }}">
-                    <div class="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black transition-transform group-hover:scale-110 {{ $siswa->id == $a->id ? 'bg-var(--accent) text-white shadow-lg shadow-var(--accent-lt)' : 'bg-gray-100 text-gray-400' }} overflow-hidden">
+                <a href="{{ route('wali.perkembangan', ['siswa_id' => $a->id_siswa]) }}" 
+                   class="group flex items-center gap-3 px-4 py-2.5 rounded-2xl transition-all border {{ $siswa->id_siswa == $a->id_siswa ? 'bg-white border-var(--accent) shadow-md ring-4 ring-var(--accent-lt)' : 'bg-white border-gray-100 opacity-60 hover:opacity-100 hover:border-gray-200 shadow-sm' }}">
+                    <div class="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black transition-transform group-hover:scale-110 {{ $siswa->id_siswa == $a->id_siswa ? 'bg-var(--accent) text-white shadow-lg shadow-var(--accent-lt)' : 'bg-gray-100 text-gray-400' }} overflow-hidden">
                         @if($a->foto)
-                            <img src="{{ asset('storage/' . $a->foto) }}" class="w-full h-full object-cover" alt="{{ $a->nama }}">
+                            <img src="{{ asset('storage/' . $a->foto) }}" class="w-full h-full object-cover" alt="{{ $a->name }}">
                         @else
-                            {{ strtoupper(substr($a->nama, 0, 1)) }}
+                            {{ strtoupper(substr($a->name, 0, 1)) }}
                         @endif
                     </div>
-                    <span class="text-[11px] font-bold {{ $siswa->id == $a->id ? 'text-var(--text-1)' : 'text-gray-500' }}">{{ $a->nama }}</span>
+                    <span class="text-[11px] font-bold {{ $siswa->id_siswa == $a->id_siswa ? 'text-var(--text-1)' : 'text-gray-500' }}">{{ $a->name }}</span>
                 </a>
             @endforeach
         </div>
@@ -141,7 +141,7 @@
                                                     @foreach($m['details'] as $idx => $d)
                                                         @php $dBadge = match($d['col']) { 'emerald'=>'badge-bsb', 'amber'=>'badge-bsh', 'rose'=>'badge-mb', default=>'badge-gray' }; @endphp
                                                         <tr class="hover:bg-var(--bg) transition-colors">
-                                                            <td class="text-center font-mono text-[10px] font-bold text-gray-400">{{ $d['kode'] }}</td>
+                                                            <td class="text-center font-mono text-[10px] font-bold text-gray-400">{{ $d['id_subkriteria'] }}</td>
                                                             <td class="py-4">
                                                                 <p class="font-bold text-gray-800 text-sm leading-tight tracking-tight">{{ $d['subkriteria'] }}</p>
                                                                 <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest mt-1.5">{{ $d['kriteria'] }}</p>

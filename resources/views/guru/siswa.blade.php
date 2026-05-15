@@ -29,7 +29,7 @@
     @endphp
 
     @forelse($groupedSiswa as $namaKelas => $students)
-    <div class="space-y-4" x-show="hasMatchesInClass({{ json_encode($students->map(fn($s) => ['nama' => strtolower($s->nama), 'kode' => strtolower($s->kode ?: '')])) }})">
+    <div class="space-y-4" x-show="hasMatchesInClass({{ json_encode($students->map(fn($s) => ['nama' => strtolower($s->name), 'nisn' => strtolower($s->id_siswa ?: '')])) }})">
         <div class="flex items-center gap-3 px-1">
             <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-blue-500 text-white shadow-sm">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
@@ -55,21 +55,21 @@
                     </thead>
                     <tbody>
                         @foreach($students as $s)
-                        <tr class="hover:bg-gray-50/50 transition-colors group" x-show="matches('{{ strtolower($s->nama) }}', '{{ strtolower($s->kode) }}')">
+                        <tr class="hover:bg-gray-50/50 transition-colors group" x-show="matches('{{ strtolower($s->name) }}', '{{ strtolower($s->id_siswa) }}')">
                             <td class="font-mono text-[10px]" style="color: var(--text-3);">{{ $loop->iteration }}</td>
                             <td>
                                 <div class="flex items-center gap-3">
                                     <div class="w-10 h-10 rounded-xl flex items-center justify-center font-black text-sm shadow-sm" style="background: var(--accent-lt); color: var(--accent);">
-                                        {{ strtoupper(substr($s->nama, 0, 1)) }}
+                                        {{ strtoupper(substr($s->name, 0, 1)) }}
                                     </div>
                                     <div>
-                                        <p class="font-semibold text-xs leading-none" style="color: var(--text-1);">{{ $s->nama }}</p>
+                                        <p class="font-semibold text-xs leading-none" style="color: var(--text-1);">{{ $s->name }}</p>
                                     </div>
                                 </div>
                             </td>
                             <td>
                                 <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-lg bg-gray-100" style="color: var(--text-2);">
-                                    {{ $s->kode ?: '-' }}
+                                    {{ $s->id_siswa ?: '-' }}
                                 </span>
                             </td>
                             <td>
@@ -80,7 +80,7 @@
                             </td>
                             <td>
                                 <div class="flex items-center gap-2">
-                                    <a href="{{ route('guru.siswa.show', $s->id) }}" 
+                                    <a href="{{ route('guru.siswa.show', $s->id_siswa) }}" 
                                        class="p-2 rounded-xl bg-white border border-var(--border) text-var(--text-2) hover:text-var(--accent) hover:border-var(--accent) transition-all shadow-sm group">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg> 
                                     </a>
@@ -108,16 +108,16 @@
         return {
             search: '',
 
-            matches(nama, kode) {
+            matches(nama, nisn) {
                 if (!this.search) return true;
                 const s = this.search.toLowerCase();
-                return nama.includes(s) || kode.includes(s);
+                return nama.includes(s) || nisn.includes(s);
             },
 
             hasMatchesInClass(students) {
                 if (!this.search) return true;
                 const s = this.search.toLowerCase();
-                return students.some(std => std.nama.includes(s) || std.kode.includes(s));
+                return students.some(std => std.nama.includes(s) || std.nisn.includes(s));
             }
         }
     }

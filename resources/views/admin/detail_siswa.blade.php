@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Profil Murid: ' . $siswa->nama)
+@section('title', 'Profil Murid: ' . $siswa->name)
 @section('page-title', 'Profil Detail Murid')
 
 @section('content')
@@ -13,7 +13,7 @@
         </a>
         
         <div class="flex gap-3">
-             <a href="{{ route('admin.siswa.edit', $siswa->id) }}" class="btn btn-blue shadow-md hover:shadow-lg transition-all flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-sm">
+             <a href="{{ route('admin.siswa.edit', $siswa->id_siswa) }}" class="btn btn-blue shadow-md hover:shadow-lg transition-all flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold text-sm">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                 Edit Data Murid
             </a>
@@ -30,7 +30,7 @@
                         <img src="{{ asset('storage/' . $siswa->foto) }}" alt="Foto Murid" class="w-32 h-32 rounded-3xl object-cover border-4 border-white shadow-2xl bg-white">
                     @else
                         <div class="w-32 h-32 rounded-3xl bg-white border-4 border-white shadow-2xl flex items-center justify-center text-4xl font-bold text-var(--accent)">
-                            {{ strtoupper(substr($siswa->nama, 0, 1)) }}
+                            {{ strtoupper(substr($siswa->name, 0, 1)) }}
                         </div>
                     @endif
                     <div class="absolute -bottom-1 -right-1 w-8 h-8 rounded-2xl bg-var(--accent) border-4 border-white flex items-center justify-center shadow-lg">
@@ -40,7 +40,7 @@
                 
                 <div class="flex-1 text-center md:text-left mb-2">
                     <div class="flex flex-wrap items-center justify-center md:justify-start gap-3 mb-1">
-                        <h2 class="text-3xl font-bold text-var(--text-1) tracking-tight">{{ $siswa->nama }}</h2>
+                        <h2 class="text-3xl font-bold text-var(--text-1) tracking-tight">{{ $siswa->name }}</h2>
                         <span class="px-3 py-1 rounded-lg bg-blue-50 text-blue-600 text-[10px] font-bold border border-blue-100">
                             {{ $siswa->kelas->nama_kelas ?? 'Tanpa Kelas' }}
                         </span>

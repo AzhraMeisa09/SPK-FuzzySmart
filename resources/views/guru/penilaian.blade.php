@@ -34,7 +34,7 @@
     hasMatchesInClass(students) {
         if (!this.search) return true;
         const s = this.search.toLowerCase();
-        return students.some(std => std.nama.includes(s) || std.kode.includes(s));
+        return students.some(std => std.name.includes(s) || std.id_siswa.includes(s));
     }
 }">
 
@@ -114,7 +114,7 @@
         @endphp
 
         @foreach($groupedSiswa as $namaKelas => $studentsInClass)
-            <div class="space-y-4 mb-8" x-show="hasMatchesInClass({{ json_encode($studentsInClass->map(fn($s) => ['nama' => strtolower($s->nama), 'kode' => strtolower($s->kode ?: '')])) }})">
+            <div class="space-y-4 mb-8" x-show="hasMatchesInClass({{ json_encode($studentsInClass->map(fn($s) => ['name' => strtolower($s->name), 'id_siswa' => strtolower($s->id_siswa ?: '')])) }})">
                 <div class="flex items-center gap-3 px-1 mt-4">
                     <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-blue-500 text-white shadow-sm">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
@@ -148,33 +148,33 @@
                             <tbody>
                                 @foreach($studentsInClass as $i => $s)
                                     @php
-                                        $grid = $statusGrid[$s->id] ?? [];
+                                        $grid = $statusGrid[$s->id_siswa] ?? [];
                                         $doneCount = collect($grid)->filter(fn($v) => $v === 'final')->count();
                                         $totalM = $semuaMinggu->count();
                                         $pct = $totalM > 0 ? ($doneCount/$totalM)*100 : 0;
                                     @endphp
-                                    <tr class="hover:bg-gray-50/80 transition-colors group" x-show="matches('{{ addslashes($s->nama) }}', '{{ $s->kode }}')">
+                                    <tr class="hover:bg-gray-50/80 transition-colors group" x-show="matches('{{ addslashes($s->name) }}', '{{ $s->id_siswa }}')">
                                         <td class="sticky left-0 bg-white group-hover:bg-gray-50 z-10 font-mono text-[10px] text-gray-400">{{ $loop->iteration }}</td>
                                         <td class="sticky left-12 bg-white group-hover:bg-gray-50 z-10">
                                             <div class="flex items-center gap-3">
                                                 <div class="w-9 h-9 rounded-xl bg-var(--bg) text-var(--text-3) flex items-center justify-center font-black text-xs border border-var(--border) shadow-sm group-hover:border-var(--accent)/30 transition-colors">
-                                                    {{ strtoupper(substr($s->nama, 0, 1)) }}
+                                                    {{ strtoupper(substr($s->name, 0, 1)) }}
                                                 </div>
                                                 <div>
-                                                    <p class="font-bold text-gray-800 text-xs leading-none">{{ $s->nama }}</p>
-                                                    <p class="text-[9px] font-bold text-gray-400 mt-1 uppercase tracking-wider">{{ $s->kode }}</p>
+                                                    <p class="font-bold text-gray-800 text-xs leading-none">{{ $s->name }}</p>
+                                                    <p class="text-[9px] font-bold text-gray-400 mt-1 uppercase tracking-wider">{{ $s->id_siswa }}</p>
                                                 </div>
                                             </div>
                                         </td>
 
                                         @foreach($semuaMinggu as $m)
                                             @php
-                                                $st = $grid[$m->id] ?? null;
-                                                $isAct = $mingguAktif && $m->id === $mingguAktif->id;
+                                                $st = $grid[$m->id_minggu] ?? null;
+                                                $isAct = $mingguAktif && $m->id_minggu === $mingguAktif->id_minggu;
                                             @endphp
                                             <td class="border-l border-gray-50/50 {{ $isAct ? 'bg-blue-50/10' : '' }}">
                                                 <button type="button"
-                                                    @if($isAct) @click="openModal({{ $s->id }}, {{ Js::from($s->nama) }}, {{ $m->id }}, '{{ $m->minggu_ke }}')" @else onclick="alert('Hanya minggu aktif yang dapat dinilai')" @endif
+                                                    @if($isAct) @click="openModal('{{ $s->id_siswa }}', {{ Js::from($s->name) }}, '{{ $m->id_minggu }}', '{{ $m->minggu_ke }}')" @else onclick="alert('Hanya minggu aktif yang dapat dinilai')" @endif
                                                     class="w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200 active:scale-90 shadow-sm
                                                         {{ $st === 'final'
                                                             ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200 hover:shadow-md'
@@ -216,19 +216,19 @@
                 <div class="md:hidden space-y-4">
                     @foreach($studentsInClass as $s)
                         @php
-                            $grid2 = $statusGrid[$s->id] ?? [];
-                            $mingguAktifStatus = $mingguAktif ? ($grid2[$mingguAktif->id] ?? null) : null;
+                            $grid2 = $statusGrid[$s->id_siswa] ?? [];
+                            $mingguAktifStatus = $mingguAktif ? ($grid2[$mingguAktif->id_minggu] ?? null) : null;
                             $doneCount2 = collect($grid2)->filter(fn($v) => $v === 'final')->count();
                             $totalM2 = $semuaMinggu->count();
                         @endphp
-                        <div class="card p-4 hover:shadow-lg transition-all active:scale-[0.98]" x-show="matches('{{ addslashes($s->nama) }}', '{{ $s->kode }}')">
+                        <div class="card p-4 hover:shadow-lg transition-all active:scale-[0.98]" x-show="matches('{{ addslashes($s->name) }}', '{{ $s->id_siswa }}')">
                             <div class="flex items-center gap-4">
                                 <div class="w-12 h-12 rounded-2xl bg-var(--accent-lt) text-var(--accent) flex items-center justify-center text-lg font-black shadow-sm">
-                                    {{ strtoupper(substr($s->nama, 0, 1)) }}
+                                    {{ strtoupper(substr($s->name, 0, 1)) }}
                                 </div>
                                 <div class="flex-1 min-w-0">
-                                    <h4 class="font-bold text-gray-800 text-sm leading-tight">{{ $s->nama }}</h4>
-                                    <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-wider font-bold">{{ $s->kode }}</p>
+                                    <h4 class="font-bold text-gray-800 text-sm leading-tight">{{ $s->name }}</h4>
+                                    <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-wider font-bold">{{ $s->id_siswa }}</p>
                                 </div>
                                 <div class="text-right">
                                     <p class="text-xs font-black text-gray-700">{{ $doneCount2 }}/{{ $totalM2 }}</p>
@@ -241,10 +241,10 @@
                                     @if($mingguAktifStatus === 'final')
                                         <span class="badge badge-bsb text-[9px] px-3 py-1 font-black text-emerald-900">✓ FINAL</span>
                                     @elseif($mingguAktifStatus === 'draft')
-                                        <button type="button" @click="openModal({{ $s->id }}, {{ Js::from($s->nama) }}, {{ $mingguAktif->id }}, '{{ $mingguAktif->minggu_ke }}')"
+                                        <button type="button" @click="openModal('{{ $s->id_siswa }}', {{ Js::from($s->name) }}, '{{ $mingguAktif->id_minggu }}', '{{ $mingguAktif->minggu_ke }}')"
                                             class="px-5 py-2 bg-amber-200 text-black rounded-xl text-[10px] font-black hover:bg-amber-300 transition-all shadow-sm">Edit Draft</button>
                                     @else
-                                        <button type="button" @click="openModal({{ $s->id }}, {{ Js::from($s->nama) }}, {{ $mingguAktif->id }}, '{{ $mingguAktif->minggu_ke }}')"
+                                        <button type="button" @click="openModal('{{ $s->id_siswa }}', {{ Js::from($s->name) }}, '{{ $mingguAktif->id_minggu }}', '{{ $mingguAktif->minggu_ke }}')"
                                             class="px-5 py-2 bg-var(--accent) text-black rounded-xl text-[10px] font-black hover:bg-black hover:text-white transition-all shadow-md shadow-var(--accent)/20">+ Nilai</button>
                                     @endif
                                 </div>
@@ -301,18 +301,18 @@
                 {{-- Modal Body --}}
                 <div class="flex-1 overflow-y-auto scrollbar-hide">
                     @foreach($semuaMinggu as $m)
-                        @php $jadwalMingguIni = $jadwalPerMinggu[$m->id] ?? collect(); @endphp
+                        @php $jadwalMingguIni = $jadwalPerMinggu[$m->id_minggu] ?? collect(); @endphp
                         @foreach($siswa as $s)
                             @php
-                                $isSiswaFinal = ($statusGrid[$s->id][$m->id] ?? null) === 'final';
+                                $isSiswaFinal = ($statusGrid[$s->id_siswa][$m->id_minggu] ?? null) === 'final';
                                 $isMingguSelesai = $m->status === 'selesai';
                                 $isReadOnly = $isMingguSelesai || $isSiswaFinal;
                             @endphp
-                            <div id="form-{{ $s->id }}-{{ $m->id }}" class="penilaian-form-container hidden">
+                            <div id="form-{{ $s->id_siswa }}-{{ $m->id_minggu }}" class="penilaian-form-container hidden">
                                 <form action="{{ route('guru.penilaian.store') }}" method="POST">
                                     @csrf
-                                    <input type="hidden" name="siswa_id" value="{{ $s->id }}">
-                                    <input type="hidden" name="minggu_id" value="{{ $m->id }}">
+                                    <input type="hidden" name="siswa_id" value="{{ $s->id_siswa }}">
+                                    <input type="hidden" name="minggu_id" value="{{ $m->id_minggu }}">
                                     
                                     <div class="p-8 space-y-6">
                                         @if($isReadOnly)
@@ -326,7 +326,7 @@
 
                                         @forelse($jadwalMingguIni as $idx => $jadwal)
                                             @php
-                                                $existingNilai = $penilaianExisting->where('siswa_id', $s->id)->where('jadwal_sub_id', $jadwal->id)->first();
+                                                $existingNilai = $penilaianExisting->where('siswa_id', $s->id_siswa)->where('jadwal_sub_id', $jadwal->id_jadwal_sub)->first();
                                                 $selectedKatId = $existingNilai ? $existingNilai->kategori_id : null;
                                                 $catatanTxt = $existingNilai ? $existingNilai->catatan : '';
                                             @endphp
@@ -334,8 +334,8 @@
                                                 <div class="flex items-start gap-4 mb-5">
                                                     <div class="w-8 h-8 rounded-xl bg-white border border-gray-100 shadow-sm flex items-center justify-center text-[10px] font-black text-var(--accent) group-hover/card:bg-var(--accent) group-hover/card:text-white">{{ $idx + 1 }}</div>
                                                     <div class="flex-1 min-w-0">
-                                                        <p class="text-sm font-bold text-gray-800 leading-snug">{{ $jadwal->subkriteria->nama }}</p>
-                                                        <p class="text-[9px] font-black text-gray-400 mt-1 uppercase tracking-widest">{{ $jadwal->subkriteria->kriteria->nama ?? '' }}</p>
+                                                        <p class="text-sm font-bold text-gray-800 leading-snug">{{ $jadwal->subkriteria->nama_subkriteria }}</p>
+                                                        <p class="text-[9px] font-black text-gray-400 mt-1 uppercase tracking-widest">{{ $jadwal->subkriteria->kriteria->nama_kriteria ?? '' }}</p>
                                                     </div>
                                                 </div>
 
@@ -359,9 +359,9 @@
                                                         @endphp
                                                         <label class="relative flex flex-col cursor-pointer {{ $isReadOnly ? 'pointer-events-none opacity-70' : '' }}">
                                                             <input type="radio"
-                                                                name="nilai[{{ $s->id }}][{{ $jadwal->id }}]"
-                                                                value="{{ $kat->id }}"
-                                                                {{ $selectedKatId == $kat->id ? 'checked' : '' }}
+                                                                name="nilai[{{ $s->id_siswa }}][{{ $jadwal->id_jadwal_sub }}]"
+                                                                value="{{ $kat->id_kategori }}"
+                                                                {{ $selectedKatId == $kat->id_kategori ? 'checked' : '' }}
                                                                 {{ $isReadOnly ? 'disabled' : 'required' }}
                                                                 class="sr-only peer">
                                                             <div class="flex flex-col flex-1 gap-3 p-4 rounded-2xl border-2 transition-all duration-200 
@@ -391,7 +391,7 @@
 
                                                 {{-- Catatan --}}
                                                 <textarea
-                                                    name="catatan[{{ $jadwal->id }}]"
+                                                    name="catatan[{{ $jadwal->id_jadwal_sub }}]"
                                                     rows="2"
                                                     {{ $isReadOnly ? 'disabled' : '' }}
                                                     class="w-full px-5 py-3 text-xs bg-white border border-gray-100 rounded-2xl text-gray-600 placeholder-gray-400 focus:ring-2 focus:ring-var(--accent) focus:border-var(--accent) transition-all resize-none shadow-sm"

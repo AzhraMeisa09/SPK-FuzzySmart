@@ -8,23 +8,28 @@
     showAdd: {{ $errors->any() && !session('edit_id') ? 'true' : 'false' }},
     showEdit: {{ session('edit_id') ? 'true' : 'false' }},
     showDelete: false,
+    confirmDelete: false,
     editData: {
-        id: '{{ old('id', session('edit_data.id')) }}',
-        kode: '{{ old('kode', session('edit_data.kode')) }}',
-        nama: '{{ old('nama', session('edit_data.nama')) }}',
-        bobot: '{{ old('bobot', session('edit_data.bobot')) }}'
+        id: '{{ old('id_kriteria', session('edit_data.id_kriteria')) }}',
+        nama: '{{ old('nama_kriteria', session('edit_data.nama_kriteria')) }}',
+        bobot: '{{ old('bobot', session('edit_data.bobot')) }}',
+        is_aktif: '{{ old('is_aktif', session('edit_data.is_aktif', true)) }}'
     },
     deleteData: {},
     openEdit(k) { 
         this.editData = {
-            id: k.id,
-            kode: k.kode,
-            nama: k.nama,
-            bobot: k.bobot
+            id: k.id_kriteria,
+            nama: k.nama_kriteria,
+            bobot: k.bobot_kriteria,
+            is_aktif: k.is_aktif
         }; 
         this.showEdit = true; 
     },
-    openDelete(k) { this.deleteData = k; this.showDelete = true; }
+    openDelete(k) { 
+        this.deleteData = { id: k.id_kriteria, nama: k.nama_kriteria }; 
+        this.confirmDelete = false;
+        this.showDelete = true; 
+    }
 }" class="space-y-6">
 
     {{-- ── HEADER CARD ── --}}
@@ -86,6 +91,7 @@
                     <th>Kriteria Penilaian</th>
                     <th class="w-32">Bobot Desimal</th>
                     <th class="w-48">Progress Bobot</th>
+                    <th class="w-32 text-center">Status</th>
                     <th class="w-32 text-center">Subkriteria</th>
                     <th class="w-36 text-center">Aksi</th>
                 </tr>
@@ -94,28 +100,38 @@
                 @forelse($kriterias as $k)
                     <tr class="hover:bg-var(--bg) transition-colors group">
                         <td class="py-6">
-                            <span class="badge badge-blue font-mono text-[10px]">{{ $k->kode }}</span>
+                            <span class="badge badge-blue font-mono text-[10px]">{{ $k->id_kriteria }}</span>
                         </td>
                         <td class="py-6">
-                            <span class="font-semibold text-var(--text-1) tracking-tight">{{ $k->nama }}</span>
+                            <span class="font-semibold text-var(--text-1) tracking-tight">{{ $k->nama_kriteria }}</span>
                         </td>
                         <td class="py-6">
-                            <span class="font-bold text-var(--text-2) font-mono">{{ number_format($k->bobot, 2) }}</span>
+                            <span class="font-bold text-var(--text-2) font-mono">{{ number_format($k->bobot_kriteria, 2) }}</span>
                         </td>
                         <td class="py-6">
                             <div class="flex items-center gap-3">
                                 <div class="flex-1 h-2.5 bg-gray-100 rounded-full overflow-hidden border border-gray-200">
-                                    <div class="h-full bg-green-500 rounded-full transition-all duration-1000 shadow-[0_0_8px_rgba(34,197,94,0.3)]" style="width: {{ $k->bobot * 100 }}%"></div>
+                                    <div class="h-full bg-green-500 rounded-full transition-all duration-1000 shadow-[0_0_8px_rgba(34,197,94,0.3)]" :style="'width: ' + ({{ $k->bobot_kriteria }} * 100) + '%'"></div>
                                 </div>
-                                <span class="text-[10px] text-var(--text-3) font-bold">{{ number_format($k->bobot * 100, 0) }}%</span>
+                                <span class="text-[10px] text-var(--text-3) font-bold">{{ number_format($k->bobot_kriteria * 100, 0) }}%</span>
                             </div>
+                        </td>
+                        <td class="text-center py-6">
+                            <form action="{{ route('admin.kriteria.toggle', $k->id_kriteria) }}" method="POST">
+                                @csrf @method('PATCH')
+                                <button type="submit" class="group relative inline-flex items-center justify-center">
+                                    <span class="badge {{ $k->is_aktif ? 'badge-green' : 'badge-red' }} px-3 py-1 rounded-full text-[10px] font-bold transition-all group-hover:scale-105">
+                                        {{ $k->is_aktif ? 'Aktif' : 'Nonaktif' }}
+                                    </span>
+                                </button>
+                            </form>
                         </td>
                         <td class="text-center py-6">
                             <span class="px-3 py-1 rounded-lg bg-gray-100 text-var(--text-2) text-[10px] font-bold border border-gray-200">{{ $k->subkriteria_count }} Item</span>
                         </td>
                         <td class="text-center py-6">
                             <div class="flex items-center justify-center gap-2">
-                                <a href="{{ route('admin.subkriteria.index', ['kriteria_id' => $k->id]) }}"
+                                <a href="{{ route('admin.subkriteria.index', ['kriteria_id' => $k->id_kriteria]) }}"
                                    class="p-2 rounded-xl bg-white border border-var(--border) text-var(--text-2) hover:text-var(--accent) hover:border-var(--accent) transition-all shadow-sm group" title="Kelola Subkriteria">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>
                                 </a>
@@ -153,8 +169,8 @@
                 <div class="px-8 py-6 space-y-5">
                     <div class="form-group">
                         <label class="form-label text-[10px] font-bold text-gray-500 mb-1.5 block">Nama Kriteria <span class="text-red-500">*</span></label>
-                        <input type="text" name="nama" value="{{ old('nama') }}" class="form-input rounded-xl bg-var(--bg) border-var(--border) font-bold text-sm @error('nama') border-red-500 @enderror" placeholder="Contoh: Nilai Agama dan Moral">
-                        @error('nama') <p class="text-[10px] text-red-500 mt-1">{{ $message }}</p> @enderror
+                        <input type="text" name="nama_kriteria" value="{{ old('nama_kriteria') }}" class="form-input rounded-xl bg-var(--bg) border-var(--border) font-bold text-sm @error('nama_kriteria') border-red-500 @enderror" placeholder="Contoh: Nilai Agama dan Moral">
+                        @error('nama_kriteria') <p class="text-[10px] text-red-500 mt-1">{{ $message }}</p> @enderror
                     </div>
                     
                     <div class="form-group">
@@ -162,6 +178,14 @@
                         <input type="number" name="bobot" value="{{ old('bobot') }}" step="0.01" min="0" max="1" class="form-input rounded-xl bg-var(--bg) border-var(--border) font-bold text-sm @error('bobot') border-red-500 @enderror" placeholder="0.00 – 1.00">
                         <p class="text-[10px] text-gray-400 mt-2 italic font-medium">Gunakan nilai desimal (contoh: 0.25 untuk 25%). Total bobot seluruh kriteria harus tepat 1.00.</p>
                         @error('bobot') <p class="text-[10px] text-red-500 mt-1">{{ $message }}</p> @enderror
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label text-[10px] font-bold text-gray-500 mb-1.5 block">Status Kriteria</label>
+                        <select name="is_aktif" class="form-input rounded-xl bg-var(--bg) border-var(--border) font-bold text-sm">
+                            <option value="1" {{ old('is_aktif', true) == '1' ? 'selected' : '' }}>Aktif</option>
+                            <option value="0" {{ old('is_aktif') == '0' ? 'selected' : '' }}>Nonaktif</option>
+                        </select>
                     </div>
                 </div>
 
@@ -191,12 +215,20 @@
                 <div class="px-8 py-6 space-y-5">
                     <div class="form-group">
                         <label class="form-label text-[10px] font-bold text-gray-500 mb-1.5 block">Nama Kriteria <span class="text-red-500">*</span></label>
-                        <input type="text" name="nama" x-model="editData.nama" class="form-input rounded-xl bg-var(--bg) border-var(--border) font-bold text-sm">
+                        <input type="text" name="nama_kriteria" x-model="editData.nama" class="form-input rounded-xl bg-var(--bg) border-var(--border) font-bold text-sm">
                     </div>
                     
                     <div class="form-group">
                         <label class="form-label text-[10px] font-bold text-gray-500 mb-1.5 block">Bobot Kriteria <span class="text-red-500">*</span></label>
                         <input type="number" name="bobot" x-model="editData.bobot" step="0.01" min="0" max="1" class="form-input rounded-xl bg-var(--bg) border-var(--border) font-bold text-sm">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label text-[10px] font-bold text-gray-500 mb-1.5 block">Status Kriteria</label>
+                        <select name="is_aktif" x-model="editData.is_aktif" class="form-input rounded-xl bg-var(--bg) border-var(--border) font-bold text-sm">
+                            <option value="1">Aktif</option>
+                            <option value="0">Nonaktif</option>
+                        </select>
                     </div>
                 </div>
 
@@ -223,9 +255,17 @@
                     <p class="text-sm text-var(--text-3) font-medium mb-6 tracking-tight" x-text="deleteData.nama"></p>
                     <p class="text-[10px] text-red-600 bg-red-50 border border-red-100 rounded-xl p-4 leading-relaxed italic">⚠️ Menghapus kriteria akan secara otomatis menghapus semua subkriteria dan data penilaian terkait.</p>
                 </div>
-                <div class="px-8 pb-8 flex gap-3">
-                    <button type="button" @click="showDelete = false" class="flex-1 px-4 py-3 rounded-xl text-xs font-bold text-var(--text-3) bg-gray-100 hover:bg-gray-200 transition-all">Batal</button>
-                    <button type="submit" class="flex-1 px-4 py-3 rounded-xl text-xs font-bold text-white bg-red-600 hover:bg-red-700 transition-all shadow-lg shadow-red-100">Ya, Hapus</button>
+                <div class="px-8 pb-8 space-y-4">
+                    <label class="flex items-center gap-3 p-3 rounded-xl bg-gray-50 border border-gray-100 cursor-pointer hover:bg-gray-100 transition-all">
+                        <input type="checkbox" x-model="confirmDelete" class="w-4 h-4 rounded border-gray-300 text-red-600 focus:ring-red-500">
+                        <span class="text-[10px] font-bold text-gray-600 uppercase tracking-wider">Saya yakin ingin menghapus data ini secara permanen</span>
+                    </label>
+                    <div class="flex gap-3">
+                        <button type="button" @click="showDelete = false; confirmDelete = false" class="flex-1 px-4 py-3 rounded-xl text-xs font-bold text-var(--text-3) bg-gray-100 hover:bg-gray-200 transition-all">Batal</button>
+                        <button type="submit" :disabled="!confirmDelete" 
+                                :class="confirmDelete ? 'bg-red-600 hover:bg-red-700 shadow-red-100' : 'bg-gray-300 cursor-not-allowed shadow-none'"
+                                class="flex-1 px-4 py-3 rounded-xl text-xs font-bold text-white transition-all shadow-lg">Ya, Hapus</button>
+                    </div>
                 </div>
             </form>
         </div>

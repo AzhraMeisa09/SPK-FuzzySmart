@@ -6,28 +6,31 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+use App\Traits\HasCustomId;
+
 class Kriteria extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, HasCustomId;
 
     protected $table = 'kriteria';
+    protected $primaryKey = 'id_kriteria';
+    public $incrementing = false;
+    protected $keyType = 'string';
 
-    protected $fillable = [
-        'kode',
-        'nama',
-        'bobot'
-    ];
-
-    /**
-     * Get dynamic Kode (C1, C2, etc) based on ID
-     */
-    public function getKodeAttribute(): string
+    public function getPrefix()
     {
-        return 'C' . $this->id;
+        return 'C';
     }
 
+    protected $fillable = [
+        'nama_kriteria',
+        'bobot_kriteria',
+        'is_aktif'
+    ];
+
     protected $casts = [
-        'bobot' => 'double'
+        'bobot_kriteria' => 'double',
+        'is_aktif' => 'boolean'
     ];
 
     // ========================

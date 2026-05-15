@@ -13,9 +13,9 @@
                 <div class="flex items-center gap-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2">
                     <a href="{{ route('admin.template-rekomendasi.index') }}" class="hover:text-var(--accent) transition-colors">Template Rekomendasi</a>
                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
-                    <span class="text-var(--accent)">{{ $kriteria->nama }}</span>
+                    <span class="text-var(--accent)">{{ $kriteria->nama_kriteria }}</span>
                 </div>
-                <h2 class="text-lg font-semibold" style="color: var(--text-1);">{{ $kriteria->kode }} — {{ $kriteria->nama }}</h2>
+                <h2 class="text-lg font-semibold" style="color: var(--text-1);">{{ $kriteria->id_kriteria }} — {{ $kriteria->nama_kriteria }}</h2>
                 <p class="text-xs mt-0.5" style="color: var(--text-3);">Klik subkriteria untuk melakukan kustomisasi atau generate narasi otomatis.</p>
             </div>
             
@@ -26,8 +26,8 @@
                 
                 @php
                     $pendingSubIds = $kriteria->subkriteria->filter(function($s) {
-                        return \App\Models\TemplateRekomendasi::where('subkriteria_id', $s->id)->count() < 3;
-                    })->pluck('id')->toArray();
+                        return \App\Models\TemplateRekomendasi::where('subkriteria_id', $s->id_subkriteria)->count() < 3;
+                    })->pluck('id_subkriteria')->toArray();
                 @endphp
 
                 @if(!empty($pendingSubIds))
@@ -66,20 +66,20 @@
             <tbody class="divide-y divide-gray-50">
                 @forelse($kriteria->subkriteria as $s)
                     @php
-                        $existingCount = \App\Models\TemplateRekomendasi::where('subkriteria_id', $s->id)->count();
+                        $existingCount = \App\Models\TemplateRekomendasi::where('subkriteria_id', $s->id_subkriteria)->count();
                         $complete = $existingCount === 3;
                     @endphp
                     <tr class="hover:bg-var(--bg) transition-colors group">
                         <td class="py-5">
                             <div class="flex flex-col">
-                                <span class="text-[9px] font-bold text-var(--accent) tracking-wide mb-1">{{ $s->kode }}</span>
-                                <span class="text-sm font-semibold text-var(--text-1) tracking-tight">{{ $s->nama }}</span>
+                                <span class="text-[9px] font-bold text-var(--accent) tracking-wide mb-1">{{ $s->id_subkriteria }}</span>
+                                <span class="text-sm font-semibold text-var(--text-1) tracking-tight">{{ $s->nama_subkriteria }}</span>
                             </div>
                         </td>
                         <td class="text-center py-5">
                             <div class="flex items-center justify-center gap-1.5">
                                 @php
-                                    $existingKats = \App\Models\TemplateRekomendasi::where('subkriteria_id', $s->id)->pluck('kategori')->toArray();
+                                    $existingKats = \App\Models\TemplateRekomendasi::where('subkriteria_id', $s->id_subkriteria)->pluck('kategori')->toArray();
                                 @endphp
                                 @foreach(['MB','BSH','BSB'] as $kat)
                                     @php
@@ -101,7 +101,7 @@
                         <td class="text-center py-5">
                             <form action="{{ route('admin.template-rekomendasi.generate') }}" method="POST" class="inline">
                                 @csrf
-                                <input type="hidden" name="subkriteria_ids[]" value="{{ $s->id }}">
+                                <input type="hidden" name="subkriteria_ids[]" value="{{ $s->id_subkriteria }}">
                                 @if($complete)
                                     <button type="submit" class="flex items-center gap-2 mx-auto px-4 py-2 rounded-xl bg-blue-50 text-black border border-gray-200 text-[10px] font-bold hover:bg-blue-600 hover:text-white transition-all shadow-sm">
                                         <svg class="w-3.5 h-3.5 text-blue-600 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>

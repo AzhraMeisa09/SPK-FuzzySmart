@@ -4,11 +4,22 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+use App\Traits\HasCustomId;
+
 class MingguPenilaian extends Model
 {
+    use HasCustomId;
     public $timestamps = true;
 
     protected $table = 'minggu_penilaian';
+    protected $primaryKey = 'id_minggu';
+    public $incrementing = false;
+    protected $keyType = 'string';
+
+    public function getPrefix()
+    {
+        return 'M';
+    }
 
     protected $fillable = [
         'periode_id',
@@ -40,6 +51,7 @@ class MingguPenilaian extends Model
     public function subkriteria()
     {
         return $this->belongsToMany(Subkriteria::class, 'jadwal_subkriteria', 'minggu_id', 'subkriteria_id')
+                    ->using(JadwalSubkriteria::class)
                     ->withPivot('urutan', 'wajib')
                     ->withTimestamps();
     }
@@ -90,12 +102,12 @@ class MingguPenilaian extends Model
     public function sudahDinilai()
     {
         // Ambil semua ID siswa yang terlibat dalam periode ini (melalui kelas)
-        $siswaIds = $this->periode->kelas->flatMap->siswa->pluck('id')->unique();
+        $siswaIds = $this->periode->kelas->flatMap->siswa->pluck('id_siswa')->unique();
         $totalSiswa = $siswaIds->count();
         
         if ($totalSiswa === 0) return false;
 
-        $jadwalIds = $this->jadwalSubkriteria->pluck('id');
+        $jadwalIds = $this->jadwalSubkriteria->pluck('id_jadwal_sub');
         if ($jadwalIds->isEmpty()) return false;
 
         // Hitung berapa banyak baris penilaian (jadwal_sub_id, siswa_id) yang SUDAH FINAL

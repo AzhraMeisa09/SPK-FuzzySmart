@@ -61,8 +61,8 @@
                     <div class="flex items-center gap-6 no-print">
                         <div class="hidden lg:flex -space-x-3">
                             @foreach($group->data->take(4) as $top)
-                                <div class="w-9 h-9 rounded-xl border-2 border-white bg-gray-100 flex items-center justify-center text-[11px] font-bold text-gray-600 shadow-sm" title="{{ $top->siswa->nama }}">
-                                    {{ substr($top->siswa->nama, 0, 1) }}
+                                <div class="w-9 h-9 rounded-xl border-2 border-white bg-gray-100 flex items-center justify-center text-[11px] font-bold text-gray-600 shadow-sm" title="{{ $top->siswa->name }}">
+                                    {{ substr($top->siswa->name, 0, 1) }}
                                 </div>
                             @endforeach
                             @if(count($group->data) > 4)
@@ -108,7 +108,7 @@
 
                                         <td>
                                             <div class="flex flex-col">
-                                                <span class="font-bold text-var(--text-1) leading-tight">{{ $item->siswa->nama }}</span>
+                                                <span class="font-bold text-var(--text-1) leading-tight">{{ $item->siswa->name }}</span>
                                                 <span class="text-[10px] text-var(--text-3) font-bold mt-0.5 tracking-wider">NISN: {{ $item->siswa->kode ?? '—' }}</span>
                                             </div>
                                         </td>
@@ -144,7 +144,7 @@
                                         </td>
 
                                         <td class="text-center no-print">
-                                            <a href="{{ route('admin.hasil_evaluasi.show', $item->id) }}" 
+                                            <a href="{{ route('admin.hasil_evaluasi.show', $item->id_evaluasi) }}" 
                                                class="inline-flex items-center justify-center w-9 h-9 rounded-xl bg-white border border-var(--border) text-var(--text-2) hover:text-var(--accent) hover:border-var(--accent) transition-all shadow-sm group-hover:scale-105" title="Lihat Analisis Detail">
                                                 <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                                             </a>

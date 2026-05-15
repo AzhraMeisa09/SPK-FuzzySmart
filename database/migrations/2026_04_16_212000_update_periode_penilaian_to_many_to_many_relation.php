@@ -15,9 +15,11 @@ return new class extends Migration
         // 1. Buat tabel pivot periode_kelas jika belum ada
         if (!Schema::hasTable('periode_kelas')) {
             Schema::create('periode_kelas', function (Blueprint $table) {
-                $table->id();
-                $table->foreignId('periode_id')->constrained('periode_penilaian')->onDelete('cascade');
-                $table->foreignId('kelas_id')->constrained('kelas')->onDelete('cascade');
+                $table->string('id_periode_kelas', 10)->primary();
+                $table->string('periode_id', 10);
+                $table->string('kelas_id', 10);
+                $table->foreign('periode_id')->references('id_periode')->on('periode_penilaian')->onDelete('cascade');
+                $table->foreign('kelas_id')->references('id_kelas')->on('kelas')->onDelete('cascade');
                 $table->timestamps();
 
                 $table->unique(['periode_id', 'kelas_id']);

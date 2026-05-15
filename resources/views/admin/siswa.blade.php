@@ -17,14 +17,13 @@
     showEdit: {{ session('edit_id') ? 'true' : 'false' }},
     showDelete: false,
     photoPreview: null,
-    parents: {{ json_encode($waliMurid->pluck('alamat', 'id')) }},
+    parents: {{ json_encode($waliMurid->pluck('alamat', 'id_user')) }},
     addData: {
         alamat: {{ json_encode(old('alamat', '')) }}
     },
     editData: {
-        id: {{ json_encode(old('id', session('edit_data.id', ''))) }},
-        kode: {{ json_encode(old('kode', session('edit_data.kode', ''))) }},
-        nama: {{ json_encode(old('nama', session('edit_data.nama', ''))) }},
+        id: {{ json_encode(old('id_siswa', session('edit_data.id_siswa', ''))) }},
+        nama: {{ json_encode(old('name', session('edit_data.name', ''))) }},
         kelas_id: {{ json_encode(old('kelas_id', session('edit_data.kelas_id', ''))) }},
         wali_murid_id: {{ json_encode(old('wali_murid_id', session('edit_data.wali_murid_id', ''))) }},
         tanggal_lahir: {{ json_encode(old('tanggal_lahir', session('edit_data.tanggal_lahir', ''))) }},
@@ -51,9 +50,8 @@
     openEdit(s) { 
         this.photoPreview = null;
         this.editData = {
-            id: s.id,
-            kode: s.kode || '',
-            nama: s.nama,
+            id: s.id_siswa,
+            nama: s.name,
             kelas_id: s.kelas_id,
             wali_murid_id: s.wali_murid_id || '',
             tanggal_lahir: s.tanggal_lahir ? s.tanggal_lahir.split('T')[0] : '',
@@ -107,7 +105,7 @@
                         <select name="filter_kelas" onchange="this.form.submit()" class="form-select bg-var(--bg) border-var(--border) rounded-xl text-[13px] font-bold h-[42px] min-w-[140px]" style="padding-left: 16px;">
                             <option value="">Semua Kelas</option>
                             @foreach($kelas as $k)
-                                <option value="{{ $k->id }}" {{ request('filter_kelas') == $k->id ? 'selected' : '' }}>{{ $k->nama_kelas }}</option>
+                                <option value="{{ $k->id_kelas }}" {{ request('filter_kelas') == $k->id_kelas ? 'selected' : '' }}>{{ $k->nama_kelas }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -150,10 +148,10 @@
                                 @if($s->foto)
                                     <img src="{{ asset('storage/' . $s->foto) }}" class="w-10 h-10 rounded-2xl object-cover border border-var(--border) shadow-sm">
                                 @else
-                                    <div class="w-10 h-10 rounded-2xl bg-var(--accent-lt) flex items-center justify-center text-xs font-bold text-var(--accent) border border-var(--accent)/10 shadow-sm">{{ strtoupper(substr($s->nama, 0, 1)) }}</div>
+                                    <div class="w-10 h-10 rounded-2xl bg-var(--accent-lt) flex items-center justify-center text-xs font-bold text-var(--accent) border border-var(--accent)/10 shadow-sm">{{ strtoupper(substr($s->name, 0, 1)) }}</div>
                                 @endif
                                 <div class="flex flex-col">
-                                    <span class="font-semibold text-var(--text-1) leading-tight">{{ $s->nama }}</span>
+                                    <span class="font-semibold text-var(--text-1) leading-tight">{{ $s->name }}</span>
                                     <span class="text-[9px] font-medium tracking-wide mt-0.5 {{ $s->jenis_kelamin == 'L' ? 'text-blue-500' : 'text-pink-500' }}">
                                         {{ $s->jenis_kelamin == 'L' ? 'Laki-laki' : 'Perempuan' }}
                                     </span>
@@ -162,7 +160,7 @@
                         </td>
                         <td class="py-4">
                             <div class="flex flex-col gap-1.5">
-                                <code class="text-[10px] font-medium bg-gray-100 px-2 py-0.5 rounded-lg text-gray-600 border border-gray-200 inline-block w-fit">{{ $s->kode ?? 'Tanpa NISN' }}</code>
+                                <code class="text-[10px] font-medium bg-gray-100 px-2 py-0.5 rounded-lg text-gray-600 border border-gray-200 inline-block w-fit">{{ $s->id_siswa }}</code>
                                 @if($s->kelas)
                                     <span class="badge badge-blue shadow-[0_0_8px_rgba(59,130,246,0.15)]">{{ $s->kelas->nama_kelas }}</span>
                                 @else
@@ -186,13 +184,13 @@
                         </td>
                         <td class="text-center py-4">
                             <div class="flex items-center justify-center gap-2">
-                                <a href="{{ route('admin.siswa.show', $s->id) }}" class="p-2 rounded-xl bg-white border border-var(--border) text-var(--text-2) hover:text-var(--accent) hover:border-var(--accent) transition-all shadow-sm group">
+                                <a href="{{ route('admin.siswa.show', $s->id_siswa) }}" class="p-2 rounded-xl bg-white border border-var(--border) text-var(--text-2) hover:text-var(--accent) hover:border-var(--accent) transition-all shadow-sm group">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg> 
                                 </a>
                                 <button @click="openEdit({{ json_encode($s) }})" class="p-2 rounded-xl bg-blue-50 border border-blue-100 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                 </button>
-                                <button @click="openDelete({ id: {{ $s->id }}, nama: '{{ addslashes($s->nama) }}', nisn: '{{ $s->kode }}' })" class="p-2 rounded-xl bg-red-50 border border-red-100 text-red-600 hover:bg-red-600 hover:text-white transition-all shadow-sm">
+                                <button @click="openDelete({ id: '{{ $s->id_siswa }}', nama: '{{ addslashes($s->name) }}' })" class="p-2 rounded-xl bg-red-50 border border-red-100 text-red-600 hover:bg-red-600 hover:text-white transition-all shadow-sm">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                 </button>
                             </div>
@@ -233,11 +231,11 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div class="form-group">
                                 <label class="form-label text-[10px] font-bold">Nama Lengkap Siswa <span class="text-red-500">*</span></label>
-                                <input type="text" name="nama" value="{{ old('nama') }}" class="form-input rounded-xl bg-var(--bg) border-var(--border) font-bold text-xs" placeholder="Cth: Aditya Pratama">
+                                <input type="text" name="name" value="{{ old('name') }}" class="form-input rounded-xl bg-var(--bg) border-var(--border) font-bold text-xs" placeholder="Cth: Aditya Pratama">
                             </div>
                             <div class="form-group">
-                                <label class="form-label text-[10px] font-bold">NISN / Kode</label>
-                                <input type="text" name="kode" value="{{ old('kode') }}" class="form-input rounded-xl bg-var(--bg) border-var(--border) font-bold text-xs text-blue-600" placeholder="Cth: 0012345678">
+                                <label class="form-label text-[10px] font-bold">Custom ID (Opsional)</label>
+                                <input type="text" name="id_siswa" value="{{ old('id_siswa') }}" class="form-input rounded-xl bg-var(--bg) border-var(--border) font-bold text-xs text-blue-600" placeholder="Cth: S001">
                             </div>
                             <div class="form-group">
                                 <label class="form-label text-[10px] font-bold">Jenis Kelamin <span class="text-red-500">*</span></label>
@@ -277,7 +275,7 @@
                             <select name="kelas_id" class="form-select rounded-xl bg-var(--bg) border-var(--border) font-bold text-xs">
                                 <option value="">Pilih Kelas</option>
                                 @foreach($kelas as $k)
-                                    <option value="{{ $k->id }}" {{ old('kelas_id') == $k->id ? 'selected' : '' }}>{{ $k->nama_kelas }}</option>
+                                    <option value="{{ $k->id_kelas }}" {{ old('kelas_id') == $k->id_kelas ? 'selected' : '' }}>{{ $k->nama_kelas }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -292,7 +290,7 @@
                                 <select name="wali_murid_id" @change="updateAddress($event.target.value, 'add')" class="form-select rounded-xl bg-white border-blue-100 font-bold text-xs mt-2">
                                     <option value="">-- Tidak ditautkan ke profil User --</option>
                                     @foreach($waliMurid as $w)
-                                        <option value="{{ $w->id }}" {{ old('wali_murid_id') == $w->id ? 'selected' : '' }}>{{ $w->nama_lengkap }} ({{ $w->email }})</option>
+                                        <option value="{{ $w->id_user }}" {{ old('wali_murid_id') == $w->id_user ? 'selected' : '' }}>{{ $w->nama_lengkap }} ({{ $w->email }})</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -337,11 +335,11 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div class="form-group">
                                 <label class="form-label text-[10px] font-bold">Nama Lengkap Siswa</label>
-                                <input type="text" name="nama" x-model="editData.nama" class="form-input rounded-xl bg-var(--bg) border-var(--border) font-bold text-xs">
+                                <input type="text" name="name" x-model="editData.nama" class="form-input rounded-xl bg-var(--bg) border-var(--border) font-bold text-xs">
                             </div>
                             <div class="form-group">
-                                <label class="form-label text-[10px] font-bold">NISN / Kode</label>
-                                <input type="text" name="kode" x-model="editData.kode" class="form-input rounded-xl bg-var(--bg) border-var(--border) font-bold text-xs text-blue-600">
+                                <label class="form-label text-[10px] font-bold">Custom ID</label>
+                                <input type="text" name="id_siswa" x-model="editData.id" class="form-input rounded-xl bg-var(--bg) border-var(--border) font-bold text-xs text-blue-600" readonly>
                             </div>
                             <div class="form-group">
                                 <label class="form-label text-[10px] font-bold">Jenis Kelamin</label>
@@ -378,7 +376,7 @@
                             <label class="form-label text-[10px] font-bold">Penempatan Kelas</label>
                             <select name="kelas_id" x-model="editData.kelas_id" class="form-select rounded-xl bg-var(--bg) border-var(--border) font-bold text-xs">
                                 @foreach($kelas as $k)
-                                    <option value="{{ $k->id }}">{{ $k->nama_kelas }}</option>
+                                    <option value="{{ $k->id_kelas }}">{{ $k->nama_kelas }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -392,7 +390,7 @@
                                 <select name="wali_murid_id" x-model="editData.wali_murid_id" @change="updateAddress($event.target.value, 'edit')" class="form-select rounded-xl bg-white border-blue-100 font-bold text-xs mt-2">
                                     <option value="">-- Tidak ditautkan ke profil User --</option>
                                     @foreach($waliMurid as $w)
-                                        <option value="{{ $w->id }}">{{ $w->nama_lengkap }} ({{ $w->email }})</option>
+                                        <option value="{{ $w->id_user }}">{{ $w->nama_lengkap }} ({{ $w->email }})</option>
                                     @endforeach
                                 </select>
                             </div>

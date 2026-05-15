@@ -37,7 +37,7 @@
                 <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">Pilih Periode</label>
                 <select name="periode_id" class="form-select" onchange="this.form.submit()">
                     @foreach($periodeList as $p)
-                        <option value="{{ $p->id }}" {{ $selectedPeriodeId == $p->id ? 'selected' : '' }}>{{ $p->nama_periode }}</option>
+                        <option value="{{ $p->id_periode }}" {{ $selectedPeriodeId == $p->id_periode ? 'selected' : '' }}>{{ $p->nama_periode }}</option>
                     @endforeach
                 </select>
             </div>
@@ -53,7 +53,7 @@
                 <select name="kelas_id" class="form-select">
                     <option value="">Semua Kelas</option>
                     @foreach($kelasList as $kelas)
-                        <option value="{{ $kelas->id }}" {{ request('kelas_id') == $kelas->id ? 'selected' : '' }}>{{ $kelas->nama_kelas }}</option>
+                        <option value="{{ $kelas->id_kelas }}" {{ request('kelas_id') == $kelas->id_kelas ? 'selected' : '' }}>{{ $kelas->nama_kelas }}</option>
                     @endforeach
                 </select>
             </div>
@@ -91,7 +91,7 @@
                 </thead>
                 <tbody class="divide-y divide-gray-50">
                     @forelse($evaluasi as $index => $eval)
-                        <tr class="hover:bg-var(--bg) transition-all cursor-pointer group" onclick="toggleDetail('detail-{{ $eval->id }}')">
+                        <tr class="hover:bg-var(--bg) transition-all cursor-pointer group" onclick="toggleDetail('detail-{{ $eval->id_evaluasi }}')">
                             <td class="text-center">
                                 <div class="w-8 h-8 rounded-full flex items-center justify-center mx-auto text-[10px] font-black {{ $index < 3 ? 'bg-amber-100 text-amber-700 border border-amber-200' : 'bg-gray-100 text-gray-400' }}">
                                     {{ $evaluasi->firstItem() + $index }}
@@ -100,10 +100,10 @@
                             <td class="py-5">
                                 <div class="flex items-center gap-4">
                                     <div class="w-10 h-10 rounded-xl flex items-center justify-center font-black text-xs shadow-sm bg-white border border-gray-100 group-hover:border-indigo-200 group-hover:text-indigo-600 transition-all">
-                                        {{ strtoupper(substr($eval->siswa->nama, 0, 1)) }}
+                                        {{ strtoupper(substr($eval->siswa->name, 0, 1)) }}
                                     </div>
                                     <div>
-                                        <p class="text-sm font-black text-gray-800 tracking-tight leading-none mb-1">{{ $eval->siswa->nama }}</p>
+                                        <p class="text-sm font-black text-gray-800 tracking-tight leading-none mb-1">{{ $eval->siswa->name }}</p>
                                         <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">
                                             {{ $eval->siswa->kelas->nama_kelas ?? '—' }} • NISN: {{ $eval->siswa->kode ?: '—' }}
                                         </p>
@@ -137,7 +137,7 @@
                             </td>
                         </tr>
                         {{-- ── EXPANDABLE DETAIL ROW ── --}}
-                        <tr id="detail-{{ $eval->id }}" class="hidden bg-gray-50/30">
+                        <tr id="detail-{{ $eval->id_evaluasi }}" class="hidden bg-gray-50/30">
                             <td colspan="6" class="p-8">
                                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
                                     {{-- Criteria Breakdown --}}
@@ -149,7 +149,7 @@
                                         <div class="grid grid-cols-1 gap-2.5">
                                             @foreach($kriteriaList as $k)
                                                 @php 
-                                                    $detail = $eval->detail->filter(fn($d) => $d->subkriteria->kriteria_id == $k->id);
+                                                    $detail = $eval->detail->filter(fn($d) => $d->subkriteria->kriteria_id == $k->id_kriteria);
                                                     $avg = $detail->avg('nilai_crisp');
                                                     $katObj = \App\Models\KategoriNilai::findByNilai($avg ?? 0);
                                                     $kat = $katObj ? $katObj->nama : 'MB';
@@ -160,7 +160,7 @@
                                                         <div class="w-8 h-8 rounded-xl bg-gray-50 flex items-center justify-center text-[10px] font-black text-gray-400 group-hover/crit:bg-indigo-50 group-hover/crit:text-indigo-500 transition-colors">
                                                             {{ $k->kode }}
                                                         </div>
-                                                        <span class="text-xs font-black text-gray-700 tracking-tight">{{ $k->nama }}</span>
+                                                        <span class="text-xs font-black text-gray-700 tracking-tight">{{ $k->nama_kriteria }}</span>
                                                     </div>
                                                     <div class="text-right">
                                                         <p class="text-sm font-black text-gray-900 tracking-tighter">{{ $score }}%</p>
@@ -201,7 +201,7 @@
                                             <form action="{{ route('kepsek.laporan.generate-word') }}" method="POST">
                                                 @csrf
                                                 <input type="hidden" name="siswa_id" value="{{ $eval->siswa_id }}">
-                                                <input type="hidden" name="periode_id" value="{{ $periodeAktif->id ?? '' }}">
+                                                <input type="hidden" name="periode_id" value="{{ $periodeAktif->id_periode ?? '' }}">
                                                 <button type="submit" class="btn btn-indigo px-8 rounded-xl font-black uppercase tracking-widest text-[10px] shadow-lg shadow-indigo-100">
                                                     Cetak Rapor
                                                 </button>

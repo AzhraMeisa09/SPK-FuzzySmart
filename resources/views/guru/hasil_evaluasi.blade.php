@@ -55,12 +55,12 @@
                         <div class="flex justify-between items-start mb-5">
                             <div class="flex items-center gap-3">
                                 <div class="w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg" style="background: var(--accent-lt); color: var(--accent);">
-                                    {{ strtoupper(substr($res->siswa->nama, 0, 1)) }}
+                                    {{ strtoupper(substr($res->siswa->name, 0, 1)) }}
                                 </div>
                                 <div class="min-w-0">
                                     <div class="flex items-center gap-2 mb-1">
                                         <span class="text-[10px] font-bold px-1.5 py-0.5 rounded" style="background: var(--bg); color: var(--text-3);">#{{ $loop->iteration }}</span>
-                                        <h3 class="font-semibold truncate" style="color: var(--text-1);">{{ $res->siswa->nama }}</h3>
+                                        <h3 class="font-semibold truncate" style="color: var(--text-1);">{{ $res->siswa->name }}</h3>
                                     </div>
                                     <p class="text-[9px] font-bold uppercase tracking-wider" style="color: var(--text-3);">{{ $res->siswa->kelas->nama ?? '-' }}</p>
                                 </div>

@@ -4,11 +4,23 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+use App\Traits\HasCustomId;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+
 class DetailEvaluasi extends Model
 {
+    use HasFactory, HasCustomId;
     public $timestamps = false;
 
     protected $table = 'detail_evaluasi';
+    protected $primaryKey = 'id_detail_evaluasi';
+    public $incrementing = false;
+    protected $keyType = 'string';
+
+    public function getPrefix()
+    {
+        return 'DE';
+    }
 
     protected $fillable = [
         'evaluasi_id',

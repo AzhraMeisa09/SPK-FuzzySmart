@@ -12,8 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('kategori_nilai', function (Blueprint $table) {
-            $table->id();
-            $table->string('nama', 100)->unique(); // MB, BSH, BSB
+            $table->string('id_kategori', 10)->primary();
+            $table->string('nama', 20)->unique(); // MB, BSH, BSB
 
             $table->double('nilai_l');
             $table->double('nilai_m');

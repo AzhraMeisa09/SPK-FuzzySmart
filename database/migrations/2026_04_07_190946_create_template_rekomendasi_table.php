@@ -12,12 +12,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('template_rekomendasi', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('subkriteria_id')->constrained('subkriteria');
+            $table->string('id_template', 10)->primary();
+            $table->string('subkriteria_id', 10)->nullable();
+            $table->foreign('subkriteria_id')->references('id_subkriteria')->on('subkriteria')->nullOnDelete();
 
-            $table->string('kategori', 5);
+            $table->string('kategori', 10);
             $table->text('isi');
-            $table->string('prioritas', 10);
+            $table->string('prioritas', 20)->default('sedang');
 
             $table->timestamps();
         });

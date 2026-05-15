@@ -16,7 +16,7 @@ class TemplateRekomendasiController extends Controller
      */
     public function index()
     {
-        $kriterias = Kriteria::withCount('subkriteria')->get();
+        $kriterias = Kriteria::where('is_aktif', true)->withCount('subkriteria')->get();
         return view('admin.template_rekomendasi.index', compact('kriterias'));
     }
 
@@ -25,7 +25,10 @@ class TemplateRekomendasiController extends Controller
      */
     public function showSubkriteria($kriteria_id)
     {
-        $kriteria = Kriteria::with('subkriteria')->findOrFail($kriteria_id);
+        $kriteria = Kriteria::with(['subkriteria' => function($q) {
+            $q->orderByRaw("LENGTH(id_subkriteria) ASC, id_subkriteria ASC");
+        }])->findOrFail($kriteria_id);
+        
         return view('admin.template_rekomendasi.step2', compact('kriteria'));
     }
 
@@ -36,11 +39,11 @@ class TemplateRekomendasiController extends Controller
     {
         $request->validate([
             'subkriteria_ids'   => 'required|array|min:1',
-            'subkriteria_ids.*' => 'exists:subkriteria,id',
+            'subkriteria_ids.*' => 'exists:subkriteria,id_subkriteria',
         ]);
 
         $subkriteria_ids = $request->subkriteria_ids;
-        $subkriterias    = Subkriteria::whereIn('id', $subkriteria_ids)->get();
+        $subkriterias    = Subkriteria::whereIn('id_subkriteria', $subkriteria_ids)->get();
 
         $pola = [
             'MB'  => ['isi' => fn($nama) => "Perlu bimbingan dalam {$nama}",  'prioritas' => 'tinggi'],
@@ -52,8 +55,8 @@ class TemplateRekomendasiController extends Controller
         foreach ($subkriterias as $s) {
             foreach ($pola as $kategori => $cfg) {
                 $created = TemplateRekomendasi::firstOrCreate(
-                    ['subkriteria_id' => $s->id, 'kategori' => $kategori],
-                    ['isi' => $cfg['isi']($s->nama), 'prioritas' => $cfg['prioritas']]
+                    ['subkriteria_id' => $s->id_subkriteria, 'kategori' => $kategori],
+                    ['isi' => $cfg['isi']($s->nama_subkriteria), 'prioritas' => $cfg['prioritas']]
                 );
                 if ($created->wasRecentlyCreated) {
                     $inserted++;

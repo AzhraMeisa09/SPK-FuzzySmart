@@ -4,9 +4,21 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+use App\Traits\HasCustomId;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+
 class PenilaianMingguan extends Model
 {
+    use HasFactory, HasCustomId;
     protected $table = 'penilaian_mingguan';
+    protected $primaryKey = 'id_penilaian';
+    public $incrementing = false;
+    protected $keyType = 'string';
+
+    public function getPrefix()
+    {
+        return 'N';
+    }
 
     protected $fillable = [
         'jadwal_sub_id',

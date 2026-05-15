@@ -9,7 +9,7 @@
     showEdit: {{ session('edit_id') ? 'true' : 'false' }},
     showDelete: false,
     editData: {
-        id: '{{ old('id', session('edit_data.id')) }}',
+        id: '{{ old('id_kelas', session('edit_data.id_kelas')) }}',
         nama: '{{ old('nama_kelas', session('edit_data.nama_kelas')) }}',
         tahun_ajaran_id: '{{ old('tahun_ajaran_id', session('edit_data.tahun_ajaran_id')) }}',
         guru_ids: {{ json_encode(old('guru_ids', session('edit_data.guru_ids', []))) }}
@@ -17,10 +17,10 @@
     deleteData: {},
     openEdit(k) { 
         this.editData = {
-            id: k.id,
+            id: k.id_kelas,
             nama: k.nama_kelas,
             tahun_ajaran_id: k.tahun_ajaran_id,
-            guru_ids: k.guru.map(g => g.id.toString())
+            guru_ids: k.guru.map(g => g.id_user.toString())
         }; 
         this.showEdit = true; 
     },
@@ -98,7 +98,7 @@
                                 <button @click="openEdit({{ json_encode($k) }})" class="p-2 rounded-xl bg-blue-50 border border-blue-100 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm" title="Edit">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                 </button>
-                                <button @click="openDelete({ id: {{ $k->id }}, nama: '{{ addslashes($k->nama_kelas) }}' })" class="p-2 rounded-xl bg-red-50 border border-red-100 text-red-600 hover:bg-red-600 hover:text-white transition-all shadow-sm" title="Hapus">
+                                <button @click="openDelete({ id: '{{ $k->id_kelas }}', nama: '{{ addslashes($k->nama_kelas) }}' })" class="p-2 rounded-xl bg-red-50 border border-red-100 text-red-600 hover:bg-red-600 hover:text-white transition-all shadow-sm" title="Hapus">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                 </button>
                             </div>
@@ -144,7 +144,7 @@
                         <select name="tahun_ajaran_id" class="form-input rounded-xl bg-var(--bg) border-var(--border) font-bold text-sm @error('tahun_ajaran_id') border-red-500 @enderror">
                             <option value="">Pilih Tahun Ajaran</option>
                             @foreach($tahunAjaran as $ta)
-                                <option value="{{ $ta->id }}" {{ old('tahun_ajaran_id') == $ta->id ? 'selected' : '' }}>
+                                <option value="{{ $ta->id_tahun_ajaran }}" {{ old('tahun_ajaran_id') == $ta->id_tahun_ajaran ? 'selected' : '' }}>
                                     {{ $ta->nama }} {{ $ta->is_aktif ? '(Aktif)' : '' }}
                                 </option>
                             @endforeach
@@ -157,12 +157,12 @@
                         selected: {{ json_encode(old('guru_ids', [])) }},
                         options: [
                             @foreach($guru as $g)
-                                { id: '{{ $g->id }}', name: '{{ addslashes($g->nama_lengkap) }}' },
+                                { id: '{{ $g->id_user }}', name: '{{ addslashes($g->nama_lengkap) }}' },
                             @endforeach
                         ],
                         get selectedNames() {
                             if (this.selected.length === 0) return 'Pilih Guru Pengampu...';
-                            let names = this.options.filter(o => this.selected.includes(o.id.toString())).map(o => o.name);
+                            let names = this.options.filter(o => this.selected.includes(o.id_user ? o.id_user.toString() : o.id.toString())).map(o => o.name);
                             if (names.length > 2) return names.slice(0, 2).join(', ') + '... (+' + (names.length - 2) + ')';
                             return names.join(', ');
                         }
@@ -219,7 +219,7 @@
                         <select name="tahun_ajaran_id" x-model="editData.tahun_ajaran_id" class="form-input rounded-xl bg-var(--bg) border-var(--border) font-bold text-sm">
                             <option value="">Pilih Tahun Ajaran</option>
                             @foreach($tahunAjaran as $ta)
-                                <option value="{{ $ta->id }}">{{ $ta->nama }}</option>
+                                <option value="{{ $ta->id_tahun_ajaran }}">{{ $ta->nama }}</option>
                             @endforeach
                         </select>
                     </div>
@@ -228,12 +228,12 @@
                         open: false,
                         options: [
                             @foreach($guru as $g)
-                                { id: '{{ $g->id }}', name: '{{ addslashes($g->nama_lengkap) }}' },
+                                { id: '{{ $g->id_user }}', name: '{{ addslashes($g->nama_lengkap) }}' },
                             @endforeach
                         ],
                         get selectedNames() {
                             if (!editData.guru_ids || editData.guru_ids.length === 0) return 'Pilih Guru Pengampu...';
-                            let names = this.options.filter(o => editData.guru_ids.includes(o.id.toString())).map(o => o.name);
+                            let names = this.options.filter(o => editData.guru_ids.includes(o.id_user ? o.id_user.toString() : o.id.toString())).map(o => o.name);
                             if (names.length > 2) return names.slice(0, 2).join(', ') + '... (+' + (names.length - 2) + ')';
                             return names.join(', ');
                         }

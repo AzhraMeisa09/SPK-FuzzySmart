@@ -12,16 +12,18 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('siswa', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('kelas_id')->constrained('kelas')->cascadeOnDelete();
-            $table->foreignId('wali_murid_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->string('id_siswa', 10)->primary();
+            $table->string('kelas_id', 10);
+            $table->string('wali_murid_id', 10)->nullable();
+            $table->foreign('kelas_id')->references('id_kelas')->on('kelas')->cascadeOnDelete();
+            $table->foreign('wali_murid_id')->references('id_user')->on('users')->nullOnDelete();
 
             $table->string('kode', 10)->nullable();
-            $table->string('nama');
+            $table->string('name', 50);
             $table->date('tanggal_lahir');
             $table->enum('jenis_kelamin', ['L','P']);
 
-            $table->string('nama_orang_tua')->nullable();
+            $table->string('nama_orang_tua', 50)->nullable();
             $table->text('alamat')->nullable();
             $table->string('no_hp_orang_tua', 20)->nullable();
 

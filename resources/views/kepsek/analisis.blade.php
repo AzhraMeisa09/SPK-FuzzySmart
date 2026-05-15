@@ -20,7 +20,7 @@
             <div class="w-full md:w-72">
                 <select name="periode_id" class="form-select w-full font-black text-xs h-[42px] rounded-xl border-gray-100 shadow-sm focus:ring-indigo-500 focus:border-indigo-500" onchange="this.form.submit()">
                     @foreach($periodeList as $p)
-                        <option value="{{ $p->id }}" {{ $selectedPeriodeId == $p->id ? 'selected' : '' }}>{{ $p->nama_periode }}</option>
+                        <option value="{{ $p->id_periode }}" {{ $selectedPeriodeId == $p->id_periode ? 'selected' : '' }} class="text-gray-900">{{ $p->nama_periode }}</option>
                     @endforeach
                 </select>
             </div>
@@ -60,10 +60,10 @@
                         <div class="flex items-center gap-4">
                             <span class="text-[10px] font-black text-gray-300 w-6">#{{ $index + 1 }}</span>
                             <div class="w-10 h-10 rounded-xl bg-white border border-gray-100 flex items-center justify-center font-black text-xs text-gray-400 group-hover/item:border-emerald-200 group-hover/item:text-emerald-600 transition-all shadow-sm">
-                                {{ strtoupper(substr($eval->siswa->nama, 0, 1)) }}
+                                {{ strtoupper(substr($eval->siswa->name, 0, 1)) }}
                             </div>
                             <div>
-                                <p class="text-sm font-black text-gray-800 tracking-tight leading-none mb-1">{{ $eval->siswa->nama }}</p>
+                                <p class="text-sm font-black text-gray-800 tracking-tight leading-none mb-1">{{ $eval->siswa->name }}</p>
                                 <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{{ $eval->siswa->kelas->nama_kelas ?? '—' }}</p>
                             </div>
                         </div>
@@ -95,10 +95,10 @@
                         <div class="flex items-center gap-4">
                             <span class="text-[10px] font-black text-gray-300 w-6">#{{ count($bottomSiswa) - $index }}</span>
                             <div class="w-10 h-10 rounded-xl bg-white border border-gray-100 flex items-center justify-center font-black text-xs text-gray-400 group-hover/item:border-rose-200 group-hover/item:text-rose-600 transition-all shadow-sm">
-                                {{ strtoupper(substr($eval->siswa->nama, 0, 1)) }}
+                                {{ strtoupper(substr($eval->siswa->name, 0, 1)) }}
                             </div>
                             <div>
-                                <p class="text-sm font-black text-gray-800 tracking-tight leading-none mb-1">{{ $eval->siswa->nama }}</p>
+                                <p class="text-sm font-black text-gray-800 tracking-tight leading-none mb-1">{{ $eval->siswa->name }}</p>
                                 <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{{ $eval->siswa->kelas->nama_kelas ?? '—' }}</p>
                             </div>
                         </div>

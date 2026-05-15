@@ -24,6 +24,7 @@
         .swal2-popup { border-radius: 20px !important; font-family: 'Inter', sans-serif !important; }
         .swal2-styled.swal2-confirm { background-color: var(--accent) !important; border-radius: 12px !important; padding: 10px 24px !important; font-weight: 600 !important; }
         .swal2-styled.swal2-cancel { border-radius: 12px !important; padding: 10px 24px !important; font-weight: 600 !important; }
+        .swal2-container { z-index: 20000 !important; }
     </style>
     
     <style>

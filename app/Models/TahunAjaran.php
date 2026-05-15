@@ -5,13 +5,23 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
+use App\Traits\HasCustomId;
+
 class TahunAjaran extends Model
 {
-    use HasFactory;
+    use HasFactory, HasCustomId;
     
     public $timestamps = false;
     
     protected $table = 'tahun_ajaran';
+    protected $primaryKey = 'id_tahun_ajaran';
+    public $incrementing = false;
+    protected $keyType = 'string';
+
+    public function getPrefix()
+    {
+        return 'T';
+    }
 
     protected $fillable = [
         'nama',
@@ -48,7 +58,7 @@ class TahunAjaran extends Model
     {
         static::saving(function ($model) {
             if ($model->is_aktif) {
-                static::where('id', '!=', $model->id)
+                static::where('id_tahun_ajaran', '!=', $model->id_tahun_ajaran)
                       ->update(['is_aktif' => false]);
             }
         });

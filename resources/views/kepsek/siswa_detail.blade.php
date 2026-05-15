@@ -37,7 +37,7 @@
         <div class="flex flex-col gap-6 items-center md:items-end relative z-10">
             <div class="flex flex-col gap-2 min-w-[200px]">
                 <label class="text-[9px] font-black text-white/60 uppercase tracking-[0.2em] text-center md:text-right">Filter Periode Analisis</label>
-                <form action="{{ route('kepsek.siswa.show', $siswa->id) }}" method="GET">
+                <form action="{{ route('kepsek.siswa.show', $siswa->id_siswa) }}" method="GET">
                     <div class="relative group">
                         <select name="periode_id" class="w-full bg-white/10 border border-white/10 text-white text-xs font-bold rounded-xl px-4 py-2.5 cursor-pointer appearance-none focus:ring-2 focus:ring-[#84934A]/50 focus:border-[#84934A] transition-all" onchange="this.form.submit()">
                             @foreach($periodeList as $p)

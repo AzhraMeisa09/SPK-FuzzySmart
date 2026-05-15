@@ -5,11 +5,21 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
+use App\Traits\HasCustomId;
+
 class Kelas extends Model
 {
-    use HasFactory;
+    use HasFactory, HasCustomId;
 
     protected $table = 'kelas';
+    protected $primaryKey = 'id_kelas';
+    public $incrementing = false;
+    protected $keyType = 'string';
+
+    public function getPrefix()
+    {
+        return 'K';
+    }
 
     protected $fillable = [
         'tahun_ajaran_id',
@@ -36,7 +46,7 @@ class Kelas extends Model
             'kelas_guru',
             'kelas_id',
             'guru_id'
-        );
+        )->using(KelasGuru::class);
     }
 
     // Kelas → Siswa (One to Many)

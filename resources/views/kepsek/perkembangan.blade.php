@@ -59,12 +59,20 @@
                             <tr class="hover:bg-var(--bg) transition-colors group">
                                 <td class="py-5 pl-8">
                                     <div class="flex items-center gap-4">
-                                        <div class="w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs shadow-sm bg-white border border-gray-100 group-hover:border-var(--accent)/30 transition-all">
-                                            {{ strtoupper(substr($row['nama'], 0, 1)) }}
-                                        </div>
+                                        @if(!empty($row['foto']))
+                                            <img src="{{ asset('storage/' . $row['foto']) }}" alt="{{ $row['nama'] }}" class="w-9 h-9 rounded-xl object-cover shadow-sm border border-gray-100 group-hover:border-var(--accent)/30 transition-all">
+                                        @else
+                                            <div class="w-9 h-9 rounded-xl flex items-center justify-center font-black text-xs shadow-sm bg-white border border-gray-100 group-hover:border-var(--accent)/30 transition-all">
+                                                {{ strtoupper(substr($row['nama'], 0, 1)) }}
+                                            </div>
+                                        @endif
                                         <div>
                                             <p class="text-sm font-black text-gray-800 tracking-tight leading-tight mb-1">{{ $row['nama'] }}</p>
-                                            <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{{ $row['kelas'] }}</p>
+                                            <div class="flex items-center gap-1.5">
+                                                <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{{ $row['kelas'] }}</span>
+                                                <span class="w-1.5 h-1.5 rounded-full bg-gray-300"></span>
+                                                <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">NISN: {{ $row['id_siswa'] }}</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </td>

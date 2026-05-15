@@ -18,11 +18,11 @@ class SiswaController extends Controller
         $user = Auth::user();
         
         // Ambil kelas yang diampu guru
-        $kelasIds = $user->kelas()->pluck('kelas.id');
+        $kelasIds = $user->kelas()->pluck('kelas.id_kelas');
 
         $siswa = Siswa::whereIn('kelas_id', $kelasIds)
             ->with(['kelas', 'wali'])
-            ->orderBy('nama', 'asc')
+            ->orderBy('name', 'asc')
             ->get();
 
         return view('guru.siswa', compact('siswa'));
@@ -34,7 +34,7 @@ class SiswaController extends Controller
     public function show($id)
     {
         $user = Auth::user();
-        $kelasIds = $user->kelas()->pluck('kelas.id');
+        $kelasIds = $user->kelas()->pluck('kelas.id_kelas');
 
         $siswa = Siswa::whereIn('kelas_id', $kelasIds)
             ->with(['kelas', 'wali'])
@@ -44,12 +44,12 @@ class SiswaController extends Controller
         $periodeAktif = \App\Models\PeriodePenilaian::where('is_aktif', true)->first();
         $evaluasi = null;
         if ($periodeAktif) {
-            $evaluasi = \App\Models\Evaluasi::where('siswa_id', $siswa->id)
-                ->where('periode_id', $periodeAktif->id)
+            $evaluasi = \App\Models\Evaluasi::where('siswa_id', $siswa->id_siswa)
+                ->where('periode_id', $periodeAktif->id_periode)
                 ->first();
         }
 
-        $portofolios = \App\Models\Portofolio::where('siswa_id', $siswa->id)
+        $portofolios = \App\Models\Portofolio::where('siswa_id', $siswa->id_siswa)
             ->with(['minggu', 'images'])
             ->orderBy('created_at', 'desc')
             ->get();

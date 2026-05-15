@@ -12,20 +12,32 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('penilaian_mingguan', function (Blueprint $table) {
-            $table->id();
+            $table->string('id_penilaian', 10)->primary();
 
-            $table->foreignId('jadwal_sub_id')->constrained('jadwal_subkriteria');
-            $table->foreignId('siswa_id')->constrained('siswa');
-            $table->foreignId('guru_id')->constrained('users');
+            $table->string('jadwal_sub_id', 10);
+            $table->string('siswa_id', 10);
+            $table->string('guru_id', 10);
+            $table->string('kategori_id', 10)->nullable();
 
-            $table->foreignId('kategori_id')->constrained('kategori_nilai');
+            $table->foreign('jadwal_sub_id')->references('id_jadwal_sub')->on('jadwal_subkriteria')->cascadeOnDelete();
+            $table->foreign('siswa_id')->references('id_siswa')->on('siswa')->cascadeOnDelete();
+            $table->foreign('guru_id')->references('id_user')->on('users')->cascadeOnDelete();
+            $table->foreign('kategori_id')->references('id_kategori')->on('kategori_nilai')->nullOnDelete();
+
+            $table->double('nilai_l')->nullable();
+            $table->double('nilai_m')->nullable();
+            $table->double('nilai_u')->nullable();
+            $table->double('nilai_crisp')->nullable();
 
             $table->text('catatan')->nullable();
-
-            $table->enum('status', ['draft','final'])->default('draft');
+            $table->string('status', 20)->default('draft');
 
             $table->timestamps();
             $table->unique(['jadwal_sub_id', 'siswa_id']);
+            
+            $table->index('siswa_id');
+            $table->index('guru_id');
+            $table->index('jadwal_sub_id');
         });
     }
 

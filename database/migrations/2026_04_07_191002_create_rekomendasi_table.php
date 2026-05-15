@@ -12,16 +12,19 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('rekomendasi', function (Blueprint $table) {
-            $table->id();
+            $table->string('id_rekomendasi', 10)->primary();
 
-            $table->foreignId('evaluasi_id')->constrained('evaluasi');
-            $table->foreignId('siswa_id')->constrained('siswa');
-            $table->foreignId('subkriteria_id')->constrained('subkriteria');
+            $table->string('evaluasi_id', 10);
+            $table->string('siswa_id', 10);
+            $table->string('subkriteria_id', 10);
+            $table->string('template_id', 10);
 
-            $table->foreignId('template_id')->constrained('template_rekomendasi');
+            $table->foreign('evaluasi_id')->references('id_evaluasi')->on('evaluasi')->cascadeOnDelete();
+            $table->foreign('siswa_id')->references('id_siswa')->on('siswa');
+            $table->foreign('subkriteria_id')->references('id_subkriteria')->on('subkriteria');
+            $table->foreign('template_id')->references('id_template')->on('template_rekomendasi');
 
-            $table->string('kategori_hasil', 5);
-
+            $table->string('kategori_hasil', 10);
             $table->text('catatan_guru')->nullable();
 
             $table->timestamp('created_at')->useCurrent();

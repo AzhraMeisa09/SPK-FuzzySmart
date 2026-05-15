@@ -36,9 +36,9 @@ class KelasController extends Controller
     {
         $request->validate([
             'nama_kelas' => 'required|string|max:255',
-            'tahun_ajaran_id' => 'required|exists:tahun_ajaran,id',
+            'tahun_ajaran_id' => 'required|exists:tahun_ajaran,id_tahun_ajaran',
             'guru_ids' => 'nullable|array',
-            'guru_ids.*' => 'exists:users,id',
+            'guru_ids.*' => 'exists:users,id_user',
         ], [
             'nama_kelas.required' => 'Nama Kelas wajib diisi.',
             'tahun_ajaran_id.required' => 'Tahun Ajaran wajib dipilih.',
@@ -67,9 +67,9 @@ class KelasController extends Controller
 
         $request->validate([
             'nama_kelas' => 'required|string|max:255',
-            'tahun_ajaran_id' => 'required|exists:tahun_ajaran,id',
+            'tahun_ajaran_id' => 'required|exists:tahun_ajaran,id_tahun_ajaran',
             'guru_ids' => 'nullable|array',
-            'guru_ids.*' => 'exists:users,id',
+            'guru_ids.*' => 'exists:users,id_user',
         ], [
             'nama_kelas.required' => 'Nama Kelas wajib diisi.',
             'tahun_ajaran_id.required' => 'Tahun Ajaran wajib dipilih.',

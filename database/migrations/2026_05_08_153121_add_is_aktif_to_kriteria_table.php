@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('template_rekomendasi_umum', function (Blueprint $table) {
-            $table->string('prioritas')->default('utama')->after('isi'); // utama, alternatif
+        Schema::table('kriteria', function (Blueprint $table) {
+            $table->boolean('is_aktif')->default(true)->after('bobot_kriteria');
         });
     }
 
@@ -21,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('template_rekomendasi_umum', function (Blueprint $table) {
-            $table->dropColumn('prioritas');
+        Schema::table('kriteria', function (Blueprint $table) {
+            $table->dropColumn('is_aktif');
         });
     }
 };

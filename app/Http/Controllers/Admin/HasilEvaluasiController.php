@@ -62,7 +62,7 @@ class HasilEvaluasiController extends Controller
 
     public function show(Evaluasi $evaluasi)
     {
-        $evaluasi->load(['siswa.kelas', 'periode', 'detail.kriteria']);
+        $evaluasi->load(['siswa.kelas', 'periode', 'detail.subkriteria.kriteria']);
         return view('admin.hasil_evaluasi_detail', compact('evaluasi'));
     }
 }

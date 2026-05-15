@@ -12,12 +12,12 @@
             Kembali ke Manajemen User
         </a>
         
-        <form action="{{ route('admin.user.toggle', $user->id) }}" method="POST">
+        <form action="{{ route('admin.user.toggle', $user) }}" method="POST">
             @csrf
             @method('PATCH')
             <button type="submit" 
                     class="btn {{ $user->is_active ? 'btn-red' : 'btn-green' }} shadow-md hover:shadow-lg transition-all flex items-center gap-2 px-6 py-2.5 rounded-xl font-bold" 
-                    {{ auth()->id() == $user->id ? 'disabled' : '' }}>
+                    {{ auth()->user()->id_user == $user->id_user ? 'disabled' : '' }}>
                 @if($user->is_active)
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
                     Nonaktifkan Akses

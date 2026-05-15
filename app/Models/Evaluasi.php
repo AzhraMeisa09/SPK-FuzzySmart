@@ -4,15 +4,28 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+use App\Traits\HasCustomId;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+
 class Evaluasi extends Model
 {
+    use HasFactory, HasCustomId;
     public $timestamps = false;
 
     protected $table = 'evaluasi';
+    protected $primaryKey = 'id_evaluasi';
+    public $incrementing = false;
+    protected $keyType = 'string';
+
+    public function getPrefix()
+    {
+        return 'E';
+    }
 
     protected $fillable = [
         'periode_id',
         'siswa_id',
+        'template_umum_id',
         'nilai_akhir',
         'kategori_akhir',
         'rekomendasi',

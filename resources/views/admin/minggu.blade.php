@@ -13,7 +13,7 @@
     addMingguKe: '',
     
     rawWeeks: {{ Js::from($existingWeeks) }},
-    allPeriodes: {{ Js::from($periode->mapWithKeys(fn($p) => [$p->id => ['start' => $p->tanggal_mulai->format('Y-m-d'), 'end' => $p->tanggal_selesai->format('Y-m-d')]])) }},
+    allPeriodes: {{ Js::from($periode->mapWithKeys(fn($p) => [$p->id_periode => ['start' => $p->tanggal_mulai->format('Y-m-d'), 'end' => $p->tanggal_selesai->format('Y-m-d')]])) }},
     
     editData: {
         id: '',
@@ -53,51 +53,59 @@
     },
     
     openDetail(m) {
+        // Group subkriteria by kriteria name
+        const grouped = {};
+        (m.subkriteria || []).forEach(s => {
+            const kName = s.kriteria ? s.kriteria.nama_kriteria : 'Lainnya';
+            if (!grouped[kName]) grouped[kName] = [];
+            grouped[kName].push(s);
+        });
+
+        let total = 0;
+        Object.values(grouped).forEach(arr => total += arr.length);
+
         this.detailData = {
-            id: m.id,
+            id: m.id_minggu,
             periode_label: m.periode.tahun_ajaran.nama + ' - Sem ' + m.periode.semester,
             minggu_ke: m.minggu_ke,
             tema: m.tema || '-',
             tanggal_mulai: m.tanggal_mulai ? m.tanggal_mulai.split('T')[0] : '',
             tanggal_selesai: m.tanggal_selesai ? m.tanggal_selesai.split('T')[0] : '',
             status: m.status,
-            subkriteria: m.subkriteria || []
+            groupedSubkriteria: grouped,
+            totalSub: total
         };
         this.showDetail = true;
+    },
+
+    isSubDisabled(subId, mode) {
+        if (mode !== 'add') return false;
+        let currentPeriodeId = this.addPeriodeId;
+        if (!currentPeriodeId) return false;
+        return this.rawWeeks.some(w => 
+            w.periode_id == currentPeriodeId && 
+            w.subkriteria_ids.includes(subId)
+        );
     },
     
     openEdit(m) {
         this.editData = {
-            id: m.id,
+            id: m.id_minggu,
             periode_id: m.periode_id,
             minggu_ke: m.minggu_ke,
             tema: m.tema || '',
             tanggal_mulai: m.tanggal_mulai ? m.tanggal_mulai.split('T')[0] : '',
             tanggal_selesai: m.tanggal_selesai ? m.tanggal_selesai.split('T')[0] : '',
-            subkriteria_ids: m.subkriteria ? m.subkriteria.map(s => s.id) : []
+            subkriteria_ids: m.subkriteria ? m.subkriteria.map(s => s.id_subkriteria) : []
         };
         this.showEdit = true;
     },
     
     openDelete(m) {
-        this.deleteData = { id: m.id, nama: 'Minggu Ke-' + m.minggu_ke };
+        this.deleteData = { id: m.id_minggu, nama: 'Minggu Ke-' + m.minggu_ke };
         this.showDelete = true;
     },
-    
-    isSubDisabled(subId, mode) {
-        let currentPeriodeId = (mode === 'add') ? this.addPeriodeId : this.editData.periode_id;
-        let currentMingguId = (mode === 'edit') ? this.editData.id : null;
-        
-        if (!currentPeriodeId) return false;
-        
-        // Cek apakah subkriteria ini sudah ada di minggu LAIN dalam periode yang SAMA
-        return this.rawWeeks.some(w => 
-            w.periode_id == currentPeriodeId && 
-            w.id != currentMingguId && 
-            w.subkriteria_ids.includes(subId)
-        );
-    }
-}" class="space-y-6">
+} " class="space-y-6">
 
     {{-- HEADER --}}
     <div class="card p-6 shadow-xl border-none">
@@ -116,7 +124,7 @@
                     </div>
                 </form>
 
-                <button @click="{{ $periode->count() > 0 ? 'showAdd = true; addPeriodeId = \'' . $periode->first()->id . '\'; suggestWeek();' : 'alert(\'Belum ada periode penilaian yang aktif.\')' }}" 
+                <button @click="{{ $periode->count() > 0 ? 'showAdd = true; addPeriodeId = \'' . $periode->first()->id_periode . '\'; suggestWeek();' : 'alert(\'Belum ada periode penilaian yang aktif.\')' }}" 
                         class="btn {{ $periode->count() > 0 ? 'btn-green shadow-lg shadow-green-100' : 'btn-gray opacity-60' }} px-6 py-2.5 rounded-xl flex items-center gap-2 font-bold text-sm">
                     <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M12 4v16m8-8H4"/></svg>
                     Tambah Minggu
@@ -179,7 +187,7 @@
                         </td>
                          <td class="text-center">
                              @if($m->status === 'draft')
-                                 <form action="{{ route('admin.minggu.status', $m) }}" method="POST">
+                                 <form action="{{ route('admin.minggu.status', $m->id_minggu) }}" method="POST">
                                      @csrf @method('PATCH')
                                      <input type="hidden" name="status" value="aktif">
                                      <button type="submit" class="px-3 py-1.5 bg-amber-50 text-amber-600 border border-amber-100 rounded-xl text-[9px] font-bold hover:bg-amber-600 hover:text-white transition-all">
@@ -187,7 +195,7 @@
                                      </button>
                                  </form>
                              @elseif($m->status === 'aktif')
-                                 <form action="{{ route('admin.minggu.status', $m) }}" method="POST">
+                                 <form action="{{ route('admin.minggu.status', $m->id_minggu) }}" method="POST">
                                      @csrf @method('PATCH')
                                      <input type="hidden" name="status" value="selesai">
                                      <button type="submit" class="px-3 py-1.5 bg-blue-50 text-blue-600 border border-blue-100 rounded-xl text-[9px] font-bold hover:bg-blue-600 hover:text-white transition-all">
@@ -202,7 +210,7 @@
                          </td>
                         <td>
                             <div class="flex items-center justify-center gap-2">
-                                <button @click="openDetail({{ Js::from($m->load(['subkriteria', 'periode.tahunAjaran'])) }})" 
+                                <button @click="openDetail({{ Js::from($m->load(['subkriteria.kriteria', 'periode.tahunAjaran'])) }})" 
                                          class="p-2 rounded-xl bg-white border border-var(--border) text-var(--text-2) hover:text-var(--accent) hover:border-var(--accent) transition-all shadow-sm">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                                 </button>
@@ -246,7 +254,7 @@
                             <label class="form-label text-[10px] font-bold">Periode Akademik <span class="text-red-500">*</span></label>
                             <select name="periode_id" x-model="addPeriodeId" @change="suggestWeek()" required class="form-select rounded-xl bg-var(--bg) border-var(--border) font-bold text-xs">
                                 @foreach($periode as $p)
-                                    <option value="{{ $p->id }}">{{ $p->tahunAjaran->nama }} - Sem {{ $p->semester }}</option>
+                                    <option value="{{ $p->id_periode }}">{{ $p->tahunAjaran->nama }} - Sem {{ $p->semester }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -281,19 +289,19 @@
                         <div class="bg-var(--bg) rounded-2xl border border-var(--border) p-5 space-y-4">
                             @php $currentKriteria = ''; @endphp
                             @foreach($subkriteria as $s)
-                                @if($currentKriteria !== $s->kriteria->nama)
+                                @if($s->kriteria && $currentKriteria !== $s->kriteria->nama_kriteria)
                                     <div class="text-[9px] font-bold text-var(--accent) mt-4 first:mt-0 mb-2 pb-1 border-b border-var(--accent)/10">
-                                        {{ $s->kriteria->nama }}
+                                        {{ $s->kriteria->nama_kriteria }}
                                     </div>
-                                    @php $currentKriteria = $s->kriteria->nama; @endphp
+                                    @php $currentKriteria = $s->kriteria->nama_kriteria; @endphp
                                 @endif
-                                <label class="flex items-center gap-3 group" :class="isSubDisabled({{ $s->id }}, 'add') ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer'">
-                                    <input type="checkbox" name="subkriteria_ids[]" value="{{ $s->id }}" 
-                                           :disabled="isSubDisabled({{ $s->id }}, 'add')"
+                                <label class="flex items-center gap-3 group" :class="isSubDisabled('{{ $s->id_subkriteria }}', 'add') ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer'">
+                                    <input type="checkbox" name="subkriteria_ids[]" value="{{ $s->id_subkriteria }}" 
+                                           :disabled="isSubDisabled('{{ $s->id_subkriteria }}', 'add')"
                                            class="w-4.5 h-4.5 text-var(--accent) border-var(--border) rounded-lg focus:ring-0">
                                     <div class="flex flex-col">
-                                        <span class="text-[11px] font-bold text-var(--text-2) group-hover:text-var(--text-1) transition-colors">{{ $s->nama }}</span>
-                                        <template x-if="isSubDisabled({{ $s->id }}, 'add')">
+                                        <span class="text-[11px] font-bold text-var(--text-2) group-hover:text-var(--text-1) transition-colors">{{ $s->nama_subkriteria }}</span>
+                                        <template x-if="isSubDisabled('{{ $s->id_subkriteria }}', 'add')">
                                             <span class="text-[8px] font-bold text-amber-600 mt-0.5 tracking-tight">Terjadwal di minggu lain</span>
                                         </template>
                                     </div>
@@ -327,7 +335,7 @@
                             <label class="form-label text-[10px] font-bold">Periode Akademik <span class="text-red-500">*</span></label>
                             <select name="periode_id" x-model="editData.periode_id" required class="form-select rounded-xl bg-var(--bg) border-var(--border) font-bold text-xs">
                                 @foreach($periode as $p)
-                                    <option value="{{ $p->id }}">{{ $p->tahunAjaran->nama }} - Sem {{ $p->semester }}</option>
+                                    <option value="{{ $p->id_periode }}">{{ $p->tahunAjaran->nama }} - Sem {{ $p->semester }}</option>
                                 @endforeach
                             </select>
                         </div>
@@ -362,22 +370,18 @@
                         <div class="bg-var(--bg) rounded-2xl border border-var(--border) p-5 space-y-4">
                             @php $currentKriteria = ''; @endphp
                             @foreach($subkriteria as $s)
-                                @if($currentKriteria !== $s->kriteria->nama)
+                                @if($s->kriteria && $currentKriteria !== $s->kriteria->nama_kriteria)
                                     <div class="text-[9px] font-bold text-var(--accent) mt-4 first:mt-0 mb-2 pb-1 border-b border-var(--accent)/10">
-                                        {{ $s->kriteria->nama }}
+                                        {{ $s->kriteria->nama_kriteria }}
                                     </div>
-                                    @php $currentKriteria = $s->kriteria->nama; @endphp
+                                    @php $currentKriteria = $s->kriteria->nama_kriteria; @endphp
                                 @endif
-                                <label class="flex items-center gap-3 group" :class="isSubDisabled({{ $s->id }}, 'edit') ? 'opacity-30 cursor-not-allowed' : 'cursor-pointer'">
-                                    <input type="checkbox" name="subkriteria_ids[]" value="{{ $s->id }}" 
+                                <label class="flex items-center gap-3 group cursor-pointer">
+                                    <input type="checkbox" name="subkriteria_ids[]" value="{{ $s->id_subkriteria }}" 
                                            x-model="editData.subkriteria_ids"
-                                           :disabled="isSubDisabled({{ $s->id }}, 'edit')"
                                            class="w-4.5 h-4.5 text-var(--accent) border-var(--border) rounded-lg focus:ring-0">
                                     <div class="flex flex-col">
-                                        <span class="text-[11px] font-bold text-var(--text-2) group-hover:text-var(--text-1) transition-colors">{{ $s->nama }}</span>
-                                        <template x-if="isSubDisabled({{ $s->id }}, 'edit')">
-                                            <span class="text-[8px] font-bold text-amber-600 mt-0.5 tracking-tight">Terjadwal di minggu lain</span>
-                                        </template>
+                                        <span class="text-[11px] font-bold text-var(--text-2) group-hover:text-var(--text-1) transition-colors">{{ $s->nama_subkriteria }}</span>
                                     </div>
                                 </label>
                             @endforeach
@@ -451,22 +455,24 @@
                             <span class="w-2 h-5 bg-var(--accent) rounded-full"></span>
                             Subkriteria Target Penilaian
                         </h4>
-                        <span class="px-2 py-0.5 bg-gray-100 text-[10px] font-bold text-gray-500 rounded-lg" x-text="detailData.subkriteria.length + ' Item'"></span>
+                        <span class="px-2 py-0.5 bg-gray-100 text-[10px] font-bold text-gray-500 rounded-lg" x-text="detailData.totalSub + ' Item'"></span>
                     </div>
                     
-                    <div class="grid grid-cols-1 gap-3">
-                        <template x-for="(s, index) in detailData.subkriteria" :key="s.id">
-                            <div class="group relative p-4 bg-white border border-gray-100 rounded-2xl hover:border-var(--accent) hover:shadow-md transition-all duration-300">
-                                <div class="flex items-start gap-4">
-                                    <div class="flex-shrink-0 w-8 h-8 rounded-xl bg-var(--bg) flex items-center justify-center text-[10px] font-bold text-var(--accent) border border-var(--border)" x-text="index + 1"></div>
-                                    <div class="flex-1 min-w-0">
-                                        <p class="text-[11px] font-bold text-gray-800 leading-relaxed" x-text="s.nama"></p>
-                                    </div>
-                                    <div class="flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        <div class="w-5 h-5 rounded-full bg-var(--accent-lt) flex items-center justify-center text-var(--accent)">
-                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>
+                    <div class="space-y-6">
+                        <template x-for="(subs, kName) in detailData.groupedSubkriteria" :key="kName">
+                            <div class="space-y-3">
+                                <div class="text-[9px] font-bold text-var(--accent) uppercase tracking-widest border-b border-var(--accent)/10 pb-1 mb-3" x-text="kName"></div>
+                                <div class="grid grid-cols-1 gap-2.5">
+                                    <template x-for="s in subs" :key="s.id_subkriteria">
+                                        <div class="group relative p-3.5 bg-white border border-gray-100 rounded-2xl hover:border-var(--accent) hover:shadow-md transition-all duration-300">
+                                            <div class="flex items-start gap-3">
+                                                <div class="flex-shrink-0 w-6 h-6 rounded-lg bg-var(--bg) flex items-center justify-center text-[9px] font-bold text-var(--accent) border border-var(--border)" x-text="s.id_subkriteria"></div>
+                                                <div class="flex-1 min-w-0">
+                                                    <p class="text-[11px] font-bold text-gray-800 leading-tight" x-text="s.nama_subkriteria"></p>
+                                                </div>
+                                            </div>
                                         </div>
-                                    </div>
+                                    </template>
                                 </div>
                             </div>
                         </template>

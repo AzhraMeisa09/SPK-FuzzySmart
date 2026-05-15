@@ -12,9 +12,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('jadwal_subkriteria', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('minggu_id')->constrained('minggu_penilaian')->cascadeOnDelete();
-            $table->foreignId('subkriteria_id')->constrained('subkriteria')->cascadeOnDelete();
+            $table->string('id_jadwal_sub', 10)->primary();
+            $table->string('minggu_id', 10);
+            $table->string('subkriteria_id', 10);
+            $table->foreign('minggu_id')->references('id_minggu')->on('minggu_penilaian')->cascadeOnDelete();
+            $table->foreign('subkriteria_id')->references('id_subkriteria')->on('subkriteria')->cascadeOnDelete();
 
             $table->integer('urutan')->nullable();
             $table->boolean('wajib')->default(true);

@@ -26,17 +26,17 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
         $kelas = $user->kelas;
-        $allKelasIds = $kelas->pluck('id')->toArray();
+        $allKelasIds = $kelas->pluck('id_kelas')->toArray();
         $allSiswa = Siswa::whereIn('kelas_id', $allKelasIds)->get();
         $totalSiswa = $allSiswa->count();
 
-        $kriteriaList = Kriteria::orderBy('id', 'asc')->get();
+        $kriteriaList = Kriteria::orderBy('id_kriteria', 'asc')->get();
 
         $periode = PeriodePenilaian::where('is_aktif', true)->first();
         $mingguAktif = null; $semuaMinggu = collect(); $mingguSelesaiCount = 0;
 
         if ($periode) {
-            $semuaMinggu = MingguPenilaian::where('periode_id', $periode->id)->orderBy('minggu_ke')->get();
+            $semuaMinggu = MingguPenilaian::where('periode_id', $periode->id_periode)->orderBy('minggu_ke')->get();
             $mingguAktif = $semuaMinggu->where('status', 'aktif')->first();
             $mingguSelesaiCount = $semuaMinggu->where('status', 'selesai')->count();
         }
@@ -46,22 +46,21 @@ class DashboardController extends Controller
         if ($mingguAktif) {
             $jadwalIds = $mingguAktif->jadwalSubkriteria->pluck('id');
             $totalHarusDinilai = $jadwalIds->count() * $totalSiswa;
-            $penilaianMingguIni = PenilaianMingguan::whereIn('jadwal_sub_id', $jadwalIds)->whereIn('siswa_id', $allSiswa->pluck('id'))->get();
+            $penilaianMingguIni = PenilaianMingguan::whereIn('jadwal_sub_id', $jadwalIds)->whereIn('siswa_id', $allSiswa->pluck('id_siswa'))->get();
             $terlayaniCount = $penilaianMingguIni->where('status', 'final')->pluck('siswa_id')->unique()->count();
             $totalProgresPercent = $totalHarusDinilai > 0 ? round(($penilaianMingguIni->count() / $totalHarusDinilai) * 100) : 0;
 
             /**
              * 🟢 DYNAMIC NORMALIZATION PREVIEW
-             * Menghitung parameter Cmin/Cmax secara dinamis berdasarkan performa seluruh siswa di kelas.
              */
             $coutMap = []; 
             foreach ($allSiswa as $s) {
-                $pSiswa = $penilaianMingguIni->where('siswa_id', $s->id);
+                $pSiswa = $penilaianMingguIni->where('siswa_id', $s->id_siswa);
                 $pGrouped = $pSiswa->groupBy(fn($item) => $item->jadwalSubkriteria->subkriteria->kriteria_id);
                 foreach ($kriteriaList as $krit) {
-                    $items = $pGrouped->get($krit->id);
+                    $items = $pGrouped->get($krit->id_kriteria);
                     $cout = ($items && $items->count() > 0) ? $items->avg('nilai_crisp') : 0.0;
-                    $coutMap[$krit->id][$s->id] = $cout;
+                    $coutMap[$krit->id_kriteria][$s->id_siswa] = $cout;
                 }
             }
 
@@ -74,7 +73,7 @@ class DashboardController extends Controller
             }
 
             foreach ($allSiswa->take(6) as $s) {
-                $p = $penilaianMingguIni->where('siswa_id', $s->id);
+                $p = $penilaianMingguIni->where('siswa_id', $s->id_siswa);
                 $status = 'Belum'; $kategori = '-';
 
                 if ($p->count() > 0) {
@@ -84,8 +83,8 @@ class DashboardController extends Controller
                         $weightedSum = 0;
                         foreach ($kriteriaList as $krit) {
                             $wi = (double)$krit->bobot; 
-                            $cout = $coutMap[$krit->id][$s->id] ?? 0.0;
-                            $pConf = $minMaxMap[$krit->id] ?? ['min' => 0, 'max' => 100];
+                            $cout = $coutMap[$krit->id_kriteria][$s->id_siswa] ?? 0.0;
+                            $pConf = $minMaxMap[$krit->id_kriteria] ?? ['min' => 0, 'max' => 100];
                             
                             if ($pConf['max'] == $pConf['min']) {
                                 $ui = 1.0;
@@ -99,7 +98,7 @@ class DashboardController extends Controller
                         $kategori = $this->matchKategori($weightedSum);
                     }
                 }
-                $progresPerSiswa[] = ['nama' => $s->nama, 'status' => $status, 'kategori' => $kategori];
+                $progresPerSiswa[] = ['nama' => $s->name, 'status' => $status, 'kategori' => $kategori];
             }
         }
 
@@ -108,9 +107,9 @@ class DashboardController extends Controller
         elseif (!$mingguAktif) $notifikasi[] = ['type' => 'info', 'pesan' => 'Tidak ada minggu aktif saat ini.'];
 
         $distribusi = [
-            'BSB' => ['nama' => 'BSB', 'count' => PenilaianMingguan::whereIn('siswa_id', $allSiswa->pluck('id'))->where('nilai_crisp', '>=', 85)->count(), 'badge' => 'badge-emerald', 'progress' => 'progress-green'],
-            'BSH' => ['nama' => 'BSH', 'count' => PenilaianMingguan::whereIn('siswa_id', $allSiswa->pluck('id'))->where('nilai_crisp', '>=', 70)->where('nilai_crisp', '<', 85)->count(), 'badge' => 'badge-amber', 'progress' => 'progress-yellow'],
-            'MB'  => ['nama' => 'MB', 'count' => PenilaianMingguan::whereIn('siswa_id', $allSiswa->pluck('id'))->where('nilai_crisp', '<', 70)->where('nilai_crisp', '>', 0)->count(), 'badge' => 'badge-rose', 'progress' => 'progress-red'],
+            'BSB' => ['nama' => 'BSB', 'count' => PenilaianMingguan::whereIn('siswa_id', $allSiswa->pluck('id_siswa'))->where('nilai_crisp', '>=', 85)->count(), 'badge' => 'badge-emerald', 'progress' => 'progress-green'],
+            'BSH' => ['nama' => 'BSH', 'count' => PenilaianMingguan::whereIn('siswa_id', $allSiswa->pluck('id_siswa'))->where('nilai_crisp', '>=', 70)->where('nilai_crisp', '<', 85)->count(), 'badge' => 'badge-amber', 'progress' => 'progress-yellow'],
+            'MB'  => ['nama' => 'MB', 'count' => PenilaianMingguan::whereIn('siswa_id', $allSiswa->pluck('id_siswa'))->where('nilai_crisp', '<', 70)->where('nilai_crisp', '>', 0)->count(), 'badge' => 'badge-rose', 'progress' => 'progress-red'],
         ];
 
         $totalEntri = array_sum(array_column($distribusi, 'count'));
@@ -122,8 +121,8 @@ class DashboardController extends Controller
         $finalizedPeriode = PeriodePenilaian::where('status', 'final')->latest('finalized_at')->first();
         if ($finalizedPeriode) {
             $latestEvaluasi = Evaluasi::with('siswa')
-                ->where('periode_id', $finalizedPeriode->id)
-                ->whereIn('siswa_id', $allSiswa->pluck('id'))
+                ->where('periode_id', $finalizedPeriode->id_periode)
+                ->whereIn('siswa_id', $allSiswa->pluck('id_siswa'))
                 ->orderBy('nilai_akhir', 'desc')
                 ->take(5)
                 ->get();

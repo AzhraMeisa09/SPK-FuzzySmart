@@ -5,17 +5,28 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
+use App\Traits\HasCustomId;
+
 class Siswa extends Model
 {
-    use HasFactory;
+    use HasFactory, HasCustomId;
 
     protected $table = 'siswa';
+    protected $primaryKey = 'id_siswa';
+    public $incrementing = false;
+    protected $keyType = 'string';
+
+    public function getPrefix()
+    {
+        return 'S';
+    }
 
     protected $fillable = [
+        'id_siswa',
         'kelas_id',
         'wali_murid_id',
         'kode',
-        'nama',
+        'name',
         'tanggal_lahir',
         'jenis_kelamin',
         'nama_orang_tua',
@@ -39,7 +50,7 @@ class Siswa extends Model
 
     public function wali()
     {
-        return $this->belongsToMany(User::class, 'wali_siswa', 'siswa_id', 'user_id');
+        return $this->belongsToMany(User::class, 'wali_siswa', 'siswa_id', 'user_id')->using(WaliSiswa::class);
     }
 
     public function penilaian()

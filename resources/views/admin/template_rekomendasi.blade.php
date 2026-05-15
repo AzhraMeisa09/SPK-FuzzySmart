@@ -177,7 +177,7 @@
                                 @foreach($subkriteria->groupBy('kriteria.nama') as $kriteriaNama => $items)
                                     <optgroup label="{{ $kriteriaNama }}">
                                         @foreach($items as $s)
-                                            <option value="{{ $s->id }}">{{ $s->nama }}</option>
+                                            <option value="{{ $s->id_subkriteria }}">{{ $s->nama }}</option>
                                         @endforeach
                                     </optgroup>
                                 @endforeach
@@ -237,7 +237,7 @@
                                 @foreach($subkriteria->groupBy('kriteria.nama') as $kriteriaNama => $items)
                                     <optgroup label="{{ $kriteriaNama }}">
                                         @foreach($items as $s)
-                                            <option value="{{ $s->id }}">{{ $s->nama }}</option>
+                                            <option value="{{ $s->id_subkriteria }}">{{ $s->nama }}</option>
                                         @endforeach
                                     </optgroup>
                                 @endforeach

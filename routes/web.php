@@ -37,6 +37,8 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     // Siswa
     Route::resource('siswa', \App\Http\Controllers\Admin\SiswaController::class);
     Route::resource('kriteria', \App\Http\Controllers\Admin\KriteriaController::class)->parameters(['kriteria' => 'kriteria']);
+    Route::patch('kriteria/{kriteria}/toggle', [\App\Http\Controllers\Admin\KriteriaController::class, 'toggleStatus'])->name('kriteria.toggle');
+    Route::post('subkriteria/import', [\App\Http\Controllers\Admin\SubkriteriaController::class, 'importWord'])->name('subkriteria.import');
     Route::resource('subkriteria', \App\Http\Controllers\Admin\SubkriteriaController::class)->parameters(['subkriteria' => 'subkriteria']);
     Route::resource('kategori-nilai', \App\Http\Controllers\Admin\KategoriNilaiController::class);
     // Template Rekomendasi Wizard
@@ -95,6 +97,7 @@ Route::prefix('kepsek')->name('kepsek.')->middleware(['auth', 'role:kepala_sekol
     Route::get('/laporan', [\App\Http\Controllers\Kepsek\KepsekController::class, 'laporan'])->name('laporan');
     Route::get('/siswa/{id}', [\App\Http\Controllers\Kepsek\KepsekController::class, 'siswaDetail'])->name('siswa.show');
     Route::post('/laporan/generate-word', [\App\Http\Controllers\Kepsek\KepsekController::class, 'generateWordReport'])->name('laporan.generate-word');
+    Route::post('/laporan/generate-global-word', [\App\Http\Controllers\Kepsek\KepsekController::class, 'generateGlobalWordReport'])->name('laporan.generate-global-word');
 });
 
 // ─── WALI MURID MODULE ────────────────────────────────

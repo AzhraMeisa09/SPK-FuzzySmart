@@ -2,13 +2,24 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 
-class JadwalSubkriteria extends Model
+use App\Traits\HasCustomId;
+
+class JadwalSubkriteria extends Pivot
 {
+    use HasCustomId;
     public $timestamps = true;
 
     protected $table = 'jadwal_subkriteria';
+    protected $primaryKey = 'id_jadwal_sub';
+    public $incrementing = false;
+    protected $keyType = 'string';
+
+    public function getPrefix()
+    {
+        return 'JS';
+    }
 
     protected $fillable = [
         'minggu_id',
@@ -65,7 +76,7 @@ class JadwalSubkriteria extends Model
     public function rataNilaiCrisp(): float
     {
         return $this->penilaian()
-            ->join('kategori_nilai', 'penilaian_mingguan.kategori_id', '=', 'kategori_nilai.id')
+            ->join('kategori_nilai', 'penilaian_mingguan.kategori_id', '=', 'kategori_nilai.id_kategori')
             ->avg('kategori_nilai.nilai_crisp') ?? 0;
     }
 }

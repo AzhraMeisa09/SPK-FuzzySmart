@@ -33,25 +33,25 @@ class SpkService
         }
 
         $siswaList = $periode->kelas->flatMap->siswa;
-        $mingguIds = $periode->minggu->pluck('id');
+        $mingguIds = $periode->minggu->pluck('id_minggu');
         
         $totalJadwal = DB::table('jadwal_subkriteria')->whereIn('minggu_id', $mingguIds)->count();
         if ($totalJadwal == 0) throw new Exception("🔒 GAGAL: Jadwal subkriteria kosong.");
 
         foreach ($siswaList as $siswa) {
-            $countPenilaian = PenilaianMingguan::where('siswa_id', $siswa->id)
-                ->whereIn('jadwal_sub_id', DB::table('jadwal_subkriteria')->whereIn('minggu_id', $mingguIds)->pluck('id'))
+            $countPenilaian = PenilaianMingguan::where('siswa_id', $siswa->id_siswa)
+                ->whereIn('jadwal_sub_id', DB::table('jadwal_subkriteria')->whereIn('minggu_id', $mingguIds)->pluck('id_jadwal_sub'))
                 ->where('status', 'final')
                 ->count();
             
             if ($countPenilaian < $totalJadwal) {
-                throw new Exception("🔒 GAGAL: Penilaian siswa {$siswa->nama} belum lengkap atau masih ada status 'draft'. Pastikan seluruh input guru sudah 'final'.");
+                throw new Exception("🔒 GAGAL: Penilaian siswa {$siswa->name} belum lengkap atau masih ada status 'draft'. Pastikan seluruh input guru sudah 'final'.");
             }
         }
 
         return DB::transaction(function () use ($periode, $siswaList, $mingguIds) {
             // Mengambil Bobot Dinamis dari database untuk fleksibilitas sistem
-            $kriteriaList = Kriteria::orderBy('id', 'asc')->get();
+            $kriteriaList = Kriteria::orderBy('id_kriteria', 'asc')->get();
             
             /**
              * ⚙️ PARAMETER NORMALISASI SMART
@@ -73,10 +73,10 @@ class SpkService
                     $tempDetails = [];
 
                     foreach ($subkriterias as $sub) {
-                        $penilaian = PenilaianMingguan::where('siswa_id', $siswa->id)
+                        $penilaian = PenilaianMingguan::where('siswa_id', $siswa->id_siswa)
                             ->where('status', 'final')
                             ->whereHas('jadwalSubkriteria', function ($q) use ($mingguIds, $sub) {
-                                $q->whereIn('minggu_id', $mingguIds)->where('subkriteria_id', $sub->id);
+                                $q->whereIn('minggu_id', $mingguIds)->where('subkriteria_id', $sub->id_subkriteria);
                             })->get();
 
                         $sumSubCrisp = $penilaian->sum('nilai_crisp');
@@ -88,20 +88,20 @@ class SpkService
                         $katSub = $latestPenilaian?->kategori?->nama ?? 'MB';
 
                         $tempDetails[] = [
-                            'sub_id' => $sub->id,
+                            'sub_id' => $sub->id_subkriteria,
                             'crisp'  => round($avgCrispSub, 4),
                             'kat'    => $katSub,
-                            'rek'    => $this->generateRekomendasiDetail($sub->id, $katSub, $siswa->nama, $avgCrispSub)
+                            'rek'    => $this->generateRekomendasiDetail($sub->id_subkriteria, $katSub, $siswa->name, $avgCrispSub)
                         ];
                     }
 
                     $Cout = $subCount > 0 ? $totalCrisp / $subCount : 0.0;
-                    $coutMap[$kriteria->id][$siswa->id] = $Cout;
+                    $coutMap[$kriteria->id_kriteria][$siswa->id_siswa] = $Cout;
                     
-                    $performanceData[$siswa->id][$kriteria->id] = [
+                    $performanceData[$siswa->id_siswa][$kriteria->id_kriteria] = [
                         'Cout' => $Cout,
                         'details' => $tempDetails,
-                        'wi' => (double)($kriteria->bobot ?? 0)
+                        'wi' => (double)($kriteria->bobot_kriteria ?? 0)
                     ];
                 }
             }
@@ -131,16 +131,16 @@ class SpkService
                 $V_a = 0.0;
 
                 $evaluasi = Evaluasi::updateOrCreate(
-                    ['periode_id' => $periode->id, 'siswa_id' => $siswa->id],
+                    ['periode_id' => $periode->id_periode, 'siswa_id' => $siswa->id_siswa],
                     ['is_final' => true, 'nilai_akhir' => 0, 'kategori_akhir' => 'MB', 'rekomendasi' => '-']
                 );
-                DetailEvaluasi::where('evaluasi_id', $evaluasi->id)->delete();
+                DetailEvaluasi::where('evaluasi_id', $evaluasi->id_evaluasi)->delete();
 
                 foreach ($kriteriaList as $kriteria) {
-                    $data = $performanceData[$siswa->id][$kriteria->id];
+                    $data = $performanceData[$siswa->id_siswa][$kriteria->id_kriteria];
                     $Cout = $data['Cout'];
-                    $Cmin = $minMaxMap[$kriteria->id]['min'];
-                    $Cmax = $minMaxMap[$kriteria->id]['max'];
+                    $Cmin = $minMaxMap[$kriteria->id_kriteria]['min'];
+                    $Cmax = $minMaxMap[$kriteria->id_kriteria]['max'];
                     $wi = $data['wi'];
 
                     // Rumus Normalisasi SMART: ui = (Cout - Cmin) / (Cmax - Cmin)
@@ -154,7 +154,7 @@ class SpkService
 
                     foreach ($data['details'] as $td) {
                         DetailEvaluasi::create([
-                            'evaluasi_id'        => $evaluasi->id,
+                            'evaluasi_id'        => $evaluasi->id_evaluasi,
                             'subkriteria_id'     => $td['sub_id'],
                             'nilai_crisp'        => $td['crisp'],
                             'nilai_normalisasi'  => (double)$ui,
@@ -173,7 +173,7 @@ class SpkService
                 $katObj = KategoriNilai::findByNilai($V_a * 100);
                 $finalKat = $katObj ? $katObj->nama : 'MB';
 
-                $rekUmum = $this->generateRekomendasiUmum($evaluasi->id, $finalKat);
+                $rekUmum = $this->generateRekomendasiUmum($evaluasi->id_evaluasi, $finalKat);
 
                 $evaluasi->update([
                     'nilai_akhir'    => round($V_a, 4),
@@ -199,7 +199,7 @@ class SpkService
         if (!$template) {
             // Fallback jika tidak ada template spesifik
             $sub = Subkriteria::find($subId);
-            $aspek = $sub ? $sub->nama : 'aspek ini';
+            $aspek = $sub ? $sub->nama_subkriteria : 'aspek ini';
             
             if ($kat === 'BSB') {
                 return "Ananda {$namaSiswa} menunjukkan perkembangan yang sangat baik dalam {$aspek}.";
@@ -225,11 +225,16 @@ class SpkService
 
         // Ambil semua aspek (subkriteria) yang mendapatkan kategori 'MB' (Mulai Berkembang)
         $lemah = $details->filter(fn($d) => $d->kategori === 'MB')
-            ->pluck('subkriteria.nama')
+            ->pluck('subkriteria.nama_subkriteria')
+            ->filter()
             ->unique()
             ->toArray();
 
-        $aspekStr = !empty($lemah) ? implode(', ', $lemah) : 'seluruh aspek';
+        if (!empty($lemah)) {
+            $aspekStr = implode(', ', $lemah);
+        } else {
+            $aspekStr = 'seluruh aspek';
+        }
 
         if (!$template) {
             if ($kat === 'BSB') {
@@ -247,7 +252,7 @@ class SpkService
         // Juga pastikan {{nama_siswa}} bisa diganti jika ada di template umum
         $siswa = Evaluasi::find($evaluasiId)->siswa;
         if ($siswa) {
-            $isi = str_replace('{{nama_siswa}}', $siswa->nama, $isi);
+            $isi = str_replace('{{nama_siswa}}', $siswa->name, $isi);
         }
 
         return trim($isi);

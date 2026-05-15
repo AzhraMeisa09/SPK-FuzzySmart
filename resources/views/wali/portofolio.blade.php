@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Portofolio Karya — ' . $selectedAnak->nama)
+@section('title', 'Portofolio Karya — ' . $selectedAnak->name)
 @section('page-title', 'Karya Anak')
 
 @section('content')
@@ -13,14 +13,14 @@
         <div class="flex flex-col md:flex-row items-center gap-8 relative z-10">
             <div class="w-24 h-24 rounded-[2rem] bg-white/90 backdrop-blur-md p-1 shadow-2xl transform hover:scale-105 transition-transform duration-500 overflow-hidden ring-4 ring-white/30">
                 @if($selectedAnak->foto)
-                    <img src="{{ asset('storage/' . $selectedAnak->foto) }}" class="w-full h-full object-cover rounded-[1.8rem]" alt="{{ $selectedAnak->nama }}">
+                    <img src="{{ asset('storage/' . $selectedAnak->foto) }}" class="w-full h-full object-cover rounded-[1.8rem]" alt="{{ $selectedAnak->name }}">
                 @else
                     <div class="w-full h-full flex items-center justify-center text-4xl">🎨</div>
                 @endif
             </div>
             <div class="text-center md:text-left">
                 <p class="text-xs font-black uppercase tracking-[0.3em] mb-2 text-white/70">Dokumentasi Portofolio</p>
-                <h1 class="text-4xl font-black tracking-tight text-white mb-2">{{ $selectedAnak->nama }}</h1>
+                <h1 class="text-4xl font-black tracking-tight text-white mb-2">{{ $selectedAnak->name }}</h1>
                 <div class="flex flex-wrap items-center justify-center md:justify-start gap-4">
                     <span class="px-4 py-1.5 rounded-xl bg-white/20 text-white text-[10px] font-black uppercase tracking-widest backdrop-blur-sm border border-white/10">Kelas: {{ $selectedAnak->kelas->nama_kelas ?? '—' }}</span>
                     <span class="w-1.5 h-1.5 rounded-full bg-white/30"></span>
@@ -34,17 +34,17 @@
     @if($anak->count() > 1)
         <div class="flex flex-wrap items-center gap-4 no-print">
             @foreach($anak as $a)
-                <a href="{{ route('wali.portofolio', ['siswa_id' => $a->id]) }}" 
-                   class="group flex items-center gap-4 px-6 py-3.5 rounded-[2rem] transition-all duration-500 border {{ $selectedAnak->id == $a->id ? 'bg-white border-var(--accent) shadow-2xl ring-4 ring-var(--accent-lt)' : 'bg-white border-gray-100 opacity-60 hover:opacity-100 hover:border-gray-200 shadow-sm' }}">
-                    <div class="w-10 h-10 rounded-2xl flex items-center justify-center text-sm font-black transition-all duration-500 group-hover:rotate-6 {{ $selectedAnak->id == $a->id ? 'bg-var(--accent) text-white shadow-lg shadow-var(--accent-lt)' : 'bg-gray-100 text-gray-400' }} overflow-hidden">
+                <a href="{{ route('wali.portofolio', ['siswa_id' => $a->id_siswa]) }}" 
+                   class="group flex items-center gap-4 px-6 py-3.5 rounded-[2rem] transition-all duration-500 border {{ $selectedAnak->id_siswa == $a->id_siswa ? 'bg-white border-var(--accent) shadow-2xl ring-4 ring-var(--accent-lt)' : 'bg-white border-gray-100 opacity-60 hover:opacity-100 hover:border-gray-200 shadow-sm' }}">
+                    <div class="w-10 h-10 rounded-2xl flex items-center justify-center text-sm font-black transition-all duration-500 group-hover:rotate-6 {{ $selectedAnak->id_siswa == $a->id_siswa ? 'bg-var(--accent) text-white shadow-lg shadow-var(--accent-lt)' : 'bg-gray-100 text-gray-400' }} overflow-hidden">
                         @if($a->foto)
-                            <img src="{{ asset('storage/' . $a->foto) }}" class="w-full h-full object-cover" alt="{{ $a->nama }}">
+                            <img src="{{ asset('storage/' . $a->foto) }}" class="w-full h-full object-cover" alt="{{ $a->name }}">
                         @else
-                            {{ strtoupper(substr($a->nama, 0, 1)) }}
+                            {{ strtoupper(substr($a->name, 0, 1)) }}
                         @endif
                     </div>
                     <div class="flex flex-col">
-                        <span class="text-xs font-black tracking-tight {{ $selectedAnak->id == $a->id ? 'text-gray-900' : 'text-gray-500' }}">{{ $a->nama }}</span>
+                        <span class="text-xs font-black tracking-tight {{ $selectedAnak->id_siswa == $a->id_siswa ? 'text-gray-900' : 'text-gray-500' }}">{{ $a->name }}</span>
                         <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{{ $a->kelas->nama_kelas ?? '-' }}</span>
                     </div>
                 </a>

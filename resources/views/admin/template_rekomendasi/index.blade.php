@@ -70,13 +70,13 @@
                     <tr class="hover:bg-var(--bg) transition-colors group">
                         <td class="py-5">
                             <span class="inline-flex items-center justify-center w-12 h-12 bg-var(--accent-lt) text-var(--accent) rounded-2xl font-bold text-sm border border-var(--accent)/10 shadow-sm transition-all group-hover:scale-110 group-hover:rotate-3">
-                                {{ $k->kode }}
+                                {{ $k->id_kriteria }}
                             </span>
                         </td>
                         <td class="py-5">
                             <div class="flex flex-col">
                                 <span class="text-[9px] font-bold text-gray-400 tracking-wide mb-1">Mata Evaluasi</span>
-                                <span class="text-sm font-semibold text-var(--text-1) tracking-tight">{{ $k->nama }}</span>
+                                <span class="text-sm font-semibold text-var(--text-1) tracking-tight">{{ $k->nama_kriteria }}</span>
                             </div>
                         </td>
                         <td class="text-center py-5">
@@ -84,7 +84,7 @@
                         </td>
                         <td class="text-center py-5">
                             <div class="flex items-center justify-center gap-2">
-                                <a href="{{ route('admin.template-rekomendasi.subkriteria', $k->id) }}"
+                                <a href="{{ route('admin.template-rekomendasi.subkriteria', $k->id_kriteria) }}"
                                    class="p-2 rounded-xl bg-white border border-var(--border) text-var(--text-2) hover:text-var(--accent) hover:border-var(--accent) transition-all shadow-sm group" title="Kelola Template">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                                 </a>

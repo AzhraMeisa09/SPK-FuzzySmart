@@ -74,11 +74,11 @@
                     @endphp
 
                     {{-- View Row --}}
-                    <tr x-show="editId !== {{ $t->id }}" class="hover:bg-var(--bg) transition-colors group">
+                    <tr x-show="editId !== '{{ $t->id_template }}'" class="hover:bg-var(--bg) transition-colors group">
                         <td class="align-top py-6">
                             <div class="flex flex-col">
-                                <span class="text-[9px] font-bold text-var(--accent) tracking-wide mb-1">{{ $t->subkriteria?->kode }}</span>
-                                <span class="text-sm font-semibold text-var(--text-1) tracking-tight">{{ $t->subkriteria?->nama ?? '-' }}</span>
+                                <span class="text-[9px] font-bold text-var(--accent) tracking-wide mb-1">{{ $t->subkriteria?->id_subkriteria }}</span>
+                                <span class="text-sm font-semibold text-var(--text-1) tracking-tight">{{ $t->subkriteria?->nama_subkriteria ?? '-' }}</span>
                             </div>
                         </td>
                         <td class="align-top text-center py-6">
@@ -96,10 +96,10 @@
                         </td>
                         <td class="align-top text-center py-6">
                             <div class="flex items-center justify-center gap-2">
-                                <button @click="openEdit({{ $t->id }})" class="p-2 rounded-xl bg-blue-50 border border-blue-100 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm">
+                                <button @click="openEdit('{{ $t->id_template }}')" class="p-2 rounded-xl bg-blue-50 border border-blue-100 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                 </button>
-                                <form action="{{ route('admin.template-rekomendasi.destroy', $t->id) }}" method="POST"
+                                <form action="{{ route('admin.template-rekomendasi.destroy', $t->id_template) }}" method="POST"
                                       onsubmit="return confirm('Hapus template ini?')">
                                     @csrf
                                     @method('DELETE')
@@ -112,15 +112,15 @@
                     </tr>
 
                     {{-- Edit Inline Row --}}
-                    <tr x-show="editId === {{ $t->id }}" x-transition.opacity class="bg-blue-50/30">
+                    <tr x-show="editId === '{{ $t->id_template }}'" x-transition.opacity class="bg-blue-50/30">
                         <td class="align-top py-6">
-                            <span class="text-sm font-semibold text-var(--text-1) tracking-tight">{{ $t->subkriteria?->nama ?? '-' }}</span>
+                            <span class="text-sm font-semibold text-var(--text-1) tracking-tight">{{ $t->subkriteria?->nama_subkriteria ?? '-' }}</span>
                         </td>
                         <td class="align-top text-center py-6">
                             <span class="badge {{ $badgeClass }} border border-current/10">{{ $t->kategori }}</span>
                         </td>
                         <td class="align-top py-6" colspan="2">
-                            <form action="{{ route('admin.template-rekomendasi.update', $t->id) }}" method="POST">
+                            <form action="{{ route('admin.template-rekomendasi.update', $t->id_template) }}" method="POST">
                                 @csrf
                                 @method('PUT')
                                 <div class="space-y-4">

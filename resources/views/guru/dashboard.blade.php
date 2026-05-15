@@ -137,7 +137,7 @@
                         <div class="flex items-center justify-between p-3 rounded-lg" style="background: var(--bg); border: 1px solid var(--border);">
                             <div class="flex items-center gap-3">
                                 <span class="text-xs w-5 text-center" style="color: var(--text-3);">{{ $loop->iteration }}</span>
-                                <span class="text-xs font-medium truncate max-w-[120px]" style="color: var(--text-1);">{{ $eval->siswa->nama }}</span>
+                                <span class="text-xs font-medium truncate max-w-[120px]" style="color: var(--text-1);">{{ $eval->siswa->name }}</span>
                             </div>
                             <div class="flex items-center gap-2">
                                 <span class="text-xs" style="color: var(--text-3);">{{ round($eval->nilai_akhir * 100, 1) }}%</span>

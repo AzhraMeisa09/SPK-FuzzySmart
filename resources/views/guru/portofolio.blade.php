@@ -26,8 +26,8 @@
                     <select name="siswa_id" class="form-select" style="padding-left: 40px;">
                         <option value="">Semua siswa</option>
                         @foreach($siswa as $s)
-                            <option value="{{ $s->id }}" {{ request('siswa_id') == $s->id ? 'selected' : '' }}>
-                                ({{ $s->kelas->nama_kelas ?? '—' }}) {{ $s->nama }}
+                            <option value="{{ $s->id_siswa }}" {{ request('siswa_id') == $s->id_siswa ? 'selected' : '' }} class="text-gray-900" style="color: #000;">
+                                ({{ $s->kelas->nama_kelas ?? '—' }}) {{ $s->name }}
                             </option>
                         @endforeach
                     </select>
@@ -40,7 +40,7 @@
                     <select name="minggu_id" class="form-select" style="padding-left: 40px;">
                         <option value="">Semua minggu</option>
                         @foreach($minggu as $m)
-                            <option value="{{ $m->id }}" {{ request('minggu_id') == $m->id ? 'selected' : '' }}>Minggu {{ $m->minggu_ke }}</option>
+                            <option value="{{ $m->id_minggu }}" {{ request('minggu_id') == $m->id_minggu ? 'selected' : '' }} class="text-gray-900" style="color: #000;">Minggu {{ $m->minggu_ke }}</option>
                         @endforeach
                     </select>
                     <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
@@ -119,7 +119,7 @@
                         <p class="text-[10px] font-medium mt-1 flex items-center gap-1.5" style="color: var(--text-2);">
                             <span class="flex items-center gap-1">
                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--accent);"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                                {{ $p->siswa->nama }}
+                                {{ $p->siswa->name }}
                             </span>
                             <span class="px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-widest {{ $isB1 ? 'bg-gray-100 text-gray-600' : 'bg-var(--accent-lt) text-var(--accent)' }}">
                                 {{ $p->siswa->kelas->nama_kelas ?? '—' }}
@@ -127,7 +127,7 @@
                         </p>
                     </div>
                     <div class="mt-4 pt-4 flex gap-2" style="border-top: 1px solid var(--border);">
-                        <a href="{{ route('guru.portofolio.show', $p->id) }}"
+                        <a href="{{ route('guru.portofolio.show', $p->id_portofolio) }}"
                            class="flex-1 btn btn-gray btn-sm flex justify-center">
                             Detail
                         </a>
@@ -387,6 +387,7 @@
                 
                 xhr.open('POST', url, true);
                 xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+                xhr.setRequestHeader('Accept', 'application/json');
 
                 // Progress Tracker
                 xhr.upload.onprogress = (e) => {
@@ -405,9 +406,29 @@
 
                     if (xhr.status >= 200 && xhr.status < 300 && res.success) {
                         window.location.href = res.redirect || '{{ route('guru.portofolio.index') }}';
+                    } else if (xhr.status === 422 && res.errors) {
+                        this.submitting = false;
+                        let errorHtml = '<ul class="text-left text-sm space-y-1 ml-4 list-disc">';
+                        for (const key in res.errors) {
+                            errorHtml += `<li>${res.errors[key][0]}</li>`;
+                        }
+                        errorHtml += '</ul>';
+                        
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Kesalahan Input',
+                            html: errorHtml,
+                            confirmButtonText: 'Perbaiki'
+                        });
                     } else {
                         this.submitting = false;
-                        alert(res.message || 'Gagal menyimpan data.');
+                        this.closeForm();
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Oops...',
+                            text: res.message || 'Gagal menyimpan data.',
+                            confirmButtonText: 'Tutup'
+                        });
                     }
                 };
 

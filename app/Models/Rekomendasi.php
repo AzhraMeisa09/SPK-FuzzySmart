@@ -4,9 +4,21 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
+use App\Traits\HasCustomId;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+
 class Rekomendasi extends Model
 {
+    use HasFactory, HasCustomId;
     protected $table = 'rekomendasi';
+    protected $primaryKey = 'id_rekomendasi';
+    public $incrementing = false;
+    protected $keyType = 'string';
+
+    public function getPrefix()
+    {
+        return 'R';
+    }
 
     protected $fillable = [
         'evaluasi_id',

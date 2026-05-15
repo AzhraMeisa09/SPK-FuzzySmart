@@ -21,13 +21,13 @@ class SiswaController extends Controller
         if ($request->filled('search')) {
             $search = $request->get('search');
             $query->where(function($q) use ($search) {
-                $q->where('nama', 'like', "%{$search}%")
+                $q->where('name', 'like', "%{$search}%")
                   ->orWhere('kode', 'like', "%{$search}%");
             });
         }
 
         if ($request->filled('filter_kelas')) {
-            $query->where('kelas_id', $request->filter_kelas);
+            $query->where('id_kelas', $request->filter_kelas);
         }
 
         $siswa = $query->latest()->paginate(10)->withQueryString();
@@ -44,10 +44,11 @@ class SiswaController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nama' => 'required|string|max:255',
+            'name' => 'required|string|max:255',
+            'id_siswa' => 'nullable|string|max:10|unique:siswa,id_siswa',
             'kode' => 'nullable|string|max:10|unique:siswa,kode',
-            'kelas_id' => 'required|exists:kelas,id',
-            'wali_murid_id' => 'nullable|exists:users,id',
+            'kelas_id' => 'required|exists:kelas,id_kelas',
+            'wali_murid_id' => 'nullable|exists:users,id_user',
             'tanggal_lahir' => 'required|date',
             'jenis_kelamin' => 'required|in:L,P',
             'nama_orang_tua' => 'nullable|string|max:255',
@@ -55,7 +56,7 @@ class SiswaController extends Controller
             'alamat' => 'nullable|string',
             'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ], [
-            'nama.required' => 'Nama wajib diisi.',
+            'name.required' => 'Nama wajib diisi.',
             'kelas_id.required' => 'Kelas wajib dipilih.',
             'tanggal_lahir.required' => 'Tanggal lahir wajib diisi.',
             'jenis_kelamin.required' => 'Jenis kelamin wajib dipilih.',
@@ -105,10 +106,11 @@ class SiswaController extends Controller
         $siswa = Siswa::findOrFail($id);
 
         $request->validate([
-            'nama' => 'required|string|max:255',
-            'kode' => 'nullable|string|max:10|unique:siswa,kode,' . $id,
-            'kelas_id' => 'required|exists:kelas,id',
-            'wali_murid_id' => 'nullable|exists:users,id',
+            'name' => 'required|string|max:255',
+            'id_siswa' => 'nullable|string|max:10|unique:siswa,id_siswa,' . $id . ',id_siswa',
+            'kode' => 'nullable|string|max:10|unique:siswa,kode,' . $id . ',id_siswa',
+            'kelas_id' => 'required|exists:kelas,id_kelas',
+            'wali_murid_id' => 'nullable|exists:users,id_user',
             'tanggal_lahir' => 'required|date',
             'jenis_kelamin' => 'required|in:L,P',
             'nama_orang_tua' => 'nullable|string|max:255',
@@ -116,7 +118,7 @@ class SiswaController extends Controller
             'alamat' => 'nullable|string',
             'foto' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ], [
-            'nama.required' => 'Nama wajib diisi.',
+            'name.required' => 'Nama wajib diisi.',
             'kelas_id.required' => 'Kelas wajib dipilih.',
             'tanggal_lahir.required' => 'Tanggal lahir wajib diisi.',
             'jenis_kelamin.required' => 'Jenis kelamin wajib dipilih.',

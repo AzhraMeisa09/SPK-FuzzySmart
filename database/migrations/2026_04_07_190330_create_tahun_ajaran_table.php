@@ -12,12 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('tahun_ajaran', function (Blueprint $table) {
-            $table->id();
-            $table->string('nama', 20);
+            $table->string('id_tahun_ajaran', 10)->primary();
+            $table->string('nama', 50);
             $table->date('tanggal_mulai');
             $table->date('tanggal_selesai');
             $table->boolean('is_aktif');
-             $table->timestamp('created_at')->useCurrent();
+            $table->timestamp('created_at')->useCurrent();
         });
     }
 

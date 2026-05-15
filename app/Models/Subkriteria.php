@@ -5,32 +5,29 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
+use App\Traits\HasCustomId;
+
 class Subkriteria extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, HasCustomId;
 
     protected $table = 'subkriteria';
+    protected $primaryKey = 'id_subkriteria';
+    public $incrementing = false;
+    protected $keyType = 'string';
+
+    public function getPrefix()
+    {
+        return ''; // Handled by trait logic for subkriteria
+    }
 
     protected $fillable = [
         'kriteria_id',
-        'nama',
+        'nama_subkriteria',
         'rubrik_mb',
         'rubrik_bsh',
         'rubrik_bsb',
     ];
-
-    /**
-     * Get dynamic Kode (C1.1, C1.2, etc)
-     */
-    public function getKodeAttribute(): string
-    {
-        // Calculate sequence within parent
-        $index = self::where('kriteria_id', $this->kriteria_id)
-            ->where('id', '<=', $this->id)
-            ->count();
-            
-        return ($this->kriteria->kode ?? 'C?') . '.' . $index;
-    }
 
     protected $dates = ['deleted_at'];
 
@@ -38,7 +35,7 @@ class Subkriteria extends Model
 
     public function kriteria()
     {
-        return $this->belongsTo(Kriteria::class);
+        return $this->belongsTo(Kriteria::class, 'kriteria_id', 'id_kriteria');
     }
 
     public function jadwalSubkriteria()

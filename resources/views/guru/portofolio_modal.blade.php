@@ -50,12 +50,13 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div class="form-group !mb-0">
                             <label class="form-label">Siswa</label>
-                            <select name="siswa_id" x-model="formData.siswa_id" required class="form-input">
+                            <select name="siswa_id" x-model="formData.siswa_id" required class="form-input text-gray-900" style="color: #000;">
                                 <option value="">— Pilih Siswa —</option>
                                 @foreach($siswa->groupBy('kelas_id') as $kelasId => $siswaGroup)
                                     <optgroup label="KELAS {{ $siswaGroup->first()->kelas->nama_kelas }}">
                                         @foreach($siswaGroup as $s)
-                                            <option value="{{ $s->id }}">{{ $s->nama }}</option>
+                                            <option value="{{ $s->id_siswa }}" style="color: #000;">{{ $s->name }}</option>
+
                                         @endforeach
                                     </optgroup>
                                 @endforeach
@@ -63,10 +64,10 @@
                         </div>
                         <div class="form-group !mb-0">
                             <label class="form-label">Minggu Penilaian</label>
-                            <select name="minggu_id" x-model="formData.minggu_id" required class="form-input">
+                            <select name="minggu_id" x-model="formData.minggu_id" required class="form-input text-gray-900" style="color: #000;">
                                 <option value="">— Pilih Minggu —</option>
                                 @foreach($minggu as $m)
-                                    <option value="{{ $m->id }}">Minggu {{ $m->minggu_ke }}</option>
+                                    <option value="{{ $m->id_minggu }}" style="color: #000;">Minggu {{ $m->minggu_ke }}</option>
                                 @endforeach
                             </select>
                         </div>

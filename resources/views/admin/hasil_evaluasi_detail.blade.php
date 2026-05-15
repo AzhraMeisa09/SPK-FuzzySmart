@@ -1,5 +1,5 @@
 @extends('layouts.app')
-@section('title', 'Analisis SPK: ' . $evaluasi->siswa->nama)
+@section('title', 'Analisis SPK: ' . $evaluasi->siswa->name)
 @section('page-title', 'Detail Analisis SPK')
 
 @section('content')
@@ -32,10 +32,10 @@
             <div class="card p-6 border-none shadow-xl flex items-center gap-5 relative overflow-hidden">
                 <div class="absolute -right-8 -bottom-8 w-24 h-24 bg-blue-50 rounded-full"></div>
                 <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 text-white flex items-center justify-center font-bold text-2xl shadow-lg border-4 border-blue-50">
-                    {{ strtoupper(substr($evaluasi->siswa->nama, 0, 1)) }}
+                    {{ strtoupper(substr($evaluasi->siswa->name, 0, 1)) }}
                 </div>
                 <div class="relative">
-                    <h3 class="text-lg font-bold text-var(--text-1) tracking-tight leading-tight">{{ $evaluasi->siswa->nama }}</h3>
+                    <h3 class="text-lg font-bold text-var(--text-1) tracking-tight leading-tight">{{ $evaluasi->siswa->name }}</h3>
                     <p class="text-[10px] font-bold text-blue-600 mt-1">Kelas {{ $evaluasi->siswa->kelas->nama_kelas ?? '—' }}</p>
                     <p class="text-[10px] font-bold text-var(--text-3) mt-1">NISN: {{ $evaluasi->siswa->kode ?? '—' }}</p>
                 </div>
@@ -118,8 +118,8 @@
                         <tr class="hover:bg-var(--bg) transition-colors">
                             <td class="pl-8 py-5">
                                 <div class="flex flex-col">
-                                    <span class="font-bold text-var(--text-1) leading-snug">{{ $detail->subkriteria->nama }}</span>
-                                    <span class="text-[10px] text-var(--text-3) font-bold mt-1">{{ $detail->subkriteria->kriteria->nama }}</span>
+                                    <span class="font-bold text-var(--text-1) leading-snug">{{ $detail->subkriteria->nama_subkriteria }}</span>
+                                    <span class="text-[10px] text-var(--text-3) font-bold mt-1">{{ $detail->subkriteria->kriteria->nama_kriteria }}</span>
                                 </div>
                             </td>
                             <td class="text-center">

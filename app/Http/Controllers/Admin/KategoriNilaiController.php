@@ -79,7 +79,7 @@ class KategoriNilaiController extends Controller
         ]);
 
         $request->validate([
-            'nama' => 'required|in:MB,BSH,BSB|unique:kategori_nilai,nama,' . $kategoriNilai->id,
+            'nama' => 'required|in:MB,BSH,BSB|unique:kategori_nilai,nama,' . $kategoriNilai->id_kategori . ',id_kategori',
             'nilai_l' => 'required|numeric|min:0|max:100',
             'nilai_m' => 'required|numeric|min:0|max:100',
             'nilai_u' => 'required|numeric|min:0|max:100',
@@ -95,7 +95,7 @@ class KategoriNilaiController extends Controller
         }
 
         // Anti-Overlap Logic (Exclude Current ID)
-        $overlap = KategoriNilai::where('id', '!=', $kategoriNilai->id)
+        $overlap = KategoriNilai::where('id_kategori', '!=', $kategoriNilai->id_kategori)
             ->where(function ($query) use ($request) {
                 $query->where('rentang_min', '<', $request->rentang_max)
                       ->where('rentang_max', '>', $request->rentang_min);
