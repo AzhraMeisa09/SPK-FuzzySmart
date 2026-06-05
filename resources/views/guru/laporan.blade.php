@@ -32,14 +32,30 @@
                     <p class="text-[11px] mt-2 font-medium text-white/80">Laporan ini menggabungkan hasil evaluasi SPK dan portofolio kegiatan.</p>
                 </div>
             </div>
-            <div class="flex flex-wrap justify-center md:justify-end gap-3">
+            <div class="flex flex-wrap justify-center md:justify-end items-center gap-3">
+                {{-- Selector Periode Glassmorphism --}}
+                <div class="relative no-print">
+                    <select onchange="window.location.href = '{{ route('guru.laporan') }}?siswa_id={{ $siswa->id_siswa }}&periode_id=' + this.value" 
+                            class="inline-flex items-center px-4 py-2.5 pr-10 rounded-lg text-sm font-bold bg-white/10 hover:bg-white/20 text-white border-0 transition-all backdrop-blur-sm focus:ring-2 focus:ring-white/30 outline-none appearance-none cursor-pointer">
+                        @foreach($listPeriode as $p)
+                            <option value="{{ $p->id_periode }}" {{ ($periodeId ?? ($evaluasi->periode_id ?? '')) == $p->id_periode ? 'selected' : '' }} class="text-gray-900 font-semibold">
+                                {{ $p->nama_periode }} - {{ $p->tahunAjaran->nama ?? '—' }} ({{ ucfirst($p->status) }})
+                            </option>
+                        @endforeach
+                    </select>
+                    <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-white/70">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    </div>
+                </div>
+
                 <button onclick="window.print()" class="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold bg-white/10 hover:bg-white/20 text-white transition-all backdrop-blur-sm">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
-                    Print PDF
+                    Cetak PDF
                 </button>
                 <form action="{{ route('guru.laporan.generate-word') }}" method="POST">
                     @csrf
                     <input type="hidden" name="siswa_id" value="{{ $siswa->id_siswa }}">
+                    <input type="hidden" name="periode_id" value="{{ $periodeId ?? ($evaluasi->periode_id ?? '') }}">
                     <button type="submit" class="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold bg-white text-[#84934A] hover:bg-[#F1F4E9] transition-all shadow-lg shadow-black/5">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                         Cetak Word
@@ -52,7 +68,7 @@
         @if(count($anak) > 1)
             <div class="flex flex-wrap items-center gap-3 no-print">
                 @foreach($anak as $a)
-                    <a href="{{ route('guru.laporan', ['siswa_id' => $a->id_siswa]) }}" 
+                    <a href="{{ route('guru.laporan', ['siswa_id' => $a->id_siswa, 'periode_id' => $periodeId ?? ($evaluasi->periode_id ?? '')]) }}" 
                        class="group flex items-center gap-3 px-4 py-2.5 rounded-2xl transition-all border {{ $siswa->id_siswa == $a->id_siswa ? 'bg-white border-[#84934A] shadow-md ring-4 ring-[#84934A]/10' : 'bg-white border-gray-100 opacity-60 hover:opacity-100 hover:border-gray-200 shadow-sm' }}">
                         <div class="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black transition-transform group-hover:scale-110 {{ $siswa->id_siswa == $a->id_siswa ? 'bg-[#84934A] text-white shadow-lg shadow-[#84934A]/20' : 'bg-gray-100 text-gray-400' }} overflow-hidden">
                             @if($a->foto)
@@ -113,7 +129,10 @@
                             <h3 class="text-xl font-bold text-gray-900 tracking-tight">{{ $siswa->name }}</h3>
                             <div class="flex flex-wrap items-center gap-3 mt-2">
                                 <span class="badge badge-blue text-[9px] px-3 font-bold">{{ $siswa->kelas->nama_kelas ?? '—' }}</span>
-                                <span class="text-[10px] font-bold text-gray-400">ID: {{ $siswa->id_siswa }}</span>
+                                <span class="badge text-[9px] px-3 font-bold bg-[#84934A]/10 text-[#84934A] border border-[#84934A]/20">
+                                    Periode: {{ $evaluasi->periode->nama_periode ?? ($reportData['active_periode']->nama_periode ?? '—') }}
+                                </span>
+                                <span class="text-[10px] font-bold text-gray-400">NISN: {{ $siswa->kode ?: $siswa->id_siswa }}</span>
                                 <span class="w-1 h-1 rounded-full bg-gray-300"></span>
                                 <span class="text-[9px] font-bold text-gray-900 uppercase">Laporan Perkembangan</span>
                             </div>
@@ -127,10 +146,10 @@
                                 {{ number_format($evaluasi->nilai_akhir, 3) }}
                             </p>
                         </div>
-                        <div class="flex-1 md:w-32 p-4 rounded-2xl shadow-sm border text-center
+                        <div class="flex-1 md:min-w-[200px] p-4 rounded-2xl shadow-sm border text-center flex flex-col justify-center
                              {{ $evaluasi->kategori_akhir === 'BSB' ? 'border-emerald-100 bg-emerald-50 text-emerald-700' : ($evaluasi->kategori_akhir === 'BSH' ? 'border-amber-100 bg-amber-50 text-amber-700' : 'border-rose-100 bg-rose-50 text-rose-700') }}">
-                            <p class="text-[8px] font-bold opacity-60 uppercase tracking-wider mb-1">Kategori Akhir</p>
-                            <p class="text-xl font-bold leading-none">{{ $evaluasi->kategori_akhir }}</p>
+                            <p class="text-[10px] font-black uppercase tracking-widest text-current mb-1 opacity-80">Predikat Akhir</p>
+                            <p class="text-sm md:text-base font-black leading-tight">{{ match($evaluasi->kategori_akhir) { 'BSB' => 'Berkembang Sangat Baik (BSB)', 'BSH' => 'Berkembang Sesuai Harapan (BSH)', 'MB' => 'Mulai Berkembang (MB)', default => $evaluasi->kategori_akhir } }}</p>
                         </div>
                         <div class="flex-1 md:w-32 p-4 bg-white rounded-2xl shadow-sm border border-gray-100 text-center">
                             <p class="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">Ranking</p>
@@ -378,7 +397,7 @@
                 <div class="flex-1 w-full">
                     <label class="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2 block">Pilih siswa untuk melihat pratinjau laporan</label>
                     <div class="relative">
-                        <select name="siswa_id" class="w-full py-2.5 pl-11 pr-4 bg-white border border-gray-200 rounded-lg text-sm font-semibold text-gray-700 shadow-sm hover:border-blue-400 focus:border-blue-400 focus:ring-4 focus:ring-blue-50 transition-all appearance-none outline-none">
+                        <select name="siswa_id" class="w-full py-2.5 pl-11 pr-4 bg-white border border-gray-200 rounded-lg text-sm font-semibold text-gray-700 shadow-sm hover:border-[#84934A] focus:border-[#84934A] focus:ring-4 focus:ring-[#84934A]/5 transition-all appearance-none outline-none">
                             <option value="">-- Cari nama siswa --</option>
                             @foreach($allSiswa as $s)
                                 <option value="{{ $s->id_siswa }}" {{ $selectedSiswaId == $s->id_siswa ? 'selected' : '' }}>
@@ -391,6 +410,23 @@
                         </div>
                     </div>
                 </div>
+                
+                <div class="flex-1 w-full">
+                    <label class="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-2 block">Pilih periode penilaian</label>
+                    <div class="relative">
+                        <select name="periode_id" class="w-full py-2.5 pl-11 pr-4 bg-white border border-gray-200 rounded-lg text-sm font-semibold text-gray-700 shadow-sm hover:border-[#84934A] focus:border-[#84934A] focus:ring-4 focus:ring-[#84934A]/5 transition-all appearance-none outline-none">
+                            @foreach($listPeriode as $p)
+                                <option value="{{ $p->id_periode }}" {{ $periodeId == $p->id_periode ? 'selected' : '' }}>
+                                    {{ $p->nama_periode }} - {{ $p->tahunAjaran->nama ?? '—' }} ({{ ucfirst($p->status) }})
+                                </option>
+                            @endforeach
+                        </select>
+                        <div class="absolute inset-y-0 left-0 pl-4.5 flex items-center pointer-events-none text-gray-400">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        </div>
+                    </div>
+                </div>
+
                 <button type="submit" class="btn btn-green px-5 py-2.5 rounded-lg font-bold text-xs shadow-sm flex items-center gap-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                     Tampilkan
@@ -437,20 +473,23 @@
                                     <p class="text-sm font-bold text-gray-800 tracking-tight">{{ $siswa->name }}</p>
                                 </td>
                                 <td class="py-4 px-6 text-left">
-                                    <span class="font-mono text-xs text-gray-500">{{ $siswa->id_siswa }}</span>
+                                    <span class="font-mono text-xs text-gray-500">{{ $siswa->kode ?: $siswa->id_siswa }}</span>
                                 </td>
                                 <td class="py-4 px-6 text-left">
                                     <span class="badge badge-blue text-[9px] px-3">{{ $siswa->kelas->nama_kelas ?? '—' }}</span>
                                 </td>
                                 <td class="py-4 px-6 text-left">
                                     <div class="flex items-center gap-2">
-                                        <a href="{{ route('guru.laporan', ['siswa_id' => $siswa->id_siswa]) }}" 
+                                        <a href="{{ route('guru.laporan', ['siswa_id' => $siswa->id_siswa, 'periode_id' => $periodeId]) }}" 
                                            class="w-10 h-10 rounded-xl flex items-center justify-center bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm" title="Detail Laporan">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                                         </a>
                                         <form action="{{ route('guru.laporan.generate-word') }}" method="POST" class="m-0 p-0 inline">
                                             @csrf
                                             <input type="hidden" name="siswa_id" value="{{ $siswa->id_siswa }}">
+                                            @if($periodeId)
+                                                <input type="hidden" name="periode_id" value="{{ $periodeId }}">
+                                            @endif
                                             <button type="submit" class="w-10 h-10 rounded-xl flex items-center justify-center bg-emerald-50 text-emerald-600 hover:bg-emerald-600 hover:text-white transition-all shadow-sm" title="Download Word">
                                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                                             </button>

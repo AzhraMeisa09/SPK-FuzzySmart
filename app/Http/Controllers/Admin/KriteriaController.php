@@ -26,7 +26,7 @@ class KriteriaController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'nama_kriteria' => 'required|string|max:100',
+            'nama_kriteria' => 'required|string|max:100|unique:kriteria,nama_kriteria',
             'bobot' => 'required|numeric|min:0|max:1'
         ]);
 
@@ -49,7 +49,7 @@ class KriteriaController extends Controller
     {
         try {
             $request->validate([
-                'nama_kriteria' => 'required|string|max:100',
+                'nama_kriteria' => 'required|string|max:100|unique:kriteria,nama_kriteria,' . $kriteria->id_kriteria . ',id_kriteria',
                 'bobot' => 'required|numeric|min:0|max:1'
             ]);
 

@@ -21,7 +21,7 @@
                 <div>
                     <div class="flex flex-wrap items-center gap-2 mb-1">
                         <span class="badge badge-blue text-[9px] uppercase tracking-widest">{{ $siswa->kelas->nama_kelas ?? 'Belum ditempatkan' }}</span>
-                        <span class="text-[10px] font-bold uppercase tracking-widest" style="color: var(--text-3);">NISN: {{ $siswa->kode ?: '—' }}</span>
+                        <span class="text-[10px] font-bold uppercase tracking-widest" style="color: var(--text-3);">NISN: {{ $siswa->kode ?: $siswa->id_siswa ?: '—' }}</span>
                     </div>
                     <h1 class="text-lg font-semibold leading-tight" style="color: var(--text-1);">{{ $siswa->name }}</h1>
                 </div>

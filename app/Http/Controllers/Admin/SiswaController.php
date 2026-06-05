@@ -65,19 +65,14 @@ class SiswaController extends Controller
             'foto.max' => 'Ukuran foto maksimal 2MB.',
         ]);
 
-        $data = $request->all();
-
-        if ($request->filled('wali_murid_id')) {
-            $userWali = User::find($request->wali_murid_id);
-            if ($userWali) {
-                $data['nama_orang_tua'] = $userWali->nama_lengkap;
-                $data['no_hp_orang_tua'] = $userWali->no_hp;
-            }
-        }
+        $data = $request->except(['kode_registrasi']);
 
         if ($request->hasFile('foto')) {
             $data['foto'] = $request->file('foto')->store('siswa', 'public');
         }
+
+        // Auto-generate kode registrasi unik
+        $data['kode_registrasi'] = Siswa::generateKodeRegistrasi();
 
         $siswa = Siswa::create($data);
 
@@ -127,15 +122,8 @@ class SiswaController extends Controller
             'foto.max' => 'Ukuran foto maksimal 2MB.',
         ]);
 
-        $data = $request->all();
-
-        if ($request->filled('wali_murid_id')) {
-            $userWali = User::find($request->wali_murid_id);
-            if ($userWali) {
-                $data['nama_orang_tua'] = $userWali->nama_lengkap;
-                $data['no_hp_orang_tua'] = $userWali->no_hp;
-            }
-        }
+        // Jangan overwrite kode_registrasi saat update biasa
+        $data = $request->except(['kode_registrasi']);
 
         if ($request->hasFile('foto')) {
             if ($siswa->foto && Storage::disk('public')->exists($siswa->foto)) {
@@ -147,13 +135,32 @@ class SiswaController extends Controller
         $siswa->update($data);
 
         if ($request->filled('wali_murid_id')) {
-            $siswa->wali()->sync([$request->wali_murid_id]);
+            $siswa->wali()->syncWithoutDetaching([$request->wali_murid_id]);
         } else {
-            $siswa->wali()->detach();
+            // Only detach if the admin explicitly chose "-- Tidak ditautkan --" 
+            // and we know it's a single guardian sync (to avoid removing guardians added by parents)
+            // But for simplicity, we'll just not detach if it's empty, 
+            // so parents can keep their linked children even if admin edits the student.
+            if ($request->has('wali_murid_id') && empty($request->wali_murid_id)) {
+                 $siswa->wali()->detach();
+            }
         }
 
         return redirect()->route('admin.siswa.index')
                          ->with('success', 'Data siswa berhasil diperbarui.');
+    }
+
+    /**
+     * Generate ulang kode registrasi siswa.
+     */
+    public function regenerateKode($id)
+    {
+        $siswa = Siswa::findOrFail($id);
+        $siswa->kode_registrasi = Siswa::generateKodeRegistrasi();
+        $siswa->save();
+
+        return redirect()->route('admin.siswa.index')
+                         ->with('success', 'Kode registrasi ' . $siswa->name . ' berhasil diperbarui: ' . $siswa->kode_registrasi);
     }
 
     /**

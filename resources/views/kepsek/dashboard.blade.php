@@ -24,7 +24,7 @@
             <form action="{{ route('kepsek.dashboard') }}" method="GET" id="periodForm">
                 <select name="periode_id" class="w-full bg-white/10 backdrop-blur-md border border-white/20 text-white text-xs font-black rounded-xl px-4 py-2.5 focus:ring-0 focus:border-white/40 cursor-pointer appearance-none" onchange="this.form.submit()">
                     @foreach($periodeList as $p)
-                        <option value="{{ $p->id_periode }}" {{ $selectedPeriodeId == $p->id_periode ? 'selected' : '' }} class="text-gray-900">{{ $p->nama_periode }}</option>
+                        <option value="{{ $p->id_periode }}" {{ $selectedPeriodeId == $p->id_periode ? 'selected' : '' }} class="text-gray-900">{{ $p->nama_periode }} - {{ $p->tahunAjaran->nama ?? '—' }}</option>
                     @endforeach
                 </select>
             </form>
@@ -85,19 +85,19 @@
             
             <div class="mt-8 space-y-3">
                 @foreach([
-                    'BSB' => ['indigo', 'Sangat Baik'], 
-                    'BSH' => ['emerald', 'Sesuai Harapan'], 
-                    'MB' => ['rose', 'Mulai Berkembang']
+                    'BSB' => ['indigo', 'Berkembang Sangat Baik', 'Mampu mandiri konsisten & membantu teman.'], 
+                    'BSH' => ['emerald', 'Berkembang Sesuai Harapan', 'Mampu mandiri konsisten tanpa pengingat.'], 
+                    'MB' => ['rose', 'Mulai Berkembang', 'Masih sering membutuhkan bimbingan guru.']
                 ] as $kat => $meta)
-                <div class="flex items-center justify-between p-3 rounded-xl bg-gray-50/50 border border-transparent hover:border-gray-100 transition-all">
-                    <div class="flex items-center gap-3">
-                        <span class="w-2.5 h-2.5 rounded-full shadow-sm bg-{{ $meta[0] }}-500"></span>
+                <div class="flex items-start justify-between p-3 rounded-xl bg-gray-50/50 border border-transparent hover:border-gray-100 transition-all">
+                    <div class="flex items-start gap-3">
+                        <span class="w-2.5 h-2.5 mt-0.5 rounded-full shadow-sm bg-{{ $meta[0] }}-500 flex-shrink-0"></span>
                         <div>
-                            <p class="text-[10px] font-black text-gray-900 leading-none">{{ $kat }}</p>
-                            <p class="text-[9px] font-bold text-gray-400 uppercase mt-1 tracking-tighter">{{ $meta[1] }}</p>
+                            <p class="text-[10px] font-black text-gray-900 leading-none mb-1.5">{{ $kat }} — {{ $meta[1] }}</p>
+                            <p class="text-[9px] font-medium text-gray-500 leading-relaxed pr-2">{{ $meta[2] }}</p>
                         </div>
                     </div>
-                    <span class="text-xs font-black text-gray-900">{{ $distribusiKategori[$kat] }}</span>
+                    <span class="text-xs font-black text-gray-900 mt-0.5">{{ $distribusiKategori[$kat] }}</span>
                 </div>
                 @endforeach
             </div>

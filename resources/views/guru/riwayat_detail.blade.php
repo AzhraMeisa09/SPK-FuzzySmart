@@ -16,18 +16,40 @@
                 <div>
                     <div class="flex flex-wrap items-center gap-2 mb-1">
                         <span class="badge badge-blue text-[9px]">{{ $siswa->kelas->nama_kelas ?? '-' }}</span>
-                        <span class="text-[10px] font-bold uppercase tracking-widest" style="color: var(--text-3);">NISN: {{ $siswa->kode ?: '—' }}</span>
+                        @if($currentPeriode)
+                            <span class="badge badge-blue text-[9px] uppercase tracking-wider">{{ $currentPeriode->nama_periode }}</span>
+                            <span class="badge text-[9px] uppercase tracking-wider {{ $currentPeriode->status === 'aktif' ? 'badge-bsb' : 'badge-nonaktif' }}">{{ $currentPeriode->status === 'aktif' ? 'Aktif' : 'Final' }}</span>
+                        @endif
+                        <span class="text-[10px] font-bold uppercase tracking-widest" style="color: var(--text-3);">NISN: {{ $siswa->kode ?: $siswa->id_siswa ?: '—' }}</span>
                     </div>
                     <h1 class="text-base font-semibold leading-tight" style="color: var(--text-1);">{{ $siswa->nama }}</h1>
                 </div>
             </div>
             {{-- Actions --}}
             <div class="flex flex-wrap items-center gap-3">
-                <a href="{{ route('guru.riwayat') }}" class="btn btn-gray btn-sm">
+                {{-- Filter PERIODE --}}
+                @if(isset($listPeriode) && $listPeriode->count() > 0)
+                    <form action="{{ route('guru.riwayat.detail', $siswa->id_siswa) }}" method="GET" id="periodeDetailForm" class="relative">
+                        <select name="periode_id" class="form-select text-gray-900" style="padding-left: 36px; color: #000;" onchange="document.getElementById('periodeDetailForm').submit()">
+                            @foreach($listPeriode as $p)
+                                <option value="{{ $p->id_periode }}" class="text-gray-900" style="color: #000;"
+                                    {{ $currentPeriode && $currentPeriode->id_periode == $p->id_periode ? 'selected' : '' }}>
+                                    {{ $p->nama_periode }} - {{ $p->tahunAjaran->nama ?? '—' }}
+                                    @if($p->status === 'aktif') (Aktif) @elseif($p->status === 'final') (Final) @endif
+                                </option>
+                            @endforeach
+                        </select>
+                        <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--text-3);"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        </div>
+                    </form>
+                @endif
+
+                <a href="{{ route('guru.riwayat', array_filter(['periode_id' => $currentPeriode?->id_periode])) }}" class="btn btn-gray btn-sm">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
                     Kembali
                 </a>
-                <a href="{{ route('guru.laporan', $siswa->id) }}" class="btn btn-green btn-sm">
+                <a href="{{ route('guru.laporan', ['siswa_id' => $siswa->id_siswa, 'periode_id' => $currentPeriode?->id_periode]) }}" class="btn btn-green btn-sm">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                     Laporan lengkap
                 </a>

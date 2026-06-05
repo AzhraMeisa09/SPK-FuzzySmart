@@ -204,8 +204,11 @@
 
         /* ── MODAL ── */
         .modal-overlay {
-            position: fixed; inset: 0; background: rgba(27,33,26,.45);
-            z-index: 100; display: flex; align-items: center;
+            position: fixed; inset: 0; 
+            background: rgba(15, 23, 42, 0.45);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 10000; display: flex; align-items: center;
             justify-content: center; padding: 16px;
         }
         .modal-box {

@@ -28,7 +28,7 @@
             </a>
             <button onclick="window.print()" class="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold bg-white/10 hover:bg-white/20 text-white transition-all backdrop-blur-sm">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
-                Print / PDF
+                Cetak PDF
             </button>
         </div>
     </div>
@@ -98,7 +98,7 @@
                         <h3 class="text-xl font-bold text-gray-900 tracking-tight">{{ $siswa->nama }}</h3>
                         <div class="flex flex-wrap items-center gap-3 mt-2">
                             <span class="badge badge-blue text-[9px] px-3 font-bold">{{ $siswa->kelas->nama_kelas ?? '—' }}</span>
-                            <span class="text-[10px] font-bold text-gray-400">NISN: {{ $siswa->kode ?: '—' }}</span>
+                            <span class="text-[10px] font-bold text-gray-400">NISN: {{ $siswa->kode ?: $siswa->id_siswa ?: '—' }}</span>
                             <span class="w-1 h-1 rounded-full bg-gray-300"></span>
                             <span class="text-[9px] font-bold text-gray-900 uppercase">Laporan Perkembangan</span>
                         </div>
@@ -112,10 +112,10 @@
                             {{ number_format($evaluasi->nilai_akhir, 3) }}
                         </p>
                     </div>
-                    <div class="flex-1 md:w-32 p-4 rounded-2xl shadow-sm border text-center
+                    <div class="flex-1 md:min-w-[200px] p-4 rounded-2xl shadow-sm border text-center flex flex-col justify-center
                          {{ $evaluasi->kategori_akhir === 'BSB' ? 'border-emerald-100 bg-emerald-50 text-emerald-700' : ($evaluasi->kategori_akhir === 'BSH' ? 'border-amber-100 bg-amber-50 text-amber-700' : 'border-rose-100 bg-rose-50 text-rose-700') }}">
-                        <p class="text-[8px] font-bold opacity-60 uppercase tracking-wider mb-1">Kategori Akhir</p>
-                        <p class="text-xl font-bold leading-none">{{ $evaluasi->kategori_akhir }}</p>
+                        <p class="text-[10px] font-black uppercase tracking-widest text-current mb-1 opacity-80">Predikat Akhir</p>
+                        <p class="text-sm md:text-base font-black leading-tight">{{ match($evaluasi->kategori_akhir) { 'BSB' => 'Berkembang Sangat Baik (BSB)', 'BSH' => 'Berkembang Sesuai Harapan (BSH)', 'MB' => 'Mulai Berkembang (MB)', default => $evaluasi->kategori_akhir } }}</p>
                     </div>
                     <div class="flex-1 md:w-32 p-4 bg-white rounded-2xl shadow-sm border border-gray-100 text-center">
                         <p class="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-1">Ranking</p>

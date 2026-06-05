@@ -71,7 +71,7 @@
                                             <div class="flex items-center gap-1.5">
                                                 <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{{ $row['kelas'] }}</span>
                                                 <span class="w-1.5 h-1.5 rounded-full bg-gray-300"></span>
-                                                <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">NISN: {{ $row['id_siswa'] }}</span>
+                                                <span class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">NISN: {{ $row['kode'] ?? $row['id_siswa'] }}</span>
                                             </div>
                                         </div>
                                     </div>
@@ -81,11 +81,11 @@
                                     <td class="text-center">
                                         @if($mScore !== null)
                                             <div class="flex flex-col items-center">
-                                                <span class="text-xs font-black tracking-tighter {{ $mScore >= 85 ? 'text-emerald-600' : ($mScore >= 70 ? 'text-amber-600' : 'text-rose-600') }}">
+                                                <span class="text-xs font-black tracking-tighter {{ $mScore >= 85 ? 'text-[#84934A]' : ($mScore >= 70 ? 'text-[#92700A]' : 'text-[#C0392B]') }}">
                                                     {{ $mScore }}%
                                                 </span>
                                                 <div class="w-12 h-1 bg-gray-100 rounded-full mt-2 overflow-hidden shadow-inner">
-                                                    <div class="h-full {{ $mScore >= 85 ? 'bg-emerald-500' : ($mScore >= 70 ? 'bg-amber-500' : 'bg-rose-500') }}" style="width: {{ $mScore }}%"></div>
+                                                    <div class="h-full {{ $mScore >= 85 ? 'progress-green' : ($mScore >= 70 ? 'progress-yellow' : 'progress-red') }}" style="width: {{ $mScore }}%"></div>
                                                 </div>
                                             </div>
                                         @else

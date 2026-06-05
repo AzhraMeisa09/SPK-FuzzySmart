@@ -132,7 +132,13 @@ class SpkService
 
                 $evaluasi = Evaluasi::updateOrCreate(
                     ['periode_id' => $periode->id_periode, 'siswa_id' => $siswa->id_siswa],
-                    ['is_final' => true, 'nilai_akhir' => 0, 'kategori_akhir' => 'MB', 'rekomendasi' => '-']
+                    [
+                        'is_final'      => false, // Belum final, menunggu validasi guru
+                        'nilai_akhir'   => 0,
+                        'kategori_akhir' => 'MB',
+                        'rekomendasi'   => '-',
+                        'status_validasi' => \App\Models\Evaluasi::STATUS_MENUNGGU_REVIEW,
+                    ]
                 );
                 DetailEvaluasi::where('evaluasi_id', $evaluasi->id_evaluasi)->delete();
 
@@ -176,9 +182,10 @@ class SpkService
                 $rekUmum = $this->generateRekomendasiUmum($evaluasi->id_evaluasi, $finalKat);
 
                 $evaluasi->update([
-                    'nilai_akhir'    => round($V_a, 4),
-                    'kategori_akhir' => $finalKat,
-                    'rekomendasi'    => $rekUmum,
+                    'nilai_akhir'                => round($V_a, 4),
+                    'kategori_akhir'             => $finalKat,
+                    'kategori_rekomendasi_sistem' => $finalKat, // Simpan rekomendasi sistem asli
+                    'rekomendasi'                => $rekUmum,
                 ]);
             }
 

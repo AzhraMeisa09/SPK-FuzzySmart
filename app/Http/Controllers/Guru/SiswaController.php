@@ -18,7 +18,14 @@ class SiswaController extends Controller
         $user = Auth::user();
         
         // Ambil kelas yang diampu guru
-        $kelasIds = $user->kelas()->pluck('kelas.id_kelas');
+        $kelasIds = $user->kelas()->pluck('kelas.id_kelas')->toArray();
+
+        // Hanya kelas yang terdaftar pada periode aktif
+        $periodeAktif = \App\Models\PeriodePenilaian::where('is_aktif', true)->first();
+        if ($periodeAktif) {
+            $kelasIdsPeriode = $periodeAktif->kelas()->pluck('kelas.id_kelas')->toArray();
+            $kelasIds = array_intersect($kelasIds, $kelasIdsPeriode);
+        }
 
         $siswa = Siswa::whereIn('kelas_id', $kelasIds)
             ->with(['kelas', 'wali'])
@@ -34,7 +41,13 @@ class SiswaController extends Controller
     public function show($id)
     {
         $user = Auth::user();
-        $kelasIds = $user->kelas()->pluck('kelas.id_kelas');
+        $kelasIds = $user->kelas()->pluck('kelas.id_kelas')->toArray();
+
+        $periodeAktif = \App\Models\PeriodePenilaian::where('is_aktif', true)->first();
+        if ($periodeAktif) {
+            $kelasIdsPeriode = $periodeAktif->kelas()->pluck('kelas.id_kelas')->toArray();
+            $kelasIds = array_intersect($kelasIds, $kelasIdsPeriode);
+        }
 
         $siswa = Siswa::whereIn('kelas_id', $kelasIds)
             ->with(['kelas', 'wali'])

@@ -570,7 +570,7 @@ class KepsekController extends Controller
             'periode_id' => 'required|exists:periode_penilaian,id_periode',
         ]);
 
-        $reportData = $this->getReportData($request->siswa_id);
+        $reportData = $this->getReportData($request->siswa_id, $request->periode_id);
         if (!$reportData) return back()->with('error', 'Siswa tidak ditemukan.');
 
         try {
@@ -836,17 +836,41 @@ class KepsekController extends Controller
         }
     }
 
-    private function getReportData($selectedSiswaId)
+    private function getReportData($selectedSiswaId, $periodeId = null)
     {
         $activeSiswa = Siswa::with(['kelas.tahunAjaran'])->find($selectedSiswaId);
         if (!$activeSiswa) return null;
 
-        $evaluasi = Evaluasi::with('periode')->where('siswa_id', $selectedSiswaId)->where('is_final', true)->latest('id_evaluasi')->first();
-        $activePeriode = PeriodePenilaian::where('is_aktif', true)->first();
+        if ($periodeId) {
+            $evaluasi = Evaluasi::with('periode')
+                ->where('siswa_id', $selectedSiswaId)
+                ->where('periode_id', $periodeId)
+                ->first();
+        } else {
+            $evaluasi = Evaluasi::with('periode')
+                ->where('siswa_id', $selectedSiswaId)
+                ->where('is_final', true)
+                ->latest('id_evaluasi')
+                ->first();
+        }
+
+        if ($periodeId) {
+            $activePeriode = PeriodePenilaian::find($periodeId);
+        } else {
+            $activePeriode = $evaluasi ? $evaluasi->periode : PeriodePenilaian::where('is_aktif', true)->first();
+        }
+
+        $targetPeriodeId = $evaluasi ? $evaluasi->periode_id : ($activePeriode->id_periode ?? null);
+
+        $penilaianQuery = PenilaianMingguan::with(['jadwalSubkriteria.subkriteria.kriteria', 'jadwalSubkriteria.minggu', 'kategori'])
+            ->where('siswa_id', $selectedSiswaId);
         
-        $penilaian = PenilaianMingguan::with(['jadwalSubkriteria.subkriteria.kriteria', 'jadwalSubkriteria.minggu', 'kategori'])
-            ->where('siswa_id', $selectedSiswaId)
-            ->get();
+        if ($targetPeriodeId) {
+            $penilaianQuery->whereHas('jadwalSubkriteria.minggu', function($q) use ($targetPeriodeId) {
+                $q->where('periode_id', $targetPeriodeId);
+            });
+        }
+        $penilaian = $penilaianQuery->get();
         
         // Helper untuk penentuan kategori
         $matchKategori = function($nilai) {
@@ -879,7 +903,12 @@ class KepsekController extends Controller
         }
 
         $detailEvaluasiGrouped = $detailEvaluasi->groupBy(fn($item) => $item->subkriteria->kriteria->nama_kriteria ?? 'Lainnya');
-        $portofolioList = \App\Models\Portofolio::with(['images', 'minggu'])->where('siswa_id', $selectedSiswaId)->get();
+        
+        $portofolioQuery = \App\Models\Portofolio::with(['images', 'minggu'])->where('siswa_id', $selectedSiswaId);
+        if ($targetPeriodeId) {
+            $portofolioQuery->whereHas('minggu', fn($q) => $q->where('periode_id', $targetPeriodeId));
+        }
+        $portofolioList = $portofolioQuery->get();
         
         return [
             'siswa' => $activeSiswa, 

@@ -14,13 +14,13 @@
                 </div>
                 <div>
                     <h4 class="text-sm font-black text-gray-800 tracking-tight leading-none mb-1">Periode Analisis</h4>
-                    <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">Pilih periode untuk melihat statistik</p>
+                    <p class="text-[9px] font-medium text-gray-400 uppercase tracking-widest">Pilih periode untuk melihat statistik</p>
                 </div>
             </div>
             <div class="w-full md:w-72">
-                <select name="periode_id" class="form-select w-full font-black text-xs h-[42px] rounded-xl border-gray-100 shadow-sm focus:ring-indigo-500 focus:border-indigo-500" onchange="this.form.submit()">
+                <select name="periode_id" class="form-select w-full font-medium text-xs h-[42px] rounded-xl border-gray-100 shadow-sm focus:ring-indigo-500 focus:border-indigo-500" onchange="this.form.submit()">
                     @foreach($periodeList as $p)
-                        <option value="{{ $p->id_periode }}" {{ $selectedPeriodeId == $p->id_periode ? 'selected' : '' }} class="text-gray-900">{{ $p->nama_periode }}</option>
+                        <option value="{{ $p->id_periode }}" {{ $selectedPeriodeId == $p->id_periode ? 'selected' : '' }} class="text-gray-900">{{ $p->nama_periode }} - {{ $p->tahunAjaran->nama ?? '—' }}</option>
                     @endforeach
                 </select>
             </div>
@@ -42,24 +42,24 @@
         
         {{-- Top 10 terbaik --}}
         <div class="card p-8 border-none shadow-xl relative overflow-hidden group/top">
-            <div class="absolute -top-10 -right-10 w-40 h-40 bg-emerald-50 rounded-full opacity-0 group-hover/top:opacity-100 transition-all duration-700 blur-3xl"></div>
+            <div class="absolute -top-10 -right-10 w-40 h-40 bg-[#F0F3E8] rounded-full opacity-0 group-hover/top:opacity-100 transition-all duration-700 blur-3xl"></div>
             
             <div class="flex items-center justify-between mb-8 relative z-10">
                 <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] flex items-center gap-3">
                     <span class="w-6 h-px bg-gray-200"></span>
                     Performa Unggulan (Top 10)
                 </h4>
-                <div class="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center shadow-sm">
+                <div class="w-10 h-10 rounded-2xl bg-[#F0F3E8] text-[#84934A] flex items-center justify-center shadow-sm">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-7.714 2.143L11 21l-2.286-6.857L1 12l7.714-2.143L11 3z"/></svg>
                 </div>
             </div>
             
             <div class="space-y-3 relative z-10">
                 @foreach($topSiswa as $index => $eval)
-                    <div class="flex items-center justify-between p-4 rounded-2xl bg-gray-50/50 border border-transparent hover:border-emerald-100 hover:bg-white transition-all group/item">
+                    <div class="flex items-center justify-between p-4 rounded-2xl bg-gray-50/50 border border-transparent hover:border-[#84934A]/20 hover:bg-white transition-all group/item">
                         <div class="flex items-center gap-4">
                             <span class="text-[10px] font-black text-gray-300 w-6">#{{ $index + 1 }}</span>
-                            <div class="w-10 h-10 rounded-xl bg-white border border-gray-100 flex items-center justify-center font-black text-xs text-gray-400 group-hover/item:border-emerald-200 group-hover/item:text-emerald-600 transition-all shadow-sm">
+                            <div class="w-10 h-10 rounded-xl bg-white border border-gray-100 flex items-center justify-center font-black text-xs text-gray-400 group-hover/item:border-[#84934A]/30 group-hover/item:text-[#84934A] transition-all shadow-sm">
                                 {{ strtoupper(substr($eval->siswa->name, 0, 1)) }}
                             </div>
                             <div>
@@ -68,7 +68,7 @@
                             </div>
                         </div>
                         <div class="text-right">
-                            <span class="text-sm font-black text-emerald-600 tracking-tighter">{{ number_format($eval->nilai_akhir * 100, 1) }}%</span>
+                            <span class="text-sm font-black text-[#84934A] tracking-tighter">{{ number_format($eval->nilai_akhir * 100, 1) }}%</span>
                         </div>
                     </div>
                 @endforeach
@@ -77,24 +77,24 @@
 
         {{-- Bottom 10 perlu perhatian --}}
         <div class="card p-8 border-none shadow-xl relative overflow-hidden group/bottom">
-            <div class="absolute -top-10 -right-10 w-40 h-40 bg-rose-50 rounded-full opacity-0 group-hover/bottom:opacity-100 transition-all duration-700 blur-3xl"></div>
+            <div class="absolute -top-10 -right-10 w-40 h-40 bg-[#FEF0EE] rounded-full opacity-0 group-hover/bottom:opacity-100 transition-all duration-700 blur-3xl"></div>
 
             <div class="flex items-center justify-between mb-8 relative z-10">
                 <h4 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] flex items-center gap-3">
                     <span class="w-6 h-px bg-gray-200"></span>
                     Perlu Intervensi (Bottom 10)
                 </h4>
-                <div class="w-10 h-10 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center shadow-sm">
+                <div class="w-10 h-10 rounded-2xl bg-[#FEF0EE] text-[#C0392B] flex items-center justify-center shadow-sm">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
                 </div>
             </div>
 
             <div class="space-y-3 relative z-10">
                 @foreach($bottomSiswa as $index => $eval)
-                    <div class="flex items-center justify-between p-4 rounded-2xl bg-gray-50/50 border border-transparent hover:border-rose-100 hover:bg-white transition-all group/item">
+                    <div class="flex items-center justify-between p-4 rounded-2xl bg-gray-50/50 border border-transparent hover:border-[#C0392B]/20 hover:bg-white transition-all group/item">
                         <div class="flex items-center gap-4">
                             <span class="text-[10px] font-black text-gray-300 w-6">#{{ count($bottomSiswa) - $index }}</span>
-                            <div class="w-10 h-10 rounded-xl bg-white border border-gray-100 flex items-center justify-center font-black text-xs text-gray-400 group-hover/item:border-rose-200 group-hover/item:text-rose-600 transition-all shadow-sm">
+                            <div class="w-10 h-10 rounded-xl bg-white border border-gray-100 flex items-center justify-center font-black text-xs text-gray-400 group-hover/item:border-[#C0392B]/30 group-hover/item:text-[#C0392B] transition-all shadow-sm">
                                 {{ strtoupper(substr($eval->siswa->name, 0, 1)) }}
                             </div>
                             <div>
@@ -103,7 +103,7 @@
                             </div>
                         </div>
                         <div class="text-right">
-                            <span class="text-sm font-black text-rose-600 tracking-tighter">{{ number_format($eval->nilai_akhir * 100, 1) }}%</span>
+                            <span class="text-sm font-black text-[#C0392B] tracking-tighter">{{ number_format($eval->nilai_akhir * 100, 1) }}%</span>
                         </div>
                     </div>
                 @endforeach
@@ -184,10 +184,10 @@
                     <div class="group/bar">
                         <div class="flex items-center justify-between mb-2 text-[10px] font-black uppercase tracking-widest">
                             <span class="text-gray-600">{{ $sub->nama }}</span>
-                            <span class="text-rose-600">{{ number_format($sub->avg, 1) }}%</span>
+                            <span class="text-[#C0392B]">{{ number_format($sub->avg, 1) }}%</span>
                         </div>
                         <div class="bg-gray-50 h-2 rounded-full overflow-hidden shadow-inner p-0.5">
-                            <div class="bg-rose-500 h-full rounded-full group-hover/bar:bg-rose-400 transition-all duration-700 shadow-sm" style="width: {{ $sub->avg }}%"></div>
+                            <div class="progress-red h-full rounded-full group-hover/bar:bg-[#C0392B]/80 transition-all duration-700 shadow-sm" style="width: {{ $sub->avg }}%"></div>
                         </div>
                     </div>
                 @endforeach

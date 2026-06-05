@@ -59,6 +59,10 @@
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                 Download Rapor
             </a>
+            <button @click="$dispatch('open-tambah-anak')" class="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold bg-white/10 hover:bg-white/20 text-white transition-all backdrop-blur-sm">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                Tambah Anak
+            </button>
         </div>
     </div>
 
@@ -218,6 +222,37 @@
                     </div>
                 </div>
             </div>
+
+            {{-- Glosarium --}}
+            <div class="card p-6 border-none shadow-sm bg-white">
+                <h4 class="text-[10px] font-black uppercase tracking-[0.2em] mb-4 flex items-center gap-2" style="color: var(--text-3);">
+                    Keterangan Predikat
+                    <span class="h-px flex-1 bg-gray-100"></span>
+                </h4>
+                <div class="space-y-3">
+                    <div class="flex items-start gap-3 p-3 rounded-xl bg-gray-50/50">
+                        <div class="w-8 h-8 rounded-lg bg-green-50 text-green-600 flex items-center justify-center font-black text-[10px] flex-shrink-0 border border-green-100">BSB</div>
+                        <div>
+                            <p class="text-xs font-bold text-gray-900 leading-none">Berkembang Sangat Baik</p>
+                            <p class="text-[10px] font-medium text-gray-500 mt-1.5 leading-relaxed">Anak sudah dapat melakukannya secara mandiri, konsisten, dan dapat membantu temannya.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3 p-3 rounded-xl bg-gray-50/50">
+                        <div class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center font-black text-[10px] flex-shrink-0 border border-amber-100">BSH</div>
+                        <div>
+                            <p class="text-xs font-bold text-gray-900 leading-none">Berkembang Sesuai Harapan</p>
+                            <p class="text-[10px] font-medium text-gray-500 mt-1.5 leading-relaxed">Anak sudah dapat melakukannya secara mandiri dan konsisten tanpa pengingat.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-start gap-3 p-3 rounded-xl bg-gray-50/50">
+                        <div class="w-8 h-8 rounded-lg bg-red-50 text-red-600 flex items-center justify-center font-black text-[10px] flex-shrink-0 border border-red-100">MB</div>
+                        <div>
+                            <p class="text-xs font-bold text-gray-900 leading-none">Mulai Berkembang</p>
+                            <p class="text-[10px] font-medium text-gray-500 mt-1.5 leading-relaxed">Anak sudah mulai melakukannya namun masih memerlukan bimbingan dari guru.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -233,5 +268,86 @@
             <button onclick="location.reload()" class="btn btn-gray mt-8 px-8 font-black text-[10px]">Coba Lagi</button>
         </div>
     @endif
+
+    {{-- ── MODAL TAMBAH ANAK ── --}}
+    <div x-data="{ open: {{ session('error') ? 'true' : 'false' }} }"
+         @open-tambah-anak.window="open = true">
+        <template x-teleport="body">
+            <div x-show="open"
+                 x-transition.opacity
+                 @keydown.escape.window="open = false"
+                 class="modal-overlay"
+                 x-cloak>
+
+                <div class="modal-box w-full max-w-md" @click.stop x-transition.scale.95>
+
+            <form action="{{ route('wali.tambah-anak') }}" method="POST">
+                @csrf
+
+                {{-- Header --}}
+                <div class="px-8 py-5 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+                    <h3 class="text-base font-bold text-gray-800 tracking-tight">Tambah Data Anak</h3>
+                    <button type="button" @click="open = false" class="p-2 rounded-xl hover:bg-gray-200 text-var(--text-3) transition-colors">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M6 18L18 6M6 6l12 12"/></svg>
+                    </button>
+                </div>
+
+                {{-- Body --}}
+                <div class="px-8 py-6 space-y-5">
+
+                    {{-- Info banner --}}
+                    <div class="flex items-start gap-3 p-4 rounded-2xl bg-var(--accent-lt) border border-var(--accent)/15">
+                        <svg class="w-4 h-4 text-var(--accent) flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <p class="text-[11px] text-var(--accent) font-bold leading-relaxed">NISN dan kode registrasi harus sesuai dengan data yang diberikan pihak sekolah.</p>
+                    </div>
+
+                    {{-- NISN --}}
+                    <div class="form-group !mb-0">
+                        <label class="form-label text-[10px] font-bold">NISN Siswa <span class="text-red-500">*</span></label>
+                        <input type="text"
+                               name="nisn"
+                               id="wali-tambah-nisn"
+                               value="{{ old('nisn') }}"
+                               class="form-input rounded-xl bg-var(--bg) border-var(--border) font-bold text-xs"
+                               placeholder="Contoh: 1234567890"
+                               required>
+                        <p class="text-[10px] text-var(--text-3) mt-1.5 font-medium">NISN siswa sesuai data yang diberikan pihak sekolah.</p>
+                    </div>
+
+                    {{-- Kode Registrasi --}}
+                    <div class="form-group !mb-0">
+                        <label class="form-label text-[10px] font-bold">Kode Registrasi <span class="text-red-500">*</span></label>
+                        <input type="text"
+                               name="kode_registrasi"
+                               id="wali-tambah-kode"
+                               value="{{ old('kode_registrasi') }}"
+                               class="form-input rounded-xl bg-var(--bg) border-var(--border) font-bold text-xs tracking-widest"
+                               placeholder="Contoh: TKP-8H2K9"
+                               required
+                               style="text-transform: uppercase;">
+                        <p class="text-[10px] text-var(--text-3) mt-1.5 font-medium">Kode registrasi diberikan oleh pihak sekolah. Hubungi sekolah jika belum memilikinya.</p>
+                    </div>
+
+                </div>
+
+                {{-- Footer --}}
+                <div class="px-8 py-5 border-t border-gray-100 flex gap-3 justify-end bg-gray-50/50">
+                    <button type="button" @click="open = false"
+                            class="px-6 py-2 rounded-xl text-sm font-bold text-var(--text-3) hover:bg-gray-100 transition-colors">
+                        Batal
+                    </button>
+                    <button type="submit"
+                            class="px-8 py-2.5 rounded-xl font-bold text-white transition-all shadow-lg shadow-green-100"
+                            style="background-color: var(--accent);">
+                        Tambahkan Anak
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</template>
+</div>
+
 </div>
 @endsection

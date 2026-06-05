@@ -263,9 +263,14 @@
                 </form>
             </div>
 
-            <p class="text-center text-[11px] font-bold text-var(--text-3) mt-10 uppercase tracking-widest">
-                Butuh bantuan sistem? <a href="#" class="text-var(--accent) hover:text-var(--accent-dark) transition-colors">Hubungi Admin</a>
-            </p>
+            <div class="mt-8 text-center">
+                <p class="text-sm font-bold text-var(--text-2) mb-4">
+                    Belum punya akun? <a href="{{ route('register') }}" class="text-var(--accent) hover:text-var(--accent-dark) underline decoration-2 underline-offset-4 transition-colors">Daftar Wali Murid</a>
+                </p>
+                <p class="text-[11px] font-bold text-var(--text-3) uppercase tracking-widest">
+                    Butuh bantuan sistem? <a href="#" class="text-var(--accent) hover:text-var(--accent-dark) transition-colors">Hubungi Admin</a>
+                </p>
+            </div>
         </div>
     </div>
 

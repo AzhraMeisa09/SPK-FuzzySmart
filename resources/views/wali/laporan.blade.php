@@ -21,14 +21,28 @@
                 <p class="text-[11px] mt-2 font-medium text-white/80">Laporan ini menggabungkan hasil evaluasi SPK dan portofolio kegiatan.</p>
             </div>
         </div>
-        <div class="flex flex-wrap justify-center md:justify-end gap-3">
+        <div class="flex flex-wrap justify-center md:justify-end gap-3 items-center">
+            @if(isset($listPeriode) && $listPeriode->count() > 1)
+                <form action="{{ route('wali.laporan') }}" method="GET" class="flex items-center gap-2">
+                    <input type="hidden" name="siswa_id" value="{{ $siswa->id_siswa }}">
+                    <span class="text-xs font-bold text-white/80 whitespace-nowrap">Pilih Periode:</span>
+                    <select name="periode_id" onchange="this.form.submit()" class="bg-white/10 backdrop-blur-md border border-white/20 text-white text-xs font-black rounded-xl px-4 py-2.5 focus:ring-0 focus:border-white/40 cursor-pointer appearance-none outline-none" style="padding-right: 32px;">
+                        @foreach($listPeriode as $p)
+                            <option value="{{ $p->id_periode }}" class="text-gray-900" {{ $periode && $periode->id_periode == $p->id_periode ? 'selected' : '' }}>
+                                {{ $p->nama_periode }} - {{ $p->tahunAjaran->nama ?? '—' }}
+                            </option>
+                        @endforeach
+                    </select>
+                </form>
+            @endif
             <button onclick="window.print()" class="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold bg-white/10 hover:bg-white/20 text-white transition-all backdrop-blur-sm">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
-                Print PDF
+                Cetak PDF
             </button>
             <form action="{{ route('wali.laporan.generate-word') }}" method="POST">
                 @csrf
                 <input type="hidden" name="siswa_id" value="{{ $siswa->id_siswa }}">
+                <input type="hidden" name="periode_id" value="{{ $periode ? $periode->id_periode : '' }}">
                 <button type="submit" class="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold bg-white text-[#84934A] hover:bg-[#F1F4E9] transition-all shadow-lg shadow-black/5">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                     Cetak Word
@@ -116,6 +130,9 @@
                             <h3 class="text-xl font-bold text-gray-900 tracking-tight">{{ $siswa->name }}</h3>
                             <div class="flex flex-wrap items-center gap-3 mt-2">
                                 <span class="badge badge-blue text-[9px] px-3 font-bold">{{ $siswa->kelas->nama_kelas ?? '—' }}</span>
+                                @if($periode)
+                                    <span class="badge badge-bsb text-[9px] px-3 font-bold">{{ $periode->nama_periode }}</span>
+                                @endif
                                 <span class="text-[10px] font-bold text-gray-400">ID: {{ $siswa->id_siswa }}</span>
                                 <span class="w-1 h-1 rounded-full bg-gray-300"></span>
                                 <span class="text-[9px] font-bold text-gray-900 uppercase">Laporan Perkembangan</span>
@@ -130,10 +147,10 @@
                                 {{ number_format($evaluasi->nilai_akhir, 3) }}
                             </p>
                         </div>
-                        <div class="flex-1 md:w-32 p-4 rounded-2xl shadow-sm border text-center
+                        <div class="flex-1 md:min-w-[200px] p-4 rounded-2xl shadow-sm border text-center flex flex-col justify-center
                              {{ $evaluasi->kategori_akhir === 'BSB' ? 'border-emerald-100 bg-emerald-50 text-emerald-700' : ($evaluasi->kategori_akhir === 'BSH' ? 'border-amber-100 bg-amber-50 text-amber-700' : 'border-rose-100 bg-rose-50 text-rose-700') }}">
-                            <p class="text-[8px] font-bold opacity-60 uppercase tracking-wider mb-1">Kategori Akhir</p>
-                            <p class="text-xl font-bold leading-none">{{ $evaluasi->kategori_akhir }}</p>
+                            <p class="text-[10px] font-black uppercase tracking-widest text-current mb-1 opacity-80">Predikat Akhir</p>
+                            <p class="text-sm md:text-base font-black leading-tight">{{ match($evaluasi->kategori_akhir) { 'BSB' => 'Berkembang Sangat Baik (BSB)', 'BSH' => 'Berkembang Sesuai Harapan (BSH)', 'MB' => 'Mulai Berkembang (MB)', default => $evaluasi->kategori_akhir } }}</p>
                         </div>
                     </div>
                 </div>

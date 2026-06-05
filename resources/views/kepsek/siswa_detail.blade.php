@@ -1,30 +1,34 @@
 @extends('layouts.app')
-@section('title', 'Detail Analisis Siswa — ' . $siswa->nama)
+@section('title', 'Detail Analisis Siswa — ' . $siswa->name)
 @section('page-title', 'Detail Siswa')
 
 @section('content')
 <div class="space-y-6 pb-20 fade-in">
 
     {{-- ── HERO BANNER ── --}}
-    <div class="rounded-[2.5rem] p-10 flex flex-col md:flex-row md:items-center justify-between gap-8 shadow-2xl relative overflow-hidden" style="background: linear-gradient(135deg, #313D29 0%, #4A5D3E 100%);">
+    <div class="rounded-[2.5rem] p-10 flex flex-col md:flex-row md:items-center justify-between gap-8 shadow-2xl relative overflow-hidden" style="background: linear-gradient(135deg, #1C201C 0%, #293029 100%);">
         <!-- Decorative Elements -->
         <div class="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl"></div>
         <div class="absolute bottom-0 left-0 w-48 h-48 bg-[#84934A]/10 rounded-full -ml-24 -mb-24 blur-2xl"></div>
 
         <div class="flex flex-col md:flex-row items-center gap-8 text-center md:text-left relative z-10">
-            <div class="w-24 h-24 rounded-3xl flex items-center justify-center text-[#313D29] font-black text-4xl shadow-2xl transform hover:scale-105 transition-transform duration-500 bg-white/90 backdrop-blur-md border-4 border-white/20">
-                {{ strtoupper(substr($siswa->nama, 0, 1)) }}
-            </div>
+            @if($siswa->foto)
+                <img src="{{ asset('storage/' . $siswa->foto) }}" alt="{{ $siswa->name }}" class="w-24 h-24 rounded-3xl object-cover shadow-2xl border-4 border-white/20 transform hover:scale-105 transition-transform duration-500 bg-white">
+            @else
+                <div class="w-24 h-24 rounded-3xl flex items-center justify-center text-[#1C201C] font-black text-4xl shadow-2xl transform hover:scale-105 transition-transform duration-500 bg-white/90 backdrop-blur-md border-4 border-white/20">
+                    {{ strtoupper(substr($siswa->name, 0, 1)) }}
+                </div>
+            @endif
             <div>
                 <div class="flex items-center justify-center md:justify-start gap-2 mb-2">
                     <span class="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
                     <p class="text-[10px] font-bold uppercase tracking-[0.3em]" style="color: rgba(255,255,255,.7);">Analisis Profil Siswa</p>
                 </div>
-                <h1 class="text-3xl font-black text-white leading-tight tracking-tight">{{ $siswa->nama }}</h1>
+                <h1 class="text-3xl font-black text-white leading-tight tracking-tight">{{ $siswa->name }}</h1>
                 <div class="flex flex-wrap items-center justify-center md:justify-start gap-4 mt-4">
                     <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm">
                         <svg class="w-3.5 h-3.5 text-[#C5CF8E]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-                        <span class="text-[11px] font-bold text-white uppercase tracking-wider">{{ $siswa->kode ?: 'NISN: —' }}</span>
+                        <span class="text-[11px] font-bold text-white uppercase tracking-wider">NISN: {{ $siswa->kode ?: $siswa->id_siswa ?: '—' }}</span>
                     </div>
                     <div class="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-white/5 border border-white/10 backdrop-blur-sm">
                         <svg class="w-3.5 h-3.5 text-[#C5CF8E]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
@@ -41,7 +45,7 @@
                     <div class="relative group">
                         <select name="periode_id" class="w-full bg-white/10 border border-white/10 text-white text-xs font-bold rounded-xl px-4 py-2.5 cursor-pointer appearance-none focus:ring-2 focus:ring-[#84934A]/50 focus:border-[#84934A] transition-all" onchange="this.form.submit()">
                             @foreach($periodeList as $p)
-                                <option value="{{ $p->id }}" {{ $selectedPeriodeId == $p->id ? 'selected' : '' }} class="text-gray-900">{{ $p->nama_periode }}</option>
+                                <option value="{{ $p->id_periode }}" {{ $selectedPeriodeId == $p->id_periode ? 'selected' : '' }} class="text-gray-900">{{ $p->nama_periode }} - {{ $p->tahunAjaran->nama ?? '—' }}</option>
                             @endforeach
                         </select>
                         <div class="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-white/40 group-hover:text-white transition-colors">
@@ -57,9 +61,9 @@
                 </a>
                 <form action="{{ route('kepsek.laporan.generate-word') }}" method="POST">
                     @csrf
-                    <input type="hidden" name="siswa_id" value="{{ $siswa->id }}">
+                    <input type="hidden" name="siswa_id" value="{{ $siswa->id_siswa }}">
                     <input type="hidden" name="periode_id" value="{{ $selectedPeriodeId }}">
-                    <button type="submit" class="inline-flex items-center gap-2 px-8 py-2.5 rounded-xl text-[#313D29] font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-black/10 hover:scale-105 active:scale-95 transition-all bg-white">
+                    <button type="submit" class="inline-flex items-center gap-2 px-8 py-2.5 rounded-xl text-[#84934A] font-black uppercase tracking-widest text-[10px] shadow-lg hover:scale-105 active:scale-95 transition-all bg-[#84934A]/10 border border-[#84934A]/20">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/></svg>
                         Cetak Laporan
                     </button>
@@ -91,9 +95,9 @@
 
                     @php 
                         $colors = [
-                            'BSB' => ['bg' => 'bg-emerald-50', 'text' => 'text-emerald-600', 'border' => 'border-emerald-100', 'dot' => 'bg-emerald-500'],
-                            'BSH' => ['bg' => 'bg-amber-50', 'text' => 'text-amber-600', 'border' => 'border-amber-100', 'dot' => 'bg-amber-500'],
-                            'MB'  => ['bg' => 'bg-rose-50', 'text' => 'text-rose-600', 'border' => 'border-rose-100', 'dot' => 'bg-rose-500'],
+                            'BSB' => ['bg' => 'bg-[#F0F3E8]', 'text' => 'text-[#84934A]', 'border' => 'border-[#84934A]/20', 'dot' => 'bg-[#84934A]'],
+                            'BSH' => ['bg' => 'bg-[#FDF8ED]', 'text' => 'text-[#92700A]', 'border' => 'border-[#92700A]/20', 'dot' => 'bg-[#92700A]'],
+                            'MB'  => ['bg' => 'bg-[#FEF0EE]', 'text' => 'text-[#C0392B]', 'border' => 'border-[#C0392B]/20', 'dot' => 'bg-[#C0392B]'],
                         ];
                         $c = $colors[$evaluasi->kategori_akhir] ?? ['bg' => 'bg-gray-50', 'text' => 'text-gray-600', 'border' => 'border-gray-100', 'dot' => 'bg-gray-500'];
                     @endphp

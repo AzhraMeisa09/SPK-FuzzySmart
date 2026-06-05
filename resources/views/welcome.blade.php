@@ -251,6 +251,7 @@
 
             <div class="flex items-center gap-4">
                 <a href="/login" class="btn-sage">Masuk</a>
+                <a href="{{ route('register') }}" class="btn-outline hidden md:inline-flex bg-white/50">Daftar Wali</a>
             </div>
         </div>
     </nav>
@@ -610,6 +611,7 @@
                         <li><a href="#tentang" class="hover:text-white transition-colors">Tentang Kami</a></li>
                         <li><a href="#fitur" class="hover:text-white transition-colors">Daftar Fitur</a></li>
                         <li><a href="/login" class="hover:text-white transition-colors">Akses Login</a></li>
+                        <li><a href="{{ route('register') }}" class="hover:text-white transition-colors">Daftar Wali Murid</a></li>
                     </ul>
                 </div>
                 <div>

@@ -46,6 +46,12 @@ class PenilaianController extends Controller
         $user = Auth::user();
         $kelasIds = $user->kelas->pluck('id_kelas')->toArray();
         $periode = PeriodePenilaian::where('is_aktif', true)->first();
+        
+        if ($periode) {
+            $kelasIdsPeriode = $periode->kelas->pluck('id_kelas')->toArray();
+            $kelasIds = array_intersect($kelasIds, $kelasIdsPeriode);
+        }
+        
         $mingguAktif = null;
         if ($periode) $mingguAktif = MingguPenilaian::where('periode_id', $periode->id_periode)->where('status', 'aktif')->first();
         
@@ -136,9 +142,14 @@ class PenilaianController extends Controller
     {
         $user = auth()->user(); 
         $kelasIds = $user->kelas->pluck('id_kelas')->toArray();
+        $periode = PeriodePenilaian::where('is_aktif', true)->first();
+        if ($periode) {
+            $kelasIdsPeriode = $periode->kelas->pluck('id_kelas')->toArray();
+            $kelasIds = array_intersect($kelasIds, $kelasIdsPeriode);
+        }
+        
         $allSiswa = Siswa::whereIn('kelas_id', $kelasIds)->with(['kelas', 'penilaian.jadwalSubkriteria.minggu'])->get();
         
-        $periode = PeriodePenilaian::where('is_aktif', true)->first();
         $totalMingguInPeriode = $periode ? $periode->minggu()->count() : 0;
         
         $records = $allSiswa->map(function($s) use ($totalMingguInPeriode) {
@@ -157,7 +168,7 @@ class PenilaianController extends Controller
             return [
                 'siswa_id' => $s->id_siswa, 
                 'nama' => $s->name, 
-                'nisn' => $s->kode, 
+                'nisn' => $s->kode ?: $s->id_siswa, 
                 'kelas' => $s->kelas->nama_kelas ?? '—', 
                 'avg' => round($avgFinal, 2), 
                 'kategori' => $this->matchKategoriCrisp($avgFinal), 
@@ -181,18 +192,31 @@ class PenilaianController extends Controller
     {
         $user = auth()->user(); 
         $kelasIds = $user->kelas->pluck('id_kelas')->toArray();
+        $selectedSiswaId = $request->siswa_id;
+        $periodeId = $request->periode_id;
+        
+        $activePeriode = $periodeId ? PeriodePenilaian::find($periodeId) : PeriodePenilaian::where('is_aktif', true)->first();
+        if ($activePeriode) {
+            $kelasIdsPeriode = $activePeriode->kelas->pluck('id_kelas')->toArray();
+            $kelasIds = array_intersect($kelasIds, $kelasIdsPeriode);
+        }
+
         $allSiswa = Siswa::whereIn('kelas_id', $kelasIds)->with('kelas')->get();
-        $selectedSiswaId = $request->siswa_id; 
+        
+        $listPeriode = PeriodePenilaian::whereIn('status', ['final', 'aktif'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+            
         $reportData = [];
         
         if ($selectedSiswaId) {
-            $reportData = $this->getReportData($selectedSiswaId);
+            $reportData = $this->getReportData($selectedSiswaId, $periodeId);
         }
 
-        return view('guru.laporan', compact('allSiswa', 'reportData', 'selectedSiswaId'));
+        return view('guru.laporan', compact('allSiswa', 'reportData', 'selectedSiswaId', 'listPeriode', 'periodeId'));
     }
 
-    private function getReportData($selectedSiswaId)
+    private function getReportData($selectedSiswaId, $periodeId = null)
     {
         $user = auth()->user(); $kelasIds = $user->kelas->pluck('id_kelas')->toArray();
         $activeSiswa = Siswa::with(['kelas.tahunAjaran'])->find($selectedSiswaId);
@@ -200,42 +224,109 @@ class PenilaianController extends Controller
         if (!$activeSiswa || !in_array($activeSiswa->kelas_id, $kelasIds)) return null;
 
         $kriteriaList = Kriteria::orderBy('id_kriteria', 'asc')->get();
-        // Ambil evaluasi final jika ada
-        $evaluasi = Evaluasi::with('periode')->where('siswa_id', $selectedSiswaId)->whereHas('periode', fn($q) => $q->where('status', 'final'))->latest('id_evaluasi')->first();
         
-        // Jika tidak ada evaluasi final, ambil semester dari periode aktif kelas tersebut
-        $activePeriode = PeriodePenilaian::whereHas('kelas', fn($q) => $q->where('kelas.id_kelas', $activeSiswa->kelas_id))
-            ->where('is_aktif', true)
-            ->first();
+        // 1. Tentukan Evaluasi
+        if ($periodeId) {
+            $evaluasi = Evaluasi::with('periode')
+                ->where('siswa_id', $selectedSiswaId)
+                ->where('periode_id', $periodeId)
+                ->first();
+        } else {
+            $evaluasi = Evaluasi::with('periode')
+                ->where('siswa_id', $selectedSiswaId)
+                ->whereHas('periode', fn($q) => $q->where('status', 'final'))
+                ->latest('id_evaluasi')
+                ->first();
+        }
+        
+        // 2. Tentukan Periode (jika evaluasi tidak ada)
+        if ($periodeId) {
+            $activePeriode = PeriodePenilaian::find($periodeId);
+        } else {
+            $activePeriode = $evaluasi ? $evaluasi->periode : PeriodePenilaian::whereHas('kelas', fn($q) => $q->where('kelas.id_kelas', $activeSiswa->kelas_id))
+                ->where('is_aktif', true)
+                ->first();
+        }
 
-        $penilaian = PenilaianMingguan::with(['jadwalSubkriteria.subkriteria.kriteria', 'jadwalSubkriteria.minggu', 'kategori'])->where('siswa_id', $selectedSiswaId)->get();
-        
-        $kriteriaScores = $penilaian->groupBy(fn($item) => $item->jadwalSubkriteria->subkriteria->kriteria_id)->map(function ($items) {
-            $first = $items->first()->jadwalSubkriteria->subkriteria->kriteria; $avg = $items->avg('nilai_crisp');
-            return ['kode' => $first->id_kriteria, 'nama' => $first->nama_kriteria, 'avg' => round($avg, 2), 'kategori' => $this->matchKategoriCrisp($avg)];
-        })->values();
-        
-        $subDetails = $penilaian->groupBy(fn($item) => $item->jadwalSubkriteria->subkriteria_id)->map(function ($items) {
-            $first = $items->first(); 
-            $sub = $first->jadwalSubkriteria->subkriteria; 
-            $avg = $items->avg('nilai_crisp');
-            return [
-                'id' => $sub->id_subkriteria,
-                'kode' => $sub->id_subkriteria, // Kode is now the ID
-                'nama' => $sub->nama_subkriteria, 
-                'nilai' => $this->matchKategoriCrisp($avg), 
-                'avg' => round($avg, 2), 
-                'catatan' => $items->whereNotNull('catatan')->pluck('catatan')->filter()->first() ?? '-'
-            ];
-        })->sortBy('id')->values();
-        
-        $detailEvaluasi = $evaluasi ? DetailEvaluasi::with('subkriteria.kriteria')->where('evaluasi_id', $evaluasi->id_evaluasi)->orderBy('subkriteria_id', 'asc')->get() : collect();
-        
-        // Fallback untuk DetailEvaluasi jika belum ada (gunakan data dari PenilaianMingguan)
-        if ($detailEvaluasi->isEmpty() && $subDetails->isNotEmpty()) {
+        $targetPeriodeId = $evaluasi ? $evaluasi->periode_id : ($activePeriode->id_periode ?? null);
+
+        // 3. Ambil data Nilai (Kriteria & Subkriteria/Indikator) secara konsisten
+        if ($evaluasi && isset($evaluasi->id_evaluasi)) {
+            // Jika sudah difinalisasi, ambil detail penilaian langsung dari record database
+            $detailEvaluasi = DetailEvaluasi::with('subkriteria.kriteria')->where('evaluasi_id', $evaluasi->id_evaluasi)->orderBy('subkriteria_id', 'asc')->get();
+            
+            // Hitung rata-rata kriteria berdasarkan subkriteria secara konsisten
+            $kriteriaScores = $detailEvaluasi->groupBy(fn($item) => $item->subkriteria->kriteria_id)->map(function ($items) {
+                $first = $items->first()->subkriteria->kriteria; 
+                $avg = $items->avg('nilai_crisp');
+                return [
+                    'kode' => $first->id_kriteria, 
+                    'nama' => $first->nama_kriteria, 
+                    'avg' => round($avg, 2), 
+                    'kategori' => $this->matchKategoriCrisp($avg)
+                ];
+            })->values();
+
+            // Sinergikan detail subkriteria dari database
+            $subDetails = $detailEvaluasi->map(function ($d) {
+                return [
+                    'id' => $d->subkriteria->id_subkriteria,
+                    'kode' => $d->subkriteria->id_subkriteria,
+                    'nama' => $d->subkriteria->nama_subkriteria,
+                    'nilai' => $d->kategori,
+                    'avg' => round($d->nilai_crisp, 2),
+                    'catatan' => $d->rekomendasi_detail ?? '-'
+                ];
+            })->sortBy('id')->values();
+        } else {
+            // Jika belum difinalisasi, hitung pratinjau dinamis dari PenilaianMingguan
+            $penilaianQuery = PenilaianMingguan::with(['jadwalSubkriteria.subkriteria.kriteria', 'jadwalSubkriteria.minggu', 'kategori'])
+                ->where('siswa_id', $selectedSiswaId);
+            
+            if ($targetPeriodeId) {
+                $penilaianQuery->whereHas('jadwalSubkriteria.minggu', function($q) use ($targetPeriodeId) {
+                    $q->where('periode_id', $targetPeriodeId);
+                });
+            }
+            $penilaian = $penilaianQuery->get();
+
+            // Hitung rata-rata subkriteria/indikator dulu
+            $subDetails = $penilaian->groupBy(fn($item) => $item->jadwalSubkriteria->subkriteria_id)->map(function ($items) {
+                $first = $items->first(); 
+                $sub = $first->jadwalSubkriteria->subkriteria; 
+                $avg = $items->avg('nilai_crisp');
+                return [
+                    'id' => $sub->id_subkriteria,
+                    'kode' => $sub->id_subkriteria, 
+                    'nama' => $sub->nama_subkriteria, 
+                    'nilai' => $this->matchKategoriCrisp($avg), 
+                    'avg' => round($avg, 2), 
+                    'catatan' => $items->whereNotNull('catatan')->pluck('catatan')->filter()->first() ?? '-'
+                ];
+            })->sortBy('id')->values();
+
+            // Menjamin setiap indikator memiliki bobot yang setara (rata-rata subkriteria dirata-ratakan per kriteria)
+            $kriteriaScores = collect();
+            foreach ($kriteriaList as $krit) {
+                $kritSubs = $subDetails->filter(function($s) use ($krit) {
+                    $subModel = \App\Models\Subkriteria::find($s['id']);
+                    return $subModel && $subModel->kriteria_id === $krit->id_kriteria;
+                });
+                
+                $avg = $kritSubs->count() > 0 ? $kritSubs->avg('avg') : 0.0;
+                $kriteriaScores->push([
+                    'kode' => $krit->id_kriteria,
+                    'nama' => $krit->nama_kriteria,
+                    'avg' => round($avg, 2),
+                    'kategori' => $this->matchKategoriCrisp($avg)
+                ]);
+            }
+
+            // Samakan data $detailEvaluasi untuk visualisasi di sisa template view
             $detailEvaluasi = $subDetails->map(function($s) {
+                $subModel = \App\Models\Subkriteria::find($s['id']);
                 return (object)[
-                    'subkriteria' => (object)['kode' => $s['kode'], 'nama' => $s['nama']],
+                    'subkriteria' => (object)['kode' => $s['kode'], 'nama' => $s['nama'], 'kriteria' => $subModel ? $subModel->kriteria : null],
                     'kategori' => $s['nilai'],
                     'rekomendasi_detail' => $s['catatan']
                 ];
@@ -243,7 +334,15 @@ class PenilaianController extends Controller
         }
 
         $detailEvaluasiGrouped = $detailEvaluasi->groupBy(fn($item) => isset($item->subkriteria->kriteria) ? $item->subkriteria->kriteria->nama_kriteria : 'Umum');
-        $portofolioList = Portofolio::with(['images', 'minggu'])->where('siswa_id', $selectedSiswaId)->get();
+        
+        // 4. Filter Portofolio berdasarkan periode terpilih
+        $portofolioQuery = Portofolio::with(['images', 'minggu'])->where('siswa_id', $selectedSiswaId);
+        if ($targetPeriodeId) {
+            $portofolioQuery->whereHas('minggu', function($q) use ($targetPeriodeId) {
+                $q->where('periode_id', $targetPeriodeId);
+            });
+        }
+        $portofolioList = $portofolioQuery->get();
         
         $isSpkFinal = ($evaluasi !== null);
         
@@ -268,7 +367,8 @@ class PenilaianController extends Controller
                 'catatan_guru' => null,
                 'nilai_akhir' => $weightedSum,
                 'kategori_akhir' => $totalKat,
-                'periode' => $activePeriode
+                'periode' => $activePeriode,
+                'periode_id' => $activePeriode->id_periode ?? null
             ];
         } else {
             $totalAvg = (double)$evaluasi->nilai_akhir * 100; 
@@ -317,10 +417,11 @@ class PenilaianController extends Controller
         // 1. Validasi & Ambil Data Laporan
         $request->validate([
             'siswa_id' => 'required',
+            'periode_id' => 'nullable',
             'template' => 'nullable|file|mimes:docx'
         ]);
 
-        $reportData = $this->getReportData($request->siswa_id);
+        $reportData = $this->getReportData($request->siswa_id, $request->periode_id);
         if (!$reportData) return back()->with('error', 'Siswa tidak ditemukan.');
 
         try {
@@ -524,8 +625,50 @@ class PenilaianController extends Controller
     {
         $user = auth()->user(); $kelasIds = $user->kelas->pluck('id_kelas')->toArray();
         
+        // Ambil semua periode yang relevan dengan kelas guru
+        $listPeriode = PeriodePenilaian::whereHas('kelas', function($q) use ($kelasIds) {
+                $q->whereIn('kelas.id_kelas', $kelasIds);
+            })
+            ->whereIn('status', [PeriodePenilaian::STATUS_AKTIF, PeriodePenilaian::STATUS_FINAL])
+            ->orderBy('created_at', 'desc')
+            ->get();
+            
+        $periodeId = $request->get('periode_id');
+        $currentPeriode = null;
+        if ($periodeId) {
+            $currentPeriode = PeriodePenilaian::find($periodeId);
+        }
+        if (!$currentPeriode) {
+            // Default: periode aktif, atau yang terbaru
+            $currentPeriode = $listPeriode->where('status', PeriodePenilaian::STATUS_AKTIF)->first()
+                           ?? $listPeriode->first();
+        }
+        
+        if ($currentPeriode) {
+            $kelasIdsPeriode = $currentPeriode->kelas->pluck('id_kelas')->toArray();
+            $kelasIds = array_intersect($kelasIds, $kelasIdsPeriode);
+        }
+        
         // Query Siswa agar kita punya akses ke seluruh riwayatnya untuk statistik di card
-        $siswaQuery = Siswa::whereIn('kelas_id', $kelasIds)->with(['kelas', 'penilaian.jadwalSubkriteria.minggu', 'portofolio']);
+        // Tapi difilter berdasarkan periode terpilih!
+        $siswaQuery = Siswa::whereIn('kelas_id', $kelasIds)->with([
+            'kelas',
+            'penilaian' => function($q) use ($currentPeriode) {
+                if ($currentPeriode) {
+                    $q->whereHas('jadwalSubkriteria.minggu', function($mq) use ($currentPeriode) {
+                        $mq->where('periode_id', $currentPeriode->id_periode);
+                    });
+                }
+            },
+            'penilaian.jadwalSubkriteria.minggu',
+            'portofolio' => function($q) use ($currentPeriode) {
+                if ($currentPeriode) {
+                    $q->whereHas('minggu', function($mq) use ($currentPeriode) {
+                        $mq->where('periode_id', $currentPeriode->id_periode);
+                    });
+                }
+            }
+        ]);
         
         $search = $request->input('search');
         if ($search) {
@@ -534,10 +677,9 @@ class PenilaianController extends Controller
         
         $allSiswa = $siswaQuery->get();
         
-        $periode = PeriodePenilaian::where('is_aktif', true)->first();
-        $totalMingguInPeriode = $periode ? $periode->minggu()->count() : 0;
+        $totalMingguInPeriode = $currentPeriode ? $currentPeriode->minggu()->count() : 0;
         
-        $records = $allSiswa->map(function ($s) use ($totalMingguInPeriode, $periode) {
+        $records = $allSiswa->map(function ($s) use ($totalMingguInPeriode, $currentPeriode) {
             $mingguGrouped = $s->penilaian->groupBy('jadwalSubkriteria.minggu_id')->map(function ($items) {
                 $first = $items->first(); 
                 $finalItems = $items->where('status', 'final');
@@ -557,13 +699,13 @@ class PenilaianController extends Controller
             $divisor = $totalMingguInPeriode ?: $mingguGrouped->count();
             $avgKeseluruhan = $divisor > 0 ? $sumHasil / $divisor : 0;
 
-            // Load Evaluasi (SPK Result)
-            $evaluasi = $periode ? Evaluasi::where('siswa_id', $s->id_siswa)->where('periode_id', $periode->id_periode)->first() : null;
+            // Load Evaluasi (SPK Result) untuk periode terpilih
+            $evaluasi = $currentPeriode ? Evaluasi::where('siswa_id', $s->id_siswa)->where('periode_id', $currentPeriode->id_periode)->first() : null;
 
             return [
                 'siswa_id' => $s->id_siswa, 
                 'nama' => $s->name, 
-                'nisn' => $s->kode, 
+                'nisn' => $s->kode ?: $s->id_siswa, 
                 'kelas' => $s->kelas->nama_kelas ?? '-', 
                 'riwayat' => $mingguGrouped,
                 'avg_hasil' => round($avgKeseluruhan, 2),
@@ -575,12 +717,52 @@ class PenilaianController extends Controller
             ];
         })->values();
 
-        return view('guru.riwayat', compact('records', 'totalMingguInPeriode'));
+        return view('guru.riwayat', compact('records', 'totalMingguInPeriode', 'listPeriode', 'currentPeriode'));
     }
 
-    public function riwayatDetail(Siswa $siswa)
+    public function riwayatDetail(Request $request, Siswa $siswa)
     {
-        $penilaian = PenilaianMingguan::with(['jadwalSubkriteria.subkriteria.kriteria', 'jadwalSubkriteria.minggu', 'kategori'])->where('siswa_id', $siswa->id_siswa)->get();
+        $user = auth()->user(); $kelasIds = $user->kelas->pluck('id_kelas')->toArray();
+        
+        // Ambil semua periode yang relevan dengan kelas guru
+        $listPeriode = PeriodePenilaian::whereHas('kelas', function($q) use ($kelasIds) {
+                $q->whereIn('kelas.id_kelas', $kelasIds);
+            })
+            ->whereIn('status', [PeriodePenilaian::STATUS_AKTIF, PeriodePenilaian::STATUS_FINAL])
+            ->orderBy('created_at', 'desc')
+            ->get();
+            
+        $periodeId = $request->get('periode_id');
+        $currentPeriode = null;
+        if ($periodeId) {
+            $currentPeriode = PeriodePenilaian::find($periodeId);
+        }
+        if (!$currentPeriode) {
+            // Default: periode aktif, atau yang terbaru
+            $currentPeriode = $listPeriode->where('status', PeriodePenilaian::STATUS_AKTIF)->first()
+                           ?? $listPeriode->first();
+        }
+        
+        if ($currentPeriode) {
+            $kelasIdsPeriode = $currentPeriode->kelas->pluck('id_kelas')->toArray();
+            $kelasIds = array_intersect($kelasIds, $kelasIdsPeriode);
+            
+            // Verifikasi apakah siswa berada di kelas yang masuk periode ini
+            if (!in_array($siswa->kelas_id, $kelasIds)) {
+                return redirect()->route('guru.riwayat')->with('error', 'Siswa tidak terkait dengan periode yang dipilih.');
+            }
+        }
+
+        $penilaianQuery = PenilaianMingguan::with(['jadwalSubkriteria.subkriteria.kriteria', 'jadwalSubkriteria.minggu', 'kategori'])
+            ->where('siswa_id', $siswa->id_siswa);
+            
+        if ($currentPeriode) {
+            $penilaianQuery->whereHas('jadwalSubkriteria.minggu', function($q) use ($currentPeriode) {
+                $q->where('periode_id', $currentPeriode->id_periode);
+            });
+        }
+        
+        $penilaian = $penilaianQuery->get();
         
         $mingguGrouped = $penilaian->groupBy('jadwalSubkriteria.minggu_id')->map(function ($items) {
             $first = $items->first(); 
@@ -615,8 +797,7 @@ class PenilaianController extends Controller
             ];
         })->sortBy('minggu_ke')->values();
 
-        $periode = PeriodePenilaian::where('is_aktif', true)->first();
-        $totalMingguInPeriode = $periode ? $periode->minggu()->count() : 0;
+        $totalMingguInPeriode = $currentPeriode ? $currentPeriode->minggu()->count() : 0;
         
         // Fallback: Jika periode aktif tidak ditemukan, gunakan jumlah minggu yang ada di data
         $divisor = $totalMingguInPeriode ?: $mingguGrouped->count();
@@ -631,7 +812,7 @@ class PenilaianController extends Controller
         $mbCount = $penilaian->filter(fn($p) => ($p->kategori->nama ?? '') === 'MB')->count();
 
         return view('guru.riwayat_detail', compact(
-            'siswa', 'mingguGrouped', 'totalMingguInPeriode', 'divisor', 'avgTotal', 'finalKat', 'bsbCount', 'bshCount', 'mbCount'
+            'siswa', 'mingguGrouped', 'totalMingguInPeriode', 'divisor', 'avgTotal', 'finalKat', 'bsbCount', 'bshCount', 'mbCount', 'listPeriode', 'currentPeriode'
         ));
     }
 
@@ -654,35 +835,80 @@ class PenilaianController extends Controller
 
     public function hasilEvaluasi(Request $request)
     {
-        $user = Auth::user(); $kelasIds = $user->kelas->pluck('id_kelas')->toArray(); $allSiswa = Siswa::whereIn('kelas_id', $kelasIds)->get();
-        $periode = PeriodePenilaian::where('status', 'final')->latest('finalized_at')->first();
-        $results = collect(); $isFinalized = false;
-        if ($periode) {
-            $isFinalized = true;
-            $results = Evaluasi::with('siswa.kelas')->where('periode_id', $periode->id_periode)->whereIn('siswa_id', $allSiswa->pluck('id_siswa'))->orderBy('nilai_akhir', 'desc')->get();
+        $user = Auth::user();
+        $kelasIds = $user->kelas->pluck('id_kelas')->toArray();
+        $allSiswa = Siswa::whereIn('kelas_id', $kelasIds)->get();
+
+        // Ambil SEMUA periode yang sudah difinalisasi
+        $listPeriode = PeriodePenilaian::where('status', 'final')
+            ->orderBy('finalized_at', 'desc')
+            ->get();
+
+        // Tentukan periode yang dipilih
+        $periodeId = $request->get('periode_id');
+        $periode = null;
+        if ($periodeId) {
+            $periode = $listPeriode->firstWhere('id_periode', $periodeId);
         }
-        return view('guru.hasil_evaluasi', compact('results', 'periode', 'isFinalized'));
+        if (!$periode) {
+            $periode = $listPeriode->first(); // Default: terbaru
+        }
+
+        $results = collect();
+        $isFinalized = $listPeriode->isNotEmpty();
+
+        if ($periode) {
+            $results = Evaluasi::with('siswa.kelas')
+                ->where('periode_id', $periode->id_periode)
+                ->whereIn('siswa_id', $allSiswa->pluck('id_siswa'))
+                ->orderBy('nilai_akhir', 'desc')
+                ->get();
+        }
+
+        return view('guru.hasil_evaluasi', compact('results', 'periode', 'isFinalized', 'listPeriode'));
     }
 
-    public function hasilEvaluasiDetail($siswa_id)
+    public function hasilEvaluasiDetail(Request $request, $siswa_id)
     {
-        $user = Auth::user(); $siswa = Siswa::with('kelas')->findOrFail($siswa_id);
+        $user = Auth::user();
+        $siswa = Siswa::with('kelas')->findOrFail($siswa_id);
         $kelasIds = $user->kelas->pluck('id_kelas')->toArray();
         if (!in_array($siswa->kelas_id, $kelasIds)) abort(403);
-        $periode = PeriodePenilaian::where('status', 'final')->latest('finalized_at')->first();
+
+        // Ambil semua periode final
+        $listPeriode = PeriodePenilaian::where('status', 'final')
+            ->orderBy('finalized_at', 'desc')
+            ->get();
+
+        // Tentukan periode yang dipilih
+        $periodeId = $request->get('periode_id');
+        $periode = null;
+        if ($periodeId) {
+            $periode = $listPeriode->firstWhere('id_periode', $periodeId);
+        }
+        if (!$periode) {
+            $periode = $listPeriode->first();
+        }
+
         $evaluasi = null;
         $details = collect();
         $portofolio_list = collect();
-        
+
         if ($periode) {
-            $evaluasi = Evaluasi::with(['siswa.kelas', 'periode', 'detail.subkriteria.kriteria'])->where('siswa_id', $siswa_id)->where('periode_id', $periode->id_periode)->first();
+            $evaluasi = Evaluasi::with(['siswa.kelas', 'periode', 'detail.subkriteria.kriteria'])
+                ->where('siswa_id', $siswa_id)
+                ->where('periode_id', $periode->id_periode)
+                ->first();
             if ($evaluasi) {
                 $details = $evaluasi->detail->groupBy(fn($d) => $d->subkriteria->kriteria->nama_kriteria ?? 'Lainnya');
-                $portofolio_list = Portofolio::with('images', 'minggu')->where('siswa_id', $siswa_id)->get();
+                $portofolio_list = Portofolio::with('images', 'minggu')
+                    ->where('siswa_id', $siswa_id)
+                    ->whereHas('minggu', fn($q) => $q->where('periode_id', $periode->id_periode))
+                    ->get();
             }
         }
-        
-        return view('guru.hasil_evaluasi_detail', compact('evaluasi', 'siswa', 'periode', 'details', 'portofolio_list'));
+
+        return view('guru.hasil_evaluasi_detail', compact('evaluasi', 'siswa', 'periode', 'details', 'portofolio_list', 'listPeriode'));
     }
 
     public function cetakLaporan($siswa_id)

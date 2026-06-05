@@ -59,7 +59,20 @@
                     </div>
                 </div>
             </div>
-            <div class="flex flex-wrap justify-center md:justify-end gap-3">
+            <div class="flex flex-wrap justify-center md:justify-end gap-3 items-center">
+                @if(isset($listPeriode) && $listPeriode->count() > 1)
+                    <form action="{{ route('wali.evaluasi') }}" method="GET" class="flex items-center gap-2">
+                        <input type="hidden" name="siswa_id" value="{{ $siswa->id_siswa }}">
+                        <span class="text-xs font-bold text-white/80 whitespace-nowrap">Pilih Periode:</span>
+                        <select name="periode_id" onchange="this.form.submit()" class="bg-white/10 backdrop-blur-md border border-white/20 text-white text-xs font-black rounded-xl px-4 py-2.5 focus:ring-0 focus:border-white/40 cursor-pointer appearance-none outline-none" style="padding-right: 32px;">
+                            @foreach($listPeriode as $p)
+                                <option value="{{ $p->id_periode }}" class="text-gray-900" {{ $periode && $periode->id_periode == $p->id_periode ? 'selected' : '' }}>
+                                    {{ $p->nama_periode }} - {{ $p->tahunAjaran->nama ?? '—' }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </form>
+                @endif
                 <a href="{{ route('wali.dashboard') }}" class="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold bg-white text-[#84934A] hover:bg-[#F1F4E9] transition-all shadow-lg shadow-black/5">
                     Kembali ke Dashboard
                 </a>
@@ -132,7 +145,7 @@
 
                 <div class="relative z-10 w-full space-y-6">
                     @php $color = $evaluasi->kategori_akhir === 'BSB' ? 'emerald' : ($evaluasi->kategori_akhir === 'BSH' ? 'amber' : 'rose'); @endphp
-                    <span class="badge {{ 'badge-'.$color }} px-8 py-2 text-[11px] font-black shadow-lg uppercase">{{ $evaluasi->kategori_akhir }}</span>
+                    <span class="badge {{ 'badge-'.$color }} px-8 py-2 text-[11px] font-black shadow-lg uppercase">{{ match($evaluasi->kategori_akhir) { 'BSB' => 'Berkembang Sangat Baik (BSB)', 'BSH' => 'Berkembang Sesuai Harapan (BSH)', 'MB' => 'Mulai Berkembang (MB)', default => $evaluasi->kategori_akhir } }}</span>
                     
                     <div class="grid grid-cols-2 gap-4 pt-8 border-t border-gray-100">
                         <div class="text-center">

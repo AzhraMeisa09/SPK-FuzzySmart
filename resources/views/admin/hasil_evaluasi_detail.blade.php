@@ -55,15 +55,15 @@
                     <span class="text-4xl font-bold text-var(--text-1) tracking-tighter">{{ number_format($evaluasi->nilai_akhir, 3) }}</span>
                     @php
                         $catClass = match($evaluasi->kategori_akhir) {
-                            'BSB' => 'bg-green-50 text-green-700 border-green-100',
-                            'BSH' => 'bg-amber-50 text-amber-700 border-amber-100',
-                            'MB'  => 'bg-red-50 text-red-700 border-red-100',
-                            default => 'bg-gray-50 text-gray-600 border-gray-100'
+                            'BSB' => ['bg' => 'bg-green-50', 'text' => 'text-green-700', 'border' => 'border-green-200'],
+                            'BSH' => ['bg' => 'bg-amber-50', 'text' => 'text-amber-700', 'border' => 'border-amber-200'],
+                            'MB'  => ['bg' => 'bg-red-50', 'text' => 'text-red-700', 'border' => 'border-red-200'],
+                            default => ['bg' => 'bg-gray-50', 'text' => 'text-gray-600', 'border' => 'border-gray-200']
                         };
                     @endphp
-                    <span class="px-3 py-1.5 rounded-xl border text-[11px] font-bold {{ $catClass }}">
-                        {{ $evaluasi->kategori_akhir }}
-                    </span>
+                    <div class="px-6 py-2 {{ $catClass['bg'] }} {{ $catClass['border'] }} border-x-4 border-y text-xs font-black {{ $catClass['text'] }} rounded-lg uppercase tracking-widest text-center shadow-inner">
+                        {{ match($evaluasi->kategori_akhir) { 'BSB' => 'Berkembang Sangat Baik (BSB)', 'BSH' => 'Berkembang Sesuai Harapan (BSH)', 'MB' => 'Mulai Berkembang (MB)', default => $evaluasi->kategori_akhir } }}
+                    </div>
                 </div>
             </div>
         </div>

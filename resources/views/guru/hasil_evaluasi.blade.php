@@ -7,19 +7,42 @@
 
     {{-- ── HEADER ── --}}
     <div class="card p-5">
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-                <h2 class="text-lg font-semibold" style="color: var(--text-1);">Hasil evaluasi akhir (SPK)</h2>
-                <p class="text-xs mt-0.5" style="color: var(--text-3);">Hasil perhitungan menggunakan metode <span class="font-semibold" style="color: var(--text-1);">Fuzzy SMART</span> untuk menentukan tingkat perkembangan siswa.</p>
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm" style="background: var(--accent-lt); color: var(--accent);">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                </div>
+                <div>
+                    <h2 class="text-lg font-semibold" style="color: var(--text-1);">Hasil evaluasi akhir (SPK)</h2>
+                    <div class="flex flex-wrap items-center gap-2 mt-1">
+                        @if($periode)
+                            <span class="badge badge-blue text-[9px] px-2.5 py-0.5 uppercase tracking-wider">{{ $periode->nama_periode }}</span>
+                            <span class="badge badge-nonaktif text-[9px] px-2.5 py-0.5 uppercase tracking-wider">Final</span>
+                        @endif
+                        <p class="text-xs" style="color: var(--text-3);">Hasil perhitungan menggunakan metode <span class="font-semibold" style="color: var(--text-1);">Fuzzy SMART</span>.</p>
+                    </div>
+                </div>
             </div>
-            @if($periode)
-            <div class="px-4 py-2.5 rounded-xl" style="background: var(--accent-lt); border: 1px solid var(--border);">
-                <span class="text-[9px] font-bold uppercase tracking-wider" style="color: var(--text-3);">Periode aktif</span>
-                <p class="text-sm font-semibold mt-0.5" style="color: var(--text-1);">{{ $periode->nama_periode }}</p>
-            </div>
+
+            {{-- Pilih Periode --}}
+            @if(isset($listPeriode) && $listPeriode->count() > 1)
+                <form action="{{ route('guru.hasil-evaluasi') }}" method="GET" id="periodeFilterForm" class="relative">
+                    <select name="periode_id" class="form-select" style="padding-left: 36px;" onchange="document.getElementById('periodeFilterForm').submit()">
+                        @foreach($listPeriode as $p)
+                            <option value="{{ $p->id_periode }}" class="text-gray-900"
+                                {{ $periode && $periode->id_periode == $p->id_periode ? 'selected' : '' }}>
+                                {{ $p->nama_periode }} - {{ $p->tahunAjaran->nama ?? '—' }} (Final)
+                            </option>
+                        @endforeach
+                    </select>
+                    <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--text-3);"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    </div>
+                </form>
             @endif
         </div>
     </div>
+
 
     @if(!$isFinalized)
         <div class="card p-20 text-center">
@@ -32,76 +55,209 @@
             </p>
         </div>
     @else
-        {{-- ── DATA GRID ── --}}
+        {{-- ── STATISTIK RINGKASAN ── --}}
         @if($results->count() > 0)
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                @foreach($results as $res)
-                    @php
-                        $kat = $res->kategori_akhir;
-                        $colorClass = match($kat) {
-                            'BSB' => 'emerald',
-                            'BSH' => 'amber',
-                            'MB'  => 'rose',
-                            default => 'gray'
-                        };
-                        $progColor = match($kat) {
-                            'BSB' => 'progress-green',
-                            'BSH' => 'progress-yellow',
-                            'MB'  => 'progress-red',
-                            default => ''
-                        };
-                    @endphp
-                    <div class="card p-5 card-hover relative group flex flex-col" style="border-top: 3px solid var(--accent);">
-                        <div class="flex justify-between items-start mb-5">
-                            <div class="flex items-center gap-3">
-                                <div class="w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg" style="background: var(--accent-lt); color: var(--accent);">
-                                    {{ strtoupper(substr($res->siswa->name, 0, 1)) }}
-                                </div>
-                                <div class="min-w-0">
-                                    <div class="flex items-center gap-2 mb-1">
-                                        <span class="text-[10px] font-bold px-1.5 py-0.5 rounded" style="background: var(--bg); color: var(--text-3);">#{{ $loop->iteration }}</span>
-                                        <h3 class="font-semibold truncate" style="color: var(--text-1);">{{ $res->siswa->name }}</h3>
-                                    </div>
-                                    <p class="text-[9px] font-bold uppercase tracking-wider" style="color: var(--text-3);">{{ $res->siswa->kelas->nama ?? '-' }}</p>
-                                </div>
-                            </div>
-                            <span class="badge {{ 'badge-'.$colorClass }} text-[9px] px-3 font-bold">{{ $kat }}</span>
-                        </div>
+            @php
+                $bsbCount = $results->where('kategori_akhir', 'BSB')->count();
+                $bshCount = $results->where('kategori_akhir', 'BSH')->count();
+                $mbCount  = $results->where('kategori_akhir', 'MB')->count();
+                $total    = $results->count();
+            @endphp
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                <div class="card p-5 flex items-center gap-4" style="border-left: 4px solid #10b981;">
+                    <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style="background: #d1fae5; color: #059669;">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <div>
+                        <p class="text-[9px] font-black uppercase tracking-widest text-gray-400">Berkembang Sangat Baik</p>
+                        <p class="text-2xl font-black text-gray-900 leading-tight">{{ $bsbCount }} <span class="text-sm font-bold text-gray-400">siswa</span></p>
+                        <span class="badge badge-bsb text-[8px] mt-0.5">BSB</span>
+                    </div>
+                </div>
+                <div class="card p-5 flex items-center gap-4" style="border-left: 4px solid #f59e0b;">
+                    <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style="background: #fef3c7; color: #d97706;">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <div>
+                        <p class="text-[9px] font-black uppercase tracking-widest text-gray-400">Berkembang Sesuai Harapan</p>
+                        <p class="text-2xl font-black text-gray-900 leading-tight">{{ $bshCount }} <span class="text-sm font-bold text-gray-400">siswa</span></p>
+                        <span class="badge badge-bsh text-[8px] mt-0.5">BSH</span>
+                    </div>
+                </div>
+                <div class="card p-5 flex items-center gap-4" style="border-left: 4px solid #f43f5e;">
+                    <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style="background: #ffe4e6; color: #e11d48;">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    </div>
+                    <div>
+                        <p class="text-[9px] font-black uppercase tracking-widest text-gray-400">Mulai Berkembang</p>
+                        <p class="text-2xl font-black text-gray-900 leading-tight">{{ $mbCount }} <span class="text-sm font-bold text-gray-400">siswa</span></p>
+                        <span class="badge badge-mb text-[8px] mt-0.5">MB</span>
+                    </div>
+                </div>
+            </div>
 
-                        <div class="flex-1 space-y-4">
-                            {{-- Score Indicator --}}
-                            <div class="p-4 rounded-xl" style="background: var(--bg); border: 1px solid var(--border);">
-                                <div class="flex justify-between items-center mb-3">
-                                    <span class="text-[9px] font-bold uppercase tracking-widest" style="color: var(--text-3);">Skor keputusan</span>
-                                    <span class="text-lg font-bold" style="color: var(--text-1);">{{ number_format($res->nilai_akhir, 3) }}</span>
-                                </div>
-                                <div class="progress-track h-2">
-                                    <div class="progress-fill h-2 {{ $progColor }}" style="width: {{ $res->nilai_akhir * 100 }}%"></div>
-                                </div>
-                            </div>
-                            
-                            {{-- Recommendation Snippet --}}
-                            <div class="px-1">
-                                <p class="text-[9px] font-bold uppercase tracking-widest mb-1.5" style="color: var(--text-3);">Rekomendasi utama</p>
-                                <p class="text-xs leading-relaxed italic" style="color: var(--text-2);">
-                                    &ldquo;{{ $res->rekomendasi ?? 'Analisis rekomendasi belum tersedia.' }}&rdquo;
-                                </p>
-                            </div>
+            {{-- ── TABEL PERANGKINGAN ── --}}
+            <div class="card overflow-hidden">
+                <div class="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4" style="border-bottom: 1px solid var(--border);">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: var(--accent-lt); color: var(--accent);">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
                         </div>
-
-                        {{-- Action Buttons --}}
-                        <div class="mt-6 pt-4 flex gap-3" style="border-top: 1px solid var(--border);">
-                            <a href="{{ route('guru.hasil-evaluasi.detail', $res->siswa_id) }}" 
-                               class="flex-1 btn btn-gray justify-center text-xs py-2.5 text-gray-900">
-                                Detail SPK
-                            </a>
-                            <a href="{{ route('guru.laporan', $res->siswa_id) }}" 
-                               class="btn btn-gray px-4 py-2.5" title="Laporan lengkap">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--text-3);"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                            </a>
+                        <div>
+                            <h3 class="text-sm font-semibold" style="color: var(--text-1);">Tabel Perangkingan Siswa</h3>
+                            <p class="text-[10px]" style="color: var(--text-3);">Diurutkan berdasarkan skor keputusan Fuzzy SMART (nilai tertinggi = peringkat 1)</p>
                         </div>
                     </div>
-                @endforeach
+                    <span class="badge badge-blue">{{ $total }} siswa</span>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="tbl w-full">
+                        <thead>
+                            <tr style="background: var(--bg);">
+                                <th class="text-center" style="width: 70px;">Peringkat</th>
+                                <th style="min-width: 200px;">Nama Siswa</th>
+                                <th class="text-center" style="width: 120px;">NISN</th>
+                                <th class="text-center" style="width: 100px;">Kelas</th>
+                                <th class="text-center" style="width: 180px;">Skor Keputusan (V)</th>
+                                <th class="text-center" style="width: 160px;">Predikat</th>
+                                <th class="text-center" style="width: 120px;">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($results as $res)
+                                @php
+                                    $rank = $loop->iteration;
+                                    $kat  = $res->kategori_akhir;
+                                    $progColor = match($kat) {
+                                        'BSB' => '#10b981',
+                                        'BSH' => '#f59e0b',
+                                        'MB'  => '#f43f5e',
+                                        default => '#94a3b8'
+                                    };
+                                    $badgeClass = match($kat) {
+                                        'BSB' => 'badge-bsb',
+                                        'BSH' => 'badge-bsh',
+                                        'MB'  => 'badge-mb',
+                                        default => ''
+                                    };
+                                    $katLabel = match($kat) {
+                                        'BSB' => 'Berkembang Sangat Baik',
+                                        'BSH' => 'Berkembang Sesuai Harapan',
+                                        'MB'  => 'Mulai Berkembang',
+                                        default => $kat
+                                    };
+                                    $rowBg = $rank === 1 ? 'rgba(251,191,36,0.04)' : ($rank === 2 ? 'rgba(156,163,175,0.04)' : ($rank === 3 ? 'rgba(180,83,9,0.04)' : 'transparent'));
+                                @endphp
+                                <tr class="transition-colors hover:bg-blue-50/10" style="background: {{ $rowBg }};">
+                                    {{-- Kolom Peringkat --}}
+                                    <td class="text-center py-4">
+                                        @if($rank === 1)
+                                            <div class="inline-flex flex-col items-center gap-0.5">
+                                                <span class="text-xl">🥇</span>
+                                                <span class="text-[9px] font-black text-amber-500 uppercase tracking-wider">1st</span>
+                                            </div>
+                                        @elseif($rank === 2)
+                                            <div class="inline-flex flex-col items-center gap-0.5">
+                                                <span class="text-xl">🥈</span>
+                                                <span class="text-[9px] font-black text-gray-400 uppercase tracking-wider">2nd</span>
+                                            </div>
+                                        @elseif($rank === 3)
+                                            <div class="inline-flex flex-col items-center gap-0.5">
+                                                <span class="text-xl">🥉</span>
+                                                <span class="text-[9px] font-black text-amber-700 uppercase tracking-wider">3rd</span>
+                                            </div>
+                                        @else
+                                            <div class="w-8 h-8 rounded-full flex items-center justify-center mx-auto font-black text-xs" style="background: var(--bg); border: 1px solid var(--border); color: var(--text-3);">
+                                                {{ $rank }}
+                                            </div>
+                                        @endif
+                                    </td>
+
+                                    {{-- Kolom Nama --}}
+                                    <td class="py-4 px-4">
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-10 h-10 rounded-xl flex items-center justify-center font-black text-sm flex-shrink-0" style="background: var(--accent-lt); color: var(--accent);">
+                                                @if($res->siswa->foto)
+                                                    <img src="{{ asset('storage/' . $res->siswa->foto) }}" class="w-full h-full object-cover rounded-xl" alt="{{ $res->siswa->name }}">
+                                                @else
+                                                    {{ strtoupper(substr($res->siswa->name, 0, 1)) }}
+                                                @endif
+                                            </div>
+                                            <div class="min-w-0">
+                                                <p class="text-sm font-bold truncate" style="color: var(--text-1);">{{ $res->siswa->name }}</p>
+                                                @if($rank <= 3)
+                                                    <p class="text-[9px] font-bold uppercase tracking-widest" style="color: var(--accent);">Top {{ $rank }}</p>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </td>
+
+                                    {{-- NISN --}}
+                                    <td class="text-center py-4">
+                                        <span class="font-mono text-xs" style="color: var(--text-3);">{{ $res->siswa->kode ?: $res->siswa->id_siswa ?: '—' }}</span>
+                                    </td>
+
+                                    {{-- Kelas --}}
+                                    <td class="text-center py-4">
+                                        <span class="badge badge-blue text-[9px]">{{ $res->siswa->kelas->nama_kelas ?? '—' }}</span>
+                                    </td>
+
+                                    {{-- Skor --}}
+                                    <td class="text-center py-4 px-4">
+                                        <div class="flex flex-col items-center gap-1.5">
+                                            <span class="text-base font-black" style="color: var(--text-1);">{{ number_format($res->nilai_akhir, 3) }}</span>
+                                            <div class="w-full max-w-[100px] h-1.5 rounded-full overflow-hidden" style="background: var(--border);">
+                                                <div class="h-full rounded-full transition-all duration-700" style="width: {{ $res->nilai_akhir * 100 }}%; background: {{ $progColor }};"></div>
+                                            </div>
+                                            <span class="text-[8px] font-bold uppercase tracking-widest" style="color: var(--text-3);">{{ number_format($res->nilai_akhir * 100, 1) }}%</span>
+                                        </div>
+                                    </td>
+
+                                    {{-- Predikat --}}
+                                    <td class="text-center py-4">
+                                        <div class="flex flex-col items-center gap-1">
+                                            <span class="badge {{ $badgeClass }} text-[8px] px-3 font-black">{{ $kat }}</span>
+                                            <span class="text-[9px] font-medium leading-tight text-center max-w-[130px]" style="color: var(--text-3);">{{ $katLabel }}</span>
+                                        </div>
+                                    </td>
+
+                                    {{-- Aksi --}}
+                                    <td class="text-center py-4">
+                                        <div class="flex items-center justify-center gap-1.5">
+                                            <a href="{{ route('guru.hasil-evaluasi.detail', $res->siswa_id) }}{{ $periode ? '?periode_id=' . $periode->id_periode : '' }}"
+                                               class="w-9 h-9 rounded-xl flex items-center justify-center transition-all shadow-sm"
+                                               style="background: var(--accent-lt); color: var(--accent);"
+                                               title="Detail SPK"
+                                               onmouseover="this.style.background='var(--accent)'; this.style.color='white';"
+                                               onmouseout="this.style.background='var(--accent-lt)'; this.style.color='var(--accent)';">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                                            </a>
+                                            <a href="{{ route('guru.laporan', $res->siswa_id) }}"
+                                               class="w-9 h-9 rounded-xl flex items-center justify-center transition-all shadow-sm"
+                                               style="background: #eff6ff; color: #3b82f6;"
+                                               title="Laporan lengkap"
+                                               onmouseover="this.style.background='#3b82f6'; this.style.color='white';"
+                                               onmouseout="this.style.background='#eff6ff'; this.style.color='#3b82f6';">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+
+                {{-- Footer Tabel --}}
+                <div class="px-5 py-3 flex items-center justify-between" style="border-top: 1px solid var(--border); background: var(--bg);">
+                    <p class="text-[10px] font-bold uppercase tracking-widest" style="color: var(--text-3);">
+                        Total {{ $total }} siswa &bull; Periode: {{ $periode->nama_periode ?? '—' }}
+                    </p>
+                    <p class="text-[10px]" style="color: var(--text-3);">
+                        Dihasilkan oleh sistem SPK Fuzzy SMART
+                    </p>
+                </div>
             </div>
         @else
             <div class="card p-20 text-center">

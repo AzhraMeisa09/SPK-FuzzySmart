@@ -127,11 +127,11 @@
                             </button>
 
                             {{-- Existing images (edit mode) --}}
-                            <template x-for="img in existingImages" :key="img.id">
+                            <template x-for="img in existingImages" :key="img.id_portofolio_images">
                                 <div class="relative aspect-square rounded-xl overflow-hidden shadow-sm group/img" style="border: 1px solid var(--border);">
                                     <img :src="'{{ asset('storage') }}/' + img.file_path" class="w-full h-full object-cover">
                                     <div class="absolute inset-0 bg-black/50 opacity-0 group-hover/img:opacity-100 transition-all flex items-center justify-center">
-                                        <button type="button" @click="deleteImage(img.id)"
+                                        <button type="button" @click="deleteImage(img.id_portofolio_images)"
                                                 class="bg-rose-500 text-white p-2 rounded-lg shadow scale-75 group-hover/img:scale-100 transition-all">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                         </button>

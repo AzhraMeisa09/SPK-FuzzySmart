@@ -18,10 +18,28 @@
             <div class="text-center md:text-left">
                 <p class="text-[10px] font-bold uppercase tracking-[0.2em] mb-1.5" style="color: rgba(255,255,255,.7);">Analisis Riwayat Mingguan</p>
                 <h1 class="text-2xl font-black tracking-tight text-white">{{ $siswa->name }}</h1>
-                <p class="text-[11px] mt-2 font-medium text-white/80">Pantau grafik dan detail perkembangan anak setiap minggunya.</p>
+                <div class="flex flex-wrap items-center gap-3 mt-2">
+                    @if($periode)
+                        <span class="px-3 py-1 rounded-lg bg-white/20 text-white text-[10px] font-black backdrop-blur-sm uppercase tracking-widest">{{ $periode->nama_periode }}</span>
+                    @endif
+                    <p class="text-[11px] font-medium text-white/70">Pantau grafik dan detail perkembangan anak setiap minggunya.</p>
+                </div>
             </div>
         </div>
-        <div class="flex flex-wrap justify-center md:justify-end gap-3">
+        <div class="flex flex-wrap justify-center md:justify-end gap-3 items-center">
+            @if(isset($listPeriode) && $listPeriode->count() > 1)
+                <form action="{{ route('wali.perkembangan') }}" method="GET" class="flex items-center gap-2">
+                    <input type="hidden" name="siswa_id" value="{{ $siswa->id_siswa }}">
+                    <span class="text-xs font-bold text-white/80 whitespace-nowrap">Pilih Periode:</span>
+                    <select name="periode_id" onchange="this.form.submit()" class="bg-white/10 backdrop-blur-md border border-white/20 text-white text-xs font-black rounded-xl px-4 py-2.5 focus:ring-0 focus:border-white/40 cursor-pointer appearance-none outline-none" style="padding-right: 32px;">
+                        @foreach($listPeriode as $p)
+                            <option value="{{ $p->id_periode }}" class="text-gray-900" {{ $periode && $periode->id_periode == $p->id_periode ? 'selected' : '' }}>
+                                {{ $p->nama_periode }} - {{ $p->tahunAjaran->nama ?? '—' }}
+                            </option>
+                        @endforeach
+                    </select>
+                </form>
+            @endif
             <a href="{{ route('wali.evaluasi', ['siswa_id' => $siswa->id_siswa]) }}" class="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold bg-white/10 hover:bg-white/20 text-white transition-all backdrop-blur-sm">
                 Hasil Evaluasi Final
             </a>
@@ -36,7 +54,7 @@
     @if(count($anak) > 1)
         <div class="flex flex-wrap items-center gap-3 no-print">
             @foreach($anak as $a)
-                <a href="{{ route('wali.perkembangan', ['siswa_id' => $a->id_siswa]) }}" 
+                <a href="{{ route('wali.perkembangan', array_filter(['siswa_id' => $a->id_siswa, 'periode_id' => $periode?->id_periode])) }}" 
                    class="group flex items-center gap-3 px-4 py-2.5 rounded-2xl transition-all border {{ $siswa->id_siswa == $a->id_siswa ? 'bg-white border-var(--accent) shadow-md ring-4 ring-var(--accent-lt)' : 'bg-white border-gray-100 opacity-60 hover:opacity-100 hover:border-gray-200 shadow-sm' }}">
                     <div class="w-8 h-8 rounded-xl flex items-center justify-center text-xs font-black transition-transform group-hover:scale-110 {{ $siswa->id_siswa == $a->id_siswa ? 'bg-var(--accent) text-white shadow-lg shadow-var(--accent-lt)' : 'bg-gray-100 text-gray-400' }} overflow-hidden">
                         @if($a->foto)
@@ -90,6 +108,7 @@
         </div>
 
         @if($mingguGrouped->count() > 0)
+
             <div class="space-y-4" x-data="{ openMinggu: null }">
                 @foreach($mingguGrouped as $index => $m)
                     @php

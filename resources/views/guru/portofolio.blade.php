@@ -7,21 +7,65 @@
 
     {{-- ── HEADER ── --}}
     <div class="card p-5">
-        <div class="flex flex-col gap-4">
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm" style="background: var(--accent-lt); color: var(--accent);">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                </div>
                 <div>
                     <h2 class="text-lg font-semibold" style="color: var(--text-1);">Portofolio kegiatan</h2>
-                    <p class="text-xs mt-0.5" style="color: var(--text-3);">Dokumentasi karya dan progres siswa</p>
+                    <div class="flex flex-wrap items-center gap-2 mt-1">
+                        @if($currentPeriode)
+                            <span class="badge badge-blue text-[9px] px-2.5 py-0.5 uppercase tracking-wider">{{ $currentPeriode->nama_periode }}</span>
+                            <span class="badge text-[9px] px-2.5 py-0.5 uppercase tracking-wider {{ $currentPeriode->status === 'aktif' ? 'badge-bsb' : 'badge-nonaktif' }}">{{ $currentPeriode->status === 'aktif' ? 'Aktif' : 'Final' }}</span>
+                        @endif
+                    </div>
                 </div>
-                <button type="button" @click="openModal()"
-                        class="btn btn-green btn-sm flex items-center gap-2 whitespace-nowrap self-start sm:self-auto">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
-                    Tambah portofolio
-                </button>
             </div>
 
-            {{-- FILTER FORM --}}
+            <div class="flex flex-wrap items-center gap-3">
+                {{-- Filter PERIODE --}}
+                @if(isset($listPeriode) && $listPeriode->count() > 0)
+                    <form action="{{ route('guru.portofolio.index') }}" method="GET" id="periodeForm" class="relative">
+                        <select name="periode_id" class="form-select" style="padding-left: 36px;" onchange="document.getElementById('periodeForm').submit()">
+                            @foreach($listPeriode as $p)
+                                <option value="{{ $p->id_periode }}" class="text-gray-900"
+                                    {{ $currentPeriode && $currentPeriode->id_periode == $p->id_periode ? 'selected' : '' }}>
+                                    {{ $p->nama_periode }} - {{ $p->tahunAjaran->nama ?? '—' }}
+                                    @if($p->status === 'aktif') (Aktif) @elseif($p->status === 'final') (Final) @endif
+                                </option>
+                            @endforeach
+                        </select>
+                        <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--text-3);"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        </div>
+                    </form>
+                @endif
+
+                @if($currentPeriode && $currentPeriode->status !== 'final')
+                    <button type="button" @click="openModal()"
+                            class="btn btn-green btn-sm flex items-center gap-2 whitespace-nowrap">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                        Tambah Portofolio
+                    </button>
+                @else
+                    <button type="button" disabled
+                            class="btn btn-gray btn-sm flex items-center gap-2 whitespace-nowrap opacity-50 cursor-not-allowed"
+                            title="{{ !$currentPeriode ? 'Belum ada periode penilaian aktif.' : 'Periode ini sudah final. Data tidak dapat ditambah.' }}">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                        Tambah Portofolio
+                    </button>
+                @endif
+            </div>
+        </div>
+
+        {{-- FILTER FORM --}}
+        <div class="mt-4 pt-4 border-t" style="border-color: var(--border);">
             <form action="{{ route('guru.portofolio.index') }}" method="GET" class="flex flex-wrap gap-2 items-center">
+                {{-- Simpan periode_id --}}
+                <input type="hidden" name="periode_id" value="{{ $currentPeriode?->id_periode }}">
+
+                {{-- Filter SISWA --}}
                 <div class="relative flex-1 min-w-[180px]">
                     <select name="siswa_id" class="form-select" style="padding-left: 40px;">
                         <option value="">Semua siswa</option>
@@ -36,6 +80,7 @@
                     </div>
                 </div>
 
+                {{-- Filter MINGGU --}}
                 <div class="relative w-full md:w-44">
                     <select name="minggu_id" class="form-select" style="padding-left: 40px;">
                         <option value="">Semua minggu</option>
@@ -51,7 +96,7 @@
                 <button type="submit" class="btn btn-blue btn-sm whitespace-nowrap">Filter</button>
 
                 @if(request('siswa_id') || request('minggu_id'))
-                    <a href="{{ route('guru.portofolio.index') }}" class="btn btn-gray btn-sm flex items-center gap-1.5">
+                    <a href="{{ route('guru.portofolio.index', array_filter(['periode_id' => $currentPeriode?->id_periode])) }}" class="btn btn-gray btn-sm flex items-center gap-1.5">
                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                         Reset
                     </a>
@@ -60,92 +105,86 @@
         </div>
     </div>
 
+
     {{-- ── GRID ── --}}
     @if($portofolio->count() > 0)
+        {{-- Section header --}}
+        <div class="flex items-center justify-between px-2">
+            <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Karya & Portofolio</h3>
+            <span class="badge badge-gray px-3 py-1 text-[9px] font-black uppercase">{{ $portofolio->total() }} Karya</span>
+        </div>
+
         @php
-            $groupedPortofolio = $portofolio->groupBy(fn($p) => $p->siswa->kelas->nama_kelas ?? 'Tanpa Kelas');
+            $groupedByWeek = $portofolio->getCollection()->groupBy(fn($p) => $p->minggu->minggu_ke ?? 0);
         @endphp
 
-        @foreach($groupedPortofolio as $namaKelas => $items)
-            <div class="space-y-4 mb-10">
+        @foreach($groupedByWeek as $mingguKe => $weekItems)
+            <div class="space-y-4">
                 <div class="flex items-center gap-3 px-1">
-                    <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-blue-500 text-white shadow-sm">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
-                    </div>
-                    <div>
-                        <h3 class="text-sm font-bold uppercase tracking-wider" style="color: var(--text-1);">Kelas {{ $namaKelas }}</h3>
-                        <p class="text-[10px]" style="color: var(--text-3);">{{ $items->count() }} Dokumentasi Portofolio</p>
-                    </div>
-                </div>
-
-                @php
-                    $groupedByWeek = $items->groupBy(fn($p) => $p->minggu->minggu_ke ?? 0);
-                @endphp
-
-                @foreach($groupedByWeek as $mingguKe => $weekItems)
-                    <div class="space-y-3 pt-2">
-                        <div class="flex items-center gap-2 px-1">
-                            <span class="w-1.5 h-1.5 rounded-full bg-var(--accent)"></span>
-                            <h4 class="text-[11px] font-black uppercase tracking-widest text-gray-400">Minggu {{ $mingguKe }}</h4>
-                            <div class="flex-1 h-px bg-gray-100 ml-2"></div>
-                        </div>
-
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-                            @foreach($weekItems as $p)
-                @php 
-                    $isB1 = ($p->siswa->kelas->nama_kelas ?? '') === 'B1';
-                    $borderColor = $isB1 ? '#6b7280' : 'var(--accent)'; // Gray for B1, Green for others
-                @endphp
-                <div class="card p-4 relative group flex flex-col" style="border-left: 3px solid {{ $borderColor }};">
-                    <div class="relative aspect-[4/3] rounded-xl overflow-hidden mb-4" style="background: var(--bg); border: 1px solid var(--border);">
-                        @if($p->images->count() > 0)
-                            <img src="{{ asset('storage/' . $p->images->first()->file_path) }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
-                            @if($p->images->count() > 1)
-                                <div class="absolute top-2 right-2 px-2 py-1 bg-black/50 backdrop-blur-sm rounded-lg text-[9px] font-bold text-white border border-white/10 uppercase tracking-widest">+{{ $p->images->count() - 1 }}</div>
-                            @endif
-                        @else
-                            <div class="w-full h-full flex flex-col items-center justify-center" style="color: var(--text-3);">
-                                <svg class="w-8 h-8 mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                                <span class="text-[9px] font-bold uppercase tracking-widest">No Photo</span>
-                            </div>
-                        @endif
+                    <div class="w-8 h-8 rounded-xl flex items-center justify-center shadow-sm" style="background: var(--accent-lt); border: 1px solid var(--border); color: var(--accent);">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                     </div>
                     <div class="flex-1">
-                        <div class="flex items-center justify-between mb-2">
-                            <span class="badge badge-blue text-[9px]">Minggu {{ $p->minggu->minggu_ke }}</span>
-                            <span class="text-[9px] font-medium" style="color: var(--text-3);">{{ $p->created_at?->diffForHumans() }}</span>
-                        </div>
-                        <h3 class="font-semibold truncate text-[12px] uppercase tracking-wide" style="color: var(--text-1);">{{ $p->judul }}</h3>
-                        <p class="text-[10px] font-medium mt-1 flex items-center gap-1.5" style="color: var(--text-2);">
-                            <span class="flex items-center gap-1">
-                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--accent);"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
-                                {{ $p->siswa->name }}
-                            </span>
-                            <span class="px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-widest {{ $isB1 ? 'bg-gray-100 text-gray-600' : 'bg-var(--accent-lt) text-var(--accent)' }}">
-                                {{ $p->siswa->kelas->nama_kelas ?? '—' }}
-                            </span>
-                        </p>
+                        <h4 class="text-xs font-black text-gray-700 uppercase tracking-widest">Minggu {{ $mingguKe }}</h4>
+                        <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{{ $weekItems->count() }} karya</p>
                     </div>
-                    <div class="mt-4 pt-4 flex gap-2" style="border-top: 1px solid var(--border);">
-                        <a href="{{ route('guru.portofolio.show', $p->id_portofolio) }}"
-                           class="flex-1 btn btn-gray btn-sm flex justify-center">
-                            Detail
-                        </a>
-                        @if($p->minggu->periode->status !== 'final')
-                            <button @click="openModal({{ json_encode($p->load('images')) }})"
-                                    class="btn btn-blue btn-sm px-3" title="Edit">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                            </button>
-                        @endif
-                    </div>
+                    <div class="flex-1 h-px bg-gray-100"></div>
                 </div>
-                            @endforeach
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+                    @foreach($weekItems as $p)
+            @php 
+                $isB1 = ($p->siswa->kelas->nama_kelas ?? '') === 'B1';
+                $borderColor = $isB1 ? '#6b7280' : 'var(--accent)'; // Gray for B1, Green for others
+            @endphp
+            <div class="card p-4 relative group flex flex-col" style="border-left: 3px solid {{ $borderColor }};">
+                <div class="relative aspect-[4/3] rounded-xl overflow-hidden mb-4" style="background: var(--bg); border: 1px solid var(--border);">
+                    @if($p->images->count() > 0)
+                        <img src="{{ asset('storage/' . $p->images->first()->file_path) }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700">
+                        @if($p->images->count() > 1)
+                            <div class="absolute top-2 right-2 px-2 py-1 bg-black/50 backdrop-blur-sm rounded-lg text-[9px] font-bold text-white border border-white/10 uppercase tracking-widest">+{{ $p->images->count() - 1 }}</div>
+                        @endif
+                    @else
+                        <div class="w-full h-full flex flex-col items-center justify-center" style="color: var(--text-3);">
+                            <svg class="w-8 h-8 mb-2 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                            <span class="text-[9px] font-bold uppercase tracking-widest">No Photo</span>
                         </div>
+                    @endif
+                </div>
+                <div class="flex-1">
+                    <div class="flex items-center justify-between mb-2">
+                        <span class="badge badge-blue text-[9px]">Minggu {{ $p->minggu->minggu_ke }}</span>
+                        <span class="text-[9px] font-medium" style="color: var(--text-3);">{{ $p->created_at?->diffForHumans() }}</span>
                     </div>
-                @endforeach
+                    <h3 class="font-semibold truncate text-[12px] uppercase tracking-wide" style="color: var(--text-1);">{{ $p->judul }}</h3>
+                    <p class="text-[10px] font-medium mt-1 flex items-center gap-1.5" style="color: var(--text-2);">
+                        <span class="flex items-center gap-1">
+                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--accent);"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                            {{ $p->siswa->name }}
+                        </span>
+                        <span class="px-1.5 py-0.5 rounded text-[8px] font-bold uppercase tracking-widest {{ $isB1 ? 'bg-gray-100 text-gray-600' : 'bg-var(--accent-lt) text-var(--accent)' }}">
+                            {{ $p->siswa->kelas->nama_kelas ?? '—' }}
+                        </span>
+                    </p>
+                </div>
+                <div class="mt-4 pt-4 flex gap-2" style="border-top: 1px solid var(--border);">
+                    <a href="{{ route('guru.portofolio.show', $p->id_portofolio) }}"
+                       class="flex-1 btn btn-gray btn-sm flex justify-center">
+                        Detail
+                    </a>
+                    @if($p->minggu->periode->status !== 'final')
+                        <button @click="openModal({{ json_encode($p->load('images')) }})"
+                                class="btn btn-blue btn-sm px-3" title="Edit">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                        </button>
+                    @endif
+                </div>
+            </div>
+                    @endforeach
+                </div>
             </div>
         @endforeach
-        <div class="mt-6">{{ $portofolio->links() }}</div>
+        <div class="mt-6">{{ $portofolio->appends(request()->query())->links() }}</div>
     @else
         <div class="card p-20 text-center">
             <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style="background: var(--bg); border: 1px solid var(--border); color: var(--border);">
@@ -186,7 +225,7 @@
             openModal(data = null) {
                 if (data) {
                     this.isEdit = true;
-                    this.editId = data.id;
+                    this.editId = data.id_portofolio;
                     this.formData = { siswa_id: data.siswa_id, minggu_id: data.minggu_id, judul: data.judul, deskripsi: data.deskripsi };
                     this.existingImages = data.images || [];
                 } else {
@@ -466,7 +505,7 @@
                         headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }
                     });
                     const result = await res.json();
-                    if (result.success) this.existingImages = this.existingImages.filter(i => i.id !== id);
+                    if (result.success) this.existingImages = this.existingImages.filter(i => i.id_portofolio_images !== id);
                     else alert(result.message || 'Gagal menghapus');
                 } catch (e) { alert('Gagal menghapus gambar'); }
             }

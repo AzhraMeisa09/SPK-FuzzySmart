@@ -25,6 +25,9 @@
             'Laporan & Hasil' => [
                 ['Hasil Evaluasi', '/admin/hasil-evaluasi', 'M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z'],
             ],
+            'Bantuan' => [
+                ['Panduan Sistem', '/admin/panduan', 'M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253'],
+            ],
             'Pengaturan' => [
                 ['Profil Saya', '/profile', 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z'],
             ],
@@ -40,6 +43,7 @@
                 ['Portofolio', '/guru/portofolio', 'M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z M15 13a3 3 0 11-6 0 3 3 0 016 0z'],
             ],
             'Hasil & Laporan' => [
+                ['Validasi Evaluasi', '/guru/validasi-evaluasi', 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'],
                 ['Hasil Evaluasi (SPK)', '/guru/hasil-evaluasi', 'M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z'],
                 ['Laporan', '/guru/laporan', 'M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'],
             ],
@@ -99,13 +103,16 @@
     </div>
 
     <!-- Nav -->
-    <nav class="flex-1 px-3 py-6 overflow-y-auto scrollbar-hide space-y-6">
+    <nav id="sidebar-nav" class="flex-1 px-3 py-6 overflow-y-auto scrollbar-hide space-y-6">
         @foreach($currentMenus as $section => $items)
             <div>
                 <p class="nav-section-label">{{ $section }}</p>
                 <div class="space-y-1 mt-2">
                     @foreach($items as $item)
-                        @php $isActive = request()->is(ltrim($item[1], '/')); @endphp
+                        @php 
+                            $path = ltrim($item[1], '/');
+                            $isActive = request()->is($path) || request()->is($path . '/*'); 
+                        @endphp
                         <a href="{{ $item[1] }}?role={{ $role }}" class="nav-item {{ $isActive ? 'active' : '' }}">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="{{ $item[2] }}"/>
@@ -134,4 +141,36 @@
             </div>
         </div>
     </div>
+    
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const sidebarNav = document.getElementById("sidebar-nav");
+            if (sidebarNav) {
+                // Pulihkan posisi scroll dari localStorage jika ada
+                const savedScrollTop = localStorage.getItem("sidebar_scroll_position");
+                if (savedScrollTop !== null) {
+                    sidebarNav.scrollTop = parseInt(savedScrollTop, 10);
+                } else {
+                    // Jika tidak ada data tersimpan, scroll item aktif ke area pandangan
+                    const activeItem = sidebarNav.querySelector(".nav-item.active");
+                    if (activeItem) {
+                        activeItem.scrollIntoView({ behavior: "auto", block: "nearest" });
+                    }
+                }
+
+                // Simpan posisi scroll ketika pengguna melakukan scroll
+                sidebarNav.addEventListener("scroll", function() {
+                    localStorage.setItem("sidebar_scroll_position", sidebarNav.scrollTop);
+                });
+
+                // Simpan posisi scroll saat pengguna mengklik menu apa saja di sidebar
+                const sidebarLinks = sidebarNav.querySelectorAll("a");
+                sidebarLinks.forEach(function(link) {
+                    link.addEventListener("click", function() {
+                        localStorage.setItem("sidebar_scroll_position", sidebarNav.scrollTop);
+                    });
+                });
+            }
+        });
+    </script>
 </aside>

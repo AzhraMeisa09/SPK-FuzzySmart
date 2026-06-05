@@ -8,6 +8,7 @@ use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
 use Illuminate\Http\Request;
 use App\Mail\UserCreatedMail;
+use App\Mail\UserPasswordUpdatedMail;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Hash;
 
@@ -18,7 +19,7 @@ class UserController extends Controller
      */
     public function index(Request $request)
     {
-        $query = User::query();
+        $query = User::query()->with('siswaWali');
 
         if ($request->filled('search')) {
             $search = $request->get('search');
@@ -80,14 +81,28 @@ class UserController extends Controller
     {
         $user = User::findOrFail($id);
         $data = $request->validated();
+        $passwordChanged = false;
+        $plainPassword = '';
 
         if ($request->filled('password')) {
-            $data['password'] = Hash::make($data['password']);
+            $plainPassword = $data['password'];
+            $data['password'] = Hash::make($plainPassword);
+            $passwordChanged = true;
         } else {
             unset($data['password']);
         }
 
         $user->update($data);
+
+        // Jika password diupdate, kirim email notifikasi kredensial baru
+        if ($passwordChanged) {
+            try {
+                Mail::to($user->email)->send(new UserPasswordUpdatedMail($user, $plainPassword));
+            } catch (\Exception $e) {
+                return redirect()->route('admin.user.index')->with('success', 'User berhasil diupdate, namun email notifikasi password baru gagal terkirim.');
+            }
+            return redirect()->route('admin.user.index')->with('success', 'User berhasil diupdate dan email notifikasi password baru telah dikirim.');
+        }
 
         return redirect()->route('admin.user.index')->with('success', 'User berhasil diupdate');
     }
@@ -126,5 +141,22 @@ class UserController extends Controller
         $user->save();
 
         return redirect()->route('admin.user.index')->with('success', 'Status user berhasil diubah');
+    }
+
+    /**
+     * Memutus relasi antara siswa dan wali murid.
+     */
+    public function putusRelasi($siswaId)
+    {
+        $siswa = \App\Models\Siswa::findOrFail($siswaId);
+        $userWaliId = $siswa->wali_murid_id;
+
+        $siswa->update(['wali_murid_id' => null]);
+        
+        if ($userWaliId) {
+            $siswa->wali()->detach($userWaliId);
+        }
+
+        return redirect()->back()->with('success', 'Relasi wali murid dan siswa berhasil diputus.');
     }
 }

@@ -29,7 +29,7 @@
     @endphp
 
     @forelse($groupedSiswa as $namaKelas => $students)
-    <div class="space-y-4" x-show="hasMatchesInClass({{ json_encode($students->map(fn($s) => ['nama' => strtolower($s->name), 'nisn' => strtolower($s->id_siswa ?: '')])) }})">
+    <div class="space-y-4" x-show="hasMatchesInClass({{ json_encode($students->map(fn($s) => ['nama' => strtolower($s->name), 'nisn' => strtolower($s->kode ?: $s->id_siswa ?: '')])) }})">
         <div class="flex items-center gap-3 px-1">
             <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-blue-500 text-white shadow-sm">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
@@ -55,7 +55,7 @@
                     </thead>
                     <tbody>
                         @foreach($students as $s)
-                        <tr class="hover:bg-gray-50/50 transition-colors group" x-show="matches('{{ strtolower($s->name) }}', '{{ strtolower($s->id_siswa) }}')">
+                        <tr class="hover:bg-gray-50/50 transition-colors group" x-show="matches('{{ strtolower($s->name) }}', '{{ strtolower($s->kode ?: $s->id_siswa) }}')">
                             <td class="font-mono text-[10px]" style="color: var(--text-3);">{{ $loop->iteration }}</td>
                             <td>
                                 <div class="flex items-center gap-3">
@@ -69,7 +69,7 @@
                             </td>
                             <td>
                                 <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-lg bg-gray-100" style="color: var(--text-2);">
-                                    {{ $s->id_siswa ?: '-' }}
+                                    {{ $s->kode ?: $s->id_siswa ?: '-' }}
                                 </span>
                             </td>
                             <td>

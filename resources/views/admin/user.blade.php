@@ -27,6 +27,8 @@
         alamat: '{{ old('alamat', session('edit_data.alamat')) }}'
     },
     deleteData: {},
+    showRelasi: false,
+    relasiData: {},
     openEdit(u) { 
         this.editData = {
             id: u.id_user,
@@ -40,7 +42,8 @@
         }; 
         this.showEdit = true; 
     },
-    openDelete(u) { this.deleteData = u; this.showDelete = true; }
+    openDelete(u) { this.deleteData = u; this.showDelete = true; },
+    openRelasi(u) { this.relasiData = u; this.showRelasi = true; }
 }" class="space-y-6">
 
     {{-- ── SUMMARY STATS ── --}}
@@ -134,7 +137,12 @@
                                 <div class="w-10 h-10 rounded-2xl bg-var(--accent-lt) flex items-center justify-center text-xs font-bold text-var(--accent) border border-var(--accent)/10 shadow-sm">{{ strtoupper(substr($u->nama_lengkap, 0, 1)) }}</div>
                                 <div class="flex flex-col">
                                     <span class="font-semibold text-var(--text-1) leading-tight">{{ $u->nama_lengkap }}</span>
-                                    <span class="text-[10px] text-var(--text-3) font-medium mt-0.5">@ {{ $u->username }}</span>
+                                    <span class="text-[10px] text-var(--text-3) font-medium mt-0.5 flex items-center">
+                                        @ {{ $u->username }}
+                                        @if($u->role == 'wali_murid')
+                                        <span class="ml-2 px-1.5 py-0.5 bg-[#F1F4E9] text-[#84934A] rounded-md font-black">{{ $u->siswaWali->count() }} Anak</span>
+                                        @endif
+                                    </span>
                                 </div>
                             </div>
                         </td>
@@ -170,6 +178,11 @@
                                 <a href="{{ route('admin.user.show', $u) }}" class="p-2 rounded-xl bg-white border border-var(--border) text-var(--text-2) hover:text-var(--accent) hover:border-var(--accent) transition-all shadow-sm group" title="Detail Profil">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg> 
                                 </a>
+                                @if($u->role == 'wali_murid')
+                                <button @click="openRelasi({{ Js::from($u) }})" class="p-2 rounded-xl bg-green-50 border border-green-100 text-green-600 hover:bg-green-600 hover:text-white transition-all shadow-sm" title="Kelola Relasi Anak">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                                </button>
+                                @endif
                                 <button @click="openEdit({{ Js::from($u) }})" class="p-2 rounded-xl bg-blue-50 border border-blue-100 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                 </button>
@@ -345,6 +358,44 @@
                     <button type="submit" class="flex-1 px-4 py-3 rounded-xl text-xs font-bold text-white bg-red-600 hover:bg-red-700 transition-all shadow-lg shadow-red-100">Ya, Hapus</button>
                 </div>
             </form>
+        </div>
+    </div>
+    </template>
+
+    {{-- MODAL RELASI WALI --}}
+    <template x-teleport="body">
+    <div x-show="showRelasi" x-transition.opacity @keydown.escape.window="showRelasi = false" class="modal-overlay" x-cloak>
+        <div class="modal-box w-full max-w-lg" @click.stop x-transition.scale.95>
+            <div class="px-8 py-5 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
+                <h3 class="text-base font-bold text-gray-800">Kelola Relasi Anak</h3>
+                <button type="button" @click="showRelasi = false" class="p-2 rounded-xl hover:bg-gray-200 text-var(--text-3) transition-colors"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M6 18L18 6M6 6l12 12"/></svg></button>
+            </div>
+            <div class="px-8 py-6">
+                <p class="text-xs font-bold text-gray-500 mb-4" x-text="'Wali Murid: ' + relasiData.nama_lengkap"></p>
+                <template x-if="relasiData.siswa_wali && relasiData.siswa_wali.length > 0">
+                    <div class="space-y-3">
+                        <template x-for="siswa in relasiData.siswa_wali" :key="siswa.id_siswa">
+                            <div class="flex items-center justify-between p-3 border border-gray-200 rounded-xl bg-white shadow-sm">
+                                <div>
+                                    <p class="text-sm font-bold text-gray-800" x-text="siswa.name"></p>
+                                    <p class="text-[10px] text-gray-500 font-medium mt-0.5" x-text="'NISN: ' + (siswa.kode || siswa.id_siswa || '-')"></p>
+                                </div>
+                                <form :action="'{{ route('admin.user.index') }}/relasi/' + siswa.id_siswa + '/putus'" method="POST">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" onclick="return confirm('Yakin ingin memutus relasi anak ini dari wali murid?')" class="px-3 py-1.5 text-[10px] font-bold text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors border border-red-100">
+                                        Putus Relasi
+                                    </button>
+                                </form>
+                            </div>
+                        </template>
+                    </div>
+                </template>
+                <template x-if="!relasiData.siswa_wali || relasiData.siswa_wali.length === 0">
+                    <div class="p-4 text-center bg-gray-50 rounded-xl border border-gray-100">
+                        <p class="text-xs text-gray-500 font-medium">Belum ada anak yang terhubung ke akun ini.</p>
+                    </div>
+                </template>
+            </div>
         </div>
     </div>
     </template>

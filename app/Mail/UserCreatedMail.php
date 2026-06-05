@@ -47,6 +47,7 @@ class UserCreatedMail extends Mailable
                 'username'     => $this->user->username,
                 'email'        => $this->user->email,
                 'password'     => $this->plainPassword,
+                'role'         => $this->user->role,
             ],
         );
     }

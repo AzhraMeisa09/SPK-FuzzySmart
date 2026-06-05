@@ -37,7 +37,7 @@
                 <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">Pilih Periode</label>
                 <select name="periode_id" class="form-select" onchange="this.form.submit()">
                     @foreach($periodeList as $p)
-                        <option value="{{ $p->id_periode }}" {{ $selectedPeriodeId == $p->id_periode ? 'selected' : '' }}>{{ $p->nama_periode }}</option>
+                        <option value="{{ $p->id_periode }}" {{ $selectedPeriodeId == $p->id_periode ? 'selected' : '' }}>{{ $p->nama_periode }} - {{ $p->tahunAjaran->nama ?? '—' }}</option>
                     @endforeach
                 </select>
             </div>
@@ -117,7 +117,7 @@
                                 <div class="flex items-center gap-3">
                                     <div class="flex-1 h-1.5 bg-gray-100 rounded-full overflow-hidden">
                                         @php 
-                                            $progColor = $eval->kategori_akhir === 'BSB' ? 'bg-emerald-500' : ($eval->kategori_akhir === 'BSH' ? 'bg-amber-500' : 'bg-rose-500');
+                                            $progColor = $eval->kategori_akhir === 'BSB' ? 'progress-green' : ($eval->kategori_akhir === 'BSH' ? 'progress-yellow' : 'progress-red');
                                         @endphp
                                         <div class="h-full {{ $progColor }} transition-all duration-1000" style="width: {{ $eval->nilai_akhir * 100 }}%"></div>
                                     </div>
@@ -126,7 +126,9 @@
                             </td>
                             <td class="text-center">
                                 @php $color = $eval->kategori_akhir === 'BSB' ? 'bsb' : ($eval->kategori_akhir === 'BSH' ? 'bsh' : 'mb'); @endphp
-                                <span class="badge badge-{{ $color }} px-4 py-1 text-[9px] font-black uppercase shadow-sm">{{ $eval->kategori_akhir }}</span>
+                                <div class="flex flex-col items-center gap-1.5">
+                                    <span class="badge badge-{{ $color }} px-4 py-1 text-[9px] font-black uppercase shadow-sm">{{ match($eval->kategori_akhir) { 'BSB' => 'Berkembang Sangat Baik (BSB)', 'BSH' => 'Berkembang Sesuai Harapan (BSH)', 'MB' => 'Mulai Berkembang (MB)', default => $eval->kategori_akhir } }}</span>
+                                </div>
                             </td>
                             <td class="text-right pr-8">
                                 <div class="flex justify-end">

@@ -120,38 +120,83 @@
                             </div>
                         </td>
                         <td class="text-center">
-                            <form action="{{ route('admin.periode.toggle', $p) }}" method="POST">
-                                @csrf @method('PATCH')
-                                <button type="submit" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all hover:scale-105 {{ $p->is_aktif ? 'bg-green-50 text-green-700 border border-green-100' : 'bg-gray-50 text-gray-400 border border-gray-100' }}">
-                                    <span class="w-1.5 h-1.5 rounded-full {{ $p->is_aktif ? 'bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]' : 'bg-gray-300' }}"></span>
-                                    {{ $p->is_aktif ? 'Aktif' : 'Nonaktif' }}
-                                </button>
-                            </form>
+                            @php
+                                $statusBadge = match($p->status) {
+                                    'final'  => '<span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-100"><span class="w-1.5 h-1.5 rounded-full bg-indigo-500"></span>Final</span>',
+                                    'proses' => '<span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-100"><span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>Proses</span>',
+                                    'aktif'  => '<span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold bg-green-50 text-green-700 border border-green-100"><span class="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]"></span>Aktif</span>',
+                                    default  => '<span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold bg-gray-50 text-gray-400 border border-gray-100"><span class="w-1.5 h-1.5 rounded-full bg-gray-300"></span>Draft</span>',
+                                };
+                            @endphp
+                            {!! $statusBadge !!}
+
+                            {{-- Progress validasi jika status proses --}}
+                            @if($p->status === 'proses')
+                                @php $prog = $p->getValidasiProgress(); @endphp
+                                <div class="mt-2">
+                                    <div class="flex items-center justify-center gap-1 mb-1">
+                                        <span class="text-[9px] font-bold text-amber-600">{{ $prog['done'] }}/{{ $prog['total'] }} Divalidasi</span>
+                                    </div>
+                                    <div class="w-full bg-gray-100 rounded-full h-1.5 mx-auto" style="max-width: 80px;">
+                                        <div class="h-1.5 rounded-full {{ $prog['done'] == $prog['total'] ? 'bg-green-500' : 'bg-amber-400' }}"
+                                             style="width: {{ $prog['total'] > 0 ? ($prog['done'] / $prog['total']) * 100 : 0 }}%"></div>
+                                    </div>
+                                </div>
+                            @endif
                         </td>
                          <td class="text-center">
-                             <div class="flex items-center justify-center gap-2">
-                                 @if($p->canBeFinalized())
-                                     <form action="{{ route('admin.periode.finalize', $p) }}" method="POST">
-                                         @csrf
-                                         <button type="button" 
-                                                 onclick="confirmFinalize(this.form)"
-                                                 class="p-2.5 rounded-xl bg-gray-200 text-black shadow-lg shadow-gray-100 hover:scale-105 transition-all group relative" title="Finalisasi">
-                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                         </button>
-                                     </form>
-                                 @endif
+                             <div class="flex items-center justify-center gap-1.5 flex-wrap">
 
-                                 @if(!$p->isFinal())
-                                     <button @click="openEdit({{ Js::from($p) }})" 
+                                {{-- Tombol Aktif/Non-Aktif (hanya untuk status draft/aktif) --}}
+                                @if(in_array($p->status, ['draft', 'aktif']))
+                                    <form action="{{ route('admin.periode.toggle', $p) }}" method="POST">
+                                        @csrf @method('PATCH')
+                                        <button type="submit"
+                                                class="p-2 rounded-xl {{ $p->is_aktif ? 'bg-green-50 border border-green-100 text-green-600' : 'bg-gray-50 border border-gray-100 text-gray-400' }} hover:scale-105 transition-all"
+                                                title="{{ $p->is_aktif ? 'Nonaktifkan' : 'Aktifkan' }}">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                                        </button>
+                                    </form>
+                                @endif
+
+                                {{-- TOMBOL PROSES EVALUASI (aktif → proses SPK) --}}
+                                @if($p->canBeFinalized())
+                                    <form action="{{ route('admin.periode.finalize', $p) }}" method="POST" id="form-proses-{{ $p->id_periode }}">
+                                        @csrf
+                                        <button type="button"
+                                                onclick="confirmProses('{{ $p->id_periode }}')"
+                                                class="p-2 rounded-xl bg-blue-50 border border-blue-200 text-blue-700 hover:bg-blue-600 hover:text-white hover:scale-105 transition-all"
+                                                title="Proses Evaluasi (Jalankan SPK)">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                        </button>
+                                    </form>
+                                @endif
+
+                                {{-- TOMBOL PUBLIKASI (proses → final, setelah semua guru validasi) --}}
+                                @if($p->status === 'proses')
+                                    @php $prog = $p->getValidasiProgress(); @endphp
+                                    <form action="{{ route('admin.periode.publish', $p->id_periode) }}" method="POST" id="form-publish-{{ $p->id_periode }}">
+                                        @csrf
+                                        <button type="button"
+                                                onclick="confirmPublish('{{ $p->id_periode }}', {{ $prog['pending'] }}, {{ $prog['total'] }})"
+                                                class="p-2 rounded-xl {{ $prog['pending'] === 0 ? 'bg-green-50 border border-green-200 text-green-700 hover:bg-green-600 hover:text-white' : 'bg-amber-50 border border-amber-200 text-amber-600 hover:bg-amber-500 hover:text-white' }} hover:scale-105 transition-all"
+                                                title="{{ $prog['pending'] === 0 ? 'Publikasikan Hasil' : 'Masih ada ' . $prog['pending'] . ' evaluasi belum divalidasi guru' }}">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                        </button>
+                                    </form>
+                                @endif
+
+                                 @if(!$p->isFinal() && $p->status !== 'proses')
+                                     <button @click="openEdit({{ Js::from($p) }})"
                                              class="p-2 rounded-xl bg-blue-50 border border-blue-100 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm">
                                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                      </button>
-                                     <button @click="openDelete({{ Js::from($p) }})" 
+                                     <button @click="openDelete({{ Js::from($p) }})"
                                              class="p-2 rounded-xl bg-red-50 border border-red-100 text-red-600 hover:bg-red-600 hover:text-white transition-all shadow-sm">
                                          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                      </button>
-                                 @else
-                                     <div class="flex items-center gap-1 text-[9px] font-bold text-var(--text-3) bg-gray-100 px-3 py-1.5 rounded-lg border border-gray-200">
+                                 @elseif($p->isFinal())
+                                     <div class="flex items-center gap-1 text-[9px] font-bold text-gray-400 bg-gray-100 px-3 py-1.5 rounded-lg border border-gray-200">
                                          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                                          Terkunci
                                      </div>
@@ -326,18 +371,46 @@
 
 @push('scripts')
 <script>
-    function confirmFinalize(form) {
+    function confirmProses(periodeId) {
         Swal.fire({
-            title: 'Finalisasi Periode?',
-            text: "Setelah difinalisasi, seluruh data nilai akan dikunci dan periode tidak dapat diaktifkan kembali secara mandiri!",
-            icon: 'warning',
+            title: 'Proses Evaluasi (SPK)?',
+            html: "<p class='text-sm text-gray-600'>Sistem akan menjalankan kalkulasi <strong>Fuzzy SMART</strong> untuk seluruh siswa pada periode ini.</p><br><p class='text-xs text-amber-600 font-bold'>Setelah diproses, guru perlu memvalidasi setiap hasil sebelum dapat dipublikasikan.</p>",
+            icon: 'info',
             showCancelButton: true,
-            confirmButtonText: 'Ya, Finalisasi Sekarang',
+            confirmButtonText: 'Ya, Proses Sekarang',
             cancelButtonText: 'Batal',
+            confirmButtonColor: '#3b82f6',
             reverseButtons: true
         }).then((result) => {
             if (result.isConfirmed) {
-                form.submit();
+                document.getElementById('form-proses-' + periodeId).submit();
+            }
+        });
+    }
+
+    function confirmPublish(periodeId, pending, total) {
+        if (pending > 0) {
+            Swal.fire({
+                title: 'Belum Semua Divalidasi',
+                html: `<p class='text-sm text-gray-600'>Masih <strong>${pending} dari ${total}</strong> evaluasi yang belum divalidasi guru.</p><br><p class='text-xs text-gray-500'>Minta guru untuk menyelesaikan validasi terlebih dahulu sebelum dipublikasikan.</p>`,
+                icon: 'warning',
+                confirmButtonText: 'Mengerti',
+                confirmButtonColor: '#f59e0b',
+            });
+            return;
+        }
+        Swal.fire({
+            title: 'Publikasikan Hasil Evaluasi?',
+            html: "<p class='text-sm text-gray-600'>Seluruh guru sudah memvalidasi. Setelah dipublikasikan, hasil akan langsung dapat dilihat oleh <strong>wali murid</strong> dan <strong>kepala sekolah</strong>.</p>",
+            icon: 'success',
+            showCancelButton: true,
+            confirmButtonText: '🎉 Ya, Publikasikan!',
+            cancelButtonText: 'Batal',
+            confirmButtonColor: '#10b981',
+            reverseButtons: true
+        }).then((result) => {
+            if (result.isConfirmed) {
+                document.getElementById('form-publish-' + periodeId).submit();
             }
         });
     }

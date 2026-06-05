@@ -23,11 +23,38 @@ class PortofolioController extends Controller
         $user = Auth::user();
         $kelasIds = $user->kelas()->pluck('kelas.id_kelas');
 
+        // Ambil semua periode yang relevan dengan kelas guru
+        $listPeriode = PeriodePenilaian::whereHas('kelas', function($q) use ($kelasIds) {
+                $q->whereIn('kelas.id_kelas', $kelasIds);
+            })
+            ->whereIn('status', [PeriodePenilaian::STATUS_AKTIF, PeriodePenilaian::STATUS_FINAL])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // Tentukan periode yang sedang dipilih
+        $periodeId = $request->get('periode_id');
+        $currentPeriode = null;
+        if ($periodeId) {
+            $currentPeriode = PeriodePenilaian::find($periodeId);
+        }
+        if (!$currentPeriode) {
+            // Default: periode aktif, atau yang terbaru
+            $currentPeriode = $listPeriode->where('status', PeriodePenilaian::STATUS_AKTIF)->first()
+                           ?? $listPeriode->first();
+        }
+
         $query = Portofolio::whereIn('siswa_id', function($q) use ($kelasIds) {
                 $q->select('id_siswa')->from('siswa')->whereIn('kelas_id', $kelasIds);
             })
-            ->with(['siswa.kelas', 'minggu', 'images'])
+            ->with(['siswa.kelas', 'minggu.periode', 'images'])
             ->latest();
+
+        // Filter berdasarkan periode terpilih
+        if ($currentPeriode) {
+            $query->whereHas('minggu', function($q) use ($currentPeriode) {
+                $q->where('periode_id', $currentPeriode->id_periode);
+            });
+        }
 
         // Filter Siswa
         if ($request->siswa_id) {
@@ -42,11 +69,13 @@ class PortofolioController extends Controller
         $portofolio = $query->paginate(12);
 
         $siswa = Siswa::with('kelas')->whereIn('kelas_id', $kelasIds)->orderBy('kelas_id')->orderBy('name')->get();
-        $minggu = MingguPenilaian::whereHas('periode', function($q) {
-                $q->where('is_aktif', true);
-            })->get();
 
-        return view('guru.portofolio', compact('portofolio', 'siswa', 'minggu'));
+        // Ambil minggu hanya dari periode terpilih
+        $minggu = $currentPeriode
+            ? MingguPenilaian::where('periode_id', $currentPeriode->id_periode)->orderBy('minggu_ke')->get()
+            : collect();
+
+        return view('guru.portofolio', compact('portofolio', 'siswa', 'minggu', 'listPeriode', 'currentPeriode'));
     }
 
     /**

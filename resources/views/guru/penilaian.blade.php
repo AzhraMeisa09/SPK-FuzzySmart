@@ -34,7 +34,7 @@
     hasMatchesInClass(students) {
         if (!this.search) return true;
         const s = this.search.toLowerCase();
-        return students.some(std => std.name.includes(s) || std.id_siswa.includes(s));
+        return students.some(std => std.nama.includes(s) || std.nisn.includes(s));
     }
 }">
 
@@ -114,7 +114,7 @@
         @endphp
 
         @foreach($groupedSiswa as $namaKelas => $studentsInClass)
-            <div class="space-y-4 mb-8" x-show="hasMatchesInClass({{ json_encode($studentsInClass->map(fn($s) => ['name' => strtolower($s->name), 'id_siswa' => strtolower($s->id_siswa ?: '')])) }})">
+            <div class="space-y-4 mb-8" x-show="hasMatchesInClass({{ json_encode($studentsInClass->map(fn($s) => ['nama' => strtolower($s->name), 'nisn' => strtolower($s->kode ?: $s->id_siswa ?: '')])) }})">
                 <div class="flex items-center gap-3 px-1 mt-4">
                     <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-blue-500 text-white shadow-sm">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
@@ -153,7 +153,7 @@
                                         $totalM = $semuaMinggu->count();
                                         $pct = $totalM > 0 ? ($doneCount/$totalM)*100 : 0;
                                     @endphp
-                                    <tr class="hover:bg-gray-50/80 transition-colors group" x-show="matches('{{ addslashes($s->name) }}', '{{ $s->id_siswa }}')">
+                                    <tr class="hover:bg-gray-50/80 transition-colors group" x-show="matches('{{ addslashes($s->name) }}', '{{ strtolower($s->kode ?: $s->id_siswa) }}')">
                                         <td class="sticky left-0 bg-white group-hover:bg-gray-50 z-10 font-mono text-[10px] text-gray-400">{{ $loop->iteration }}</td>
                                         <td class="sticky left-12 bg-white group-hover:bg-gray-50 z-10">
                                             <div class="flex items-center gap-3">
@@ -162,7 +162,7 @@
                                                 </div>
                                                 <div>
                                                     <p class="font-bold text-gray-800 text-xs leading-none">{{ $s->name }}</p>
-                                                    <p class="text-[9px] font-bold text-gray-400 mt-1 uppercase tracking-wider">{{ $s->id_siswa }}</p>
+                                                    <p class="text-[9px] font-bold text-gray-400 mt-1 uppercase tracking-wider">{{ $s->kode ?: $s->id_siswa }}</p>
                                                 </div>
                                             </div>
                                         </td>
@@ -221,14 +221,14 @@
                             $doneCount2 = collect($grid2)->filter(fn($v) => $v === 'final')->count();
                             $totalM2 = $semuaMinggu->count();
                         @endphp
-                        <div class="card p-4 hover:shadow-lg transition-all active:scale-[0.98]" x-show="matches('{{ addslashes($s->name) }}', '{{ $s->id_siswa }}')">
+                        <div class="card p-4 hover:shadow-lg transition-all active:scale-[0.98]" x-show="matches('{{ addslashes($s->name) }}', '{{ strtolower($s->kode ?: $s->id_siswa) }}')">
                             <div class="flex items-center gap-4">
                                 <div class="w-12 h-12 rounded-2xl bg-var(--accent-lt) text-var(--accent) flex items-center justify-center text-lg font-black shadow-sm">
                                     {{ strtoupper(substr($s->name, 0, 1)) }}
                                 </div>
                                 <div class="flex-1 min-w-0">
                                     <h4 class="font-bold text-gray-800 text-sm leading-tight">{{ $s->name }}</h4>
-                                    <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-wider font-bold">{{ $s->id_siswa }}</p>
+                                    <p class="text-[10px] text-gray-400 mt-1 uppercase tracking-wider font-bold">{{ $s->kode ?: $s->id_siswa }}</p>
                                 </div>
                                 <div class="text-right">
                                     <p class="text-xs font-black text-gray-700">{{ $doneCount2 }}/{{ $totalM2 }}</p>

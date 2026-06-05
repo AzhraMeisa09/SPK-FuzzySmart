@@ -10,12 +10,15 @@
     $totalP = \App\Models\Siswa::where('jenis_kelamin', 'P')->count();
     $totalKelasCount = \App\Models\Kelas::count();
     $totalWaliTaut = \App\Models\Siswa::whereNotNull('wali_murid_id')->count();
+    $totalBelumTerhubung = \App\Models\Siswa::whereNull('wali_murid_id')->count();
 @endphp
 
 <div x-data="{
     showAdd: {{ $errors->any() && !session('edit_id') ? 'true' : 'false' }},
     showEdit: {{ session('edit_id') ? 'true' : 'false' }},
     showDelete: false,
+    showRegenerate: false,
+    regenerateData: {},
     photoPreview: null,
     parents: {{ json_encode($waliMurid->pluck('alamat', 'id_user')) }},
     addData: {
@@ -53,16 +56,17 @@
             id: s.id_siswa,
             nama: s.name,
             kelas_id: s.kelas_id,
-            wali_murid_id: s.wali_murid_id || '',
+            wali_murid_id: (s.wali && s.wali.length > 0) ? s.wali[0].id_user : '',
             tanggal_lahir: s.tanggal_lahir ? s.tanggal_lahir.split('T')[0] : '',
             jenis_kelamin: s.jenis_kelamin,
-            nama_orang_tua: s.nama_orang_tua || '',
-            no_hp_orang_tua: s.no_hp_orang_tua || '',
-            alamat: s.alamat || ''
+            nama_orang_tua: (s.wali && s.wali.length > 0) ? s.wali[0].nama_lengkap : (s.nama_orang_tua || ''),
+            no_hp_orang_tua: (s.wali && s.wali.length > 0) ? s.wali[0].no_hp : (s.no_hp_orang_tua || ''),
+            alamat: (s.wali && s.wali.length > 0 && s.wali[0].alamat) ? s.wali[0].alamat : (s.alamat || '')
         }; 
         this.showEdit = true; 
     },
-    openDelete(s) { this.deleteData = s; this.showDelete = true; }
+    openDelete(s) { this.deleteData = s; this.showDelete = true; },
+    openRegenerate(s) { this.regenerateData = s; this.showRegenerate = true; }
 }" class="space-y-6">
 
     {{-- ── SUMMARY STATS ── --}}
@@ -134,8 +138,9 @@
                     <th class="w-16">No</th>
                     <th>Informasi Siswa</th>
                     <th>NISN & Kelas</th>
+                    <th>Kode Registrasi</th>
+                    <th>Status Registrasi</th>
                     <th>Wali Murid</th>
-                    <th>Kontak Ortu</th>
                     <th class="text-center">Aksi</th>
                 </tr>
             </thead>
@@ -168,6 +173,39 @@
                                 @endif
                             </div>
                         </td>
+                        {{-- Kode Registrasi --}}
+                        <td class="py-4">
+                            @if($s->kode_registrasi)
+                                <div class="flex items-center gap-2">
+                                    <code class="text-[11px] font-bold bg-amber-50 text-amber-700 px-2.5 py-1 rounded-lg border border-amber-200 tracking-wider">{{ $s->kode_registrasi }}</code>
+                                    <button
+                                        type="button"
+                                        onclick="copyKode('{{ $s->kode_registrasi }}', this)"
+                                        class="p-1.5 rounded-lg bg-amber-50 border border-amber-200 text-amber-600 hover:bg-amber-500 hover:text-white transition-all shadow-sm"
+                                        title="Salin kode">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                                    </button>
+                                </div>
+                            @else
+                                <span class="text-[10px] text-gray-400 italic">—</span>
+                            @endif
+                        </td>
+
+                        {{-- Status Registrasi --}}
+                        <td class="py-4">
+                            @if($s->wali->count() > 0 || $s->wali_murid_id)
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-green-50 text-green-700 border border-green-200">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                                    Sudah Terhubung
+                                </span>
+                            @else
+                                <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-gray-50 text-gray-500 border border-gray-200">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-gray-400"></span>
+                                    Belum Terhubung
+                                </span>
+                            @endif
+                        </td>
+
                         <td class="py-4">
                             @if($s->wali->count() > 0)
                                 @foreach($s->wali as $w)
@@ -179,16 +217,16 @@
                                 <span class="text-[10px] text-gray-400 italic font-bold">Belum diatur</span>
                             @endif
                         </td>
-                        <td class="py-4">
-                             <span class="text-[10px] font-bold text-var(--text-2) tracking-wider">{{ $s->waliMurid ? $s->waliMurid->no_hp : ($s->no_hp_orang_tua ?? '—') }}</span>
-                        </td>
                         <td class="text-center py-4">
                             <div class="flex items-center justify-center gap-2">
                                 <a href="{{ route('admin.siswa.show', $s->id_siswa) }}" class="p-2 rounded-xl bg-white border border-var(--border) text-var(--text-2) hover:text-var(--accent) hover:border-var(--accent) transition-all shadow-sm group">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg> 
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                                 </a>
                                 <button @click="openEdit({{ json_encode($s) }})" class="p-2 rounded-xl bg-blue-50 border border-blue-100 text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                </button>
+                                <button @click="openRegenerate({ id: '{{ $s->id_siswa }}', nama: '{{ addslashes($s->name) }}', kode: '{{ $s->kode_registrasi }}' })" class="p-2 rounded-xl bg-amber-50 border border-amber-100 text-amber-600 hover:bg-amber-500 hover:text-white transition-all shadow-sm" title="Generate Ulang Kode">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                                 </button>
                                 <button @click="openDelete({ id: '{{ $s->id_siswa }}', nama: '{{ addslashes($s->name) }}' })" class="p-2 rounded-xl bg-red-50 border border-red-100 text-red-600 hover:bg-red-600 hover:text-white transition-all shadow-sm">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
@@ -198,7 +236,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" class="text-center py-24 text-var(--text-3) font-medium italic text-sm">Belum ada data siswa.</td>
+                        <td colspan="8" class="text-center py-24 text-var(--text-3) font-medium italic text-sm">Belum ada data siswa.</td>
                     </tr>
                 @endforelse
             </tbody>
@@ -285,9 +323,13 @@
                     <div>
                         <h4 class="text-[10px] font-bold text-var(--accent) mb-4 pb-1 border-b border-var(--accent)/10">3. Data Wali Murid / Orang Tua</h4>
                         <div class="bg-blue-50/50 p-6 rounded-[2rem] border border-blue-100 mb-6">
-                            <div class="form-group !mb-0">
-                                <label class="form-label text-[10px] font-bold text-blue-700">Tautkan Akun Wali Murid <span class="text-blue-400 font-normal lowercase">(otomatis)</span></label>
-                                <select name="wali_murid_id" @change="updateAddress($event.target.value, 'add')" class="form-select rounded-xl bg-white border-blue-100 font-bold text-xs mt-2">
+                            <div class="form-group !mb-0" wire:ignore>
+                                <label class="form-label text-[10px] font-bold text-blue-700 mb-2">Tautkan Akun Wali Murid <span class="text-blue-400 font-normal lowercase">(Opsional)</span></label>
+                                <select name="wali_murid_id" @change="updateAddress($event.target.value, 'add')" class="searchable-select"
+                                        x-init="
+                                            let ts = new TomSelect($el, { create: false, placeholder: '-- Tidak ditautkan ke profil User --' });
+                                            // Optional: handle alpine reset if needed
+                                        ">
                                     <option value="">-- Tidak ditautkan ke profil User --</option>
                                     @foreach($waliMurid as $w)
                                         <option value="{{ $w->id_user }}" {{ old('wali_murid_id') == $w->id_user ? 'selected' : '' }}>{{ $w->nama_lengkap }} ({{ $w->email }})</option>
@@ -299,7 +341,7 @@
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div class="form-group">
                                 <label class="form-label text-[10px] font-bold">Nama Orang Tua Manual</label>
-                                <input type="text" name="nama_orang_tua" value="{{ old('nama_orang_tua') }}" class="form-input rounded-xl bg-var(--bg) border-var(--border) font-bold text-xs" placeholder="Alternatif jika tanpa akun">
+                                <input type="text" name="nama_orang_tua" value="{{ old('nama_orang_tua') }}" class="form-input rounded-xl bg-var(--bg) border-var(--border) font-bold text-xs" placeholder="Nama ayah/ibu">
                             </div>
                             <div class="form-group">
                                 <label class="form-label text-[10px] font-bold">No. HP Orang Tua Manual</label>
@@ -385,9 +427,17 @@
                     <div>
                         <h4 class="text-[10px] font-bold text-var(--accent) mb-4 pb-1 border-b border-var(--accent)/10">3. Data Wali Murid / Orang Tua</h4>
                         <div class="bg-blue-50/50 p-6 rounded-[2rem] border border-blue-100 mb-6">
-                            <div class="form-group !mb-0">
-                                <label class="form-label text-[10px] font-bold text-blue-700">Tautkan Akun Wali Murid</label>
-                                <select name="wali_murid_id" x-model="editData.wali_murid_id" @change="updateAddress($event.target.value, 'edit')" class="form-select rounded-xl bg-white border-blue-100 font-bold text-xs mt-2">
+                            <div class="form-group !mb-0" wire:ignore>
+                                <label class="form-label text-[10px] font-bold text-blue-700 mb-2">Tautkan Akun Wali Murid <span class="text-blue-400 font-normal lowercase">(Opsional)</span></label>
+                                <select name="wali_murid_id" x-model="editData.wali_murid_id" @change="updateAddress($event.target.value, 'edit')" class="searchable-select"
+                                        x-init="
+                                            let ts = new TomSelect($el, { create: false, placeholder: '-- Tidak ditautkan ke profil User --' });
+                                            $watch('editData.wali_murid_id', value => {
+                                                if(ts.getValue() !== value) {
+                                                    ts.setValue(value);
+                                                }
+                                            });
+                                        ">
                                     <option value="">-- Tidak ditautkan ke profil User --</option>
                                     @foreach($waliMurid as $w)
                                         <option value="{{ $w->id_user }}">{{ $w->nama_lengkap }} ({{ $w->email }})</option>
@@ -443,5 +493,89 @@
     </div>
     </template>
 
+    {{-- MODAL GENERATE ULANG KODE --}}
+    <template x-teleport="body">
+    <div x-show="showRegenerate" x-transition.opacity @keydown.escape.window="showRegenerate = false" class="modal-overlay" x-cloak>
+        <div class="modal-box w-full max-w-sm" @click.stop x-transition.scale.95>
+            <form :action="'{{ url('admin/siswa') }}/' + regenerateData.id + '/regenerate-kode'" method="POST">
+                @csrf
+                <div class="px-8 py-10 text-center">
+                    <div class="w-20 h-20 rounded-3xl bg-amber-50 text-amber-600 flex items-center justify-center mx-auto mb-6 shadow-sm border border-amber-100">
+                        <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-var(--text-1) tracking-tight mb-2">Generate Ulang Kode?</h3>
+                    <p class="text-sm text-var(--text-3) font-medium mb-1 tracking-tight" x-text="regenerateData.nama"></p>
+                    <p class="text-xs text-amber-600 font-bold mb-4">Kode saat ini: <span x-text="regenerateData.kode" class="tracking-widest"></span></p>
+                    <div class="p-4 rounded-xl bg-amber-50/80 border border-amber-100 text-[11px] font-bold text-amber-700 leading-relaxed">
+                        ⚠️ Yakin ingin membuat kode registrasi baru?<br>
+                        Kode lama tidak dapat digunakan lagi untuk registrasi wali murid.
+                    </div>
+                </div>
+                <div class="px-8 pb-8 flex gap-3">
+                    <button type="button" @click="showRegenerate = false" class="flex-1 px-4 py-3 rounded-xl text-xs font-bold text-var(--text-3) bg-gray-100 hover:bg-gray-200 transition-all">Batal</button>
+                    <button type="submit" class="flex-1 px-4 py-3 rounded-xl text-xs font-bold text-white bg-amber-500 hover:bg-amber-600 transition-all shadow-lg shadow-amber-100">Ya, Generate Baru</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    </template>
+
 </div>
+
+@push('styles')
+<link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.css" rel="stylesheet">
+<style>
+    .ts-control {
+        border-radius: 0.75rem !important; 
+        border: 1px solid #dbeafe !important;
+        padding: 10px 12px !important;
+        font-size: 0.75rem !important; 
+        font-weight: 700 !important; 
+        background-color: #fff !important;
+        min-height: 42px;
+        font-family: 'Inter', sans-serif;
+        color: var(--text-1);
+    }
+    .ts-dropdown {
+        border-radius: 0.75rem !important;
+        font-size: 0.75rem !important;
+        font-weight: 600 !important;
+        font-family: 'Inter', sans-serif;
+        border: 1px solid var(--border) !important;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1) !important;
+    }
+    .ts-control input {
+        font-size: 0.75rem !important;
+        font-weight: 700 !important;
+        font-family: 'Inter', sans-serif;
+    }
+</style>
+@endpush
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/js/tom-select.complete.min.js"></script>
+<script>
+function copyKode(kode, btn) {
+    navigator.clipboard.writeText(kode).then(() => {
+        const original = btn.innerHTML;
+        btn.innerHTML = '<svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>';
+        btn.classList.remove('text-amber-600', 'bg-amber-50', 'border-amber-200');
+        btn.classList.add('text-green-600', 'bg-green-50', 'border-green-200');
+        setTimeout(() => {
+            btn.innerHTML = original;
+            btn.classList.remove('text-green-600', 'bg-green-50', 'border-green-200');
+            btn.classList.add('text-amber-600', 'bg-amber-50', 'border-amber-200');
+        }, 1500);
+    }).catch(() => {
+        // Fallback untuk browser lama
+        const el = document.createElement('textarea');
+        el.value = kode;
+        document.body.appendChild(el);
+        el.select();
+        document.execCommand('copy');
+        document.body.removeChild(el);
+    });
+}
+</script>
+@endpush
 @endsection

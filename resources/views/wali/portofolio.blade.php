@@ -6,27 +6,41 @@
 <div class="space-y-8 pb-20 fade-in">
 
     {{-- ── HERO BANNER ── --}}
-    <div class="rounded-[2.5rem] p-10 flex flex-col md:flex-row md:items-center justify-between gap-8 shadow-2xl border border-white/20 relative overflow-hidden no-print" style="background: linear-gradient(135deg, #84934A 0%, #A3B18A 100%);">
-        <div class="absolute -right-20 -top-20 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
-        <div class="absolute -left-20 -bottom-20 w-64 h-64 bg-black/10 rounded-full blur-3xl"></div>
-        
-        <div class="flex flex-col md:flex-row items-center gap-8 relative z-10">
-            <div class="w-24 h-24 rounded-[2rem] bg-white/90 backdrop-blur-md p-1 shadow-2xl transform hover:scale-105 transition-transform duration-500 overflow-hidden ring-4 ring-white/30">
+    <div class="rounded-xl p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-sm border border-gray-100 no-print" style="background: linear-gradient(135deg, #84934A 0%, #A3B18A 100%);">
+        <div class="flex flex-col md:flex-row items-center gap-6">
+            <div class="w-20 h-20 rounded-2xl flex items-center justify-center text-[#84934A] font-black text-3xl shadow-xl bg-white/90 backdrop-blur-sm transform hover:scale-105 transition-transform overflow-hidden">
                 @if($selectedAnak->foto)
-                    <img src="{{ asset('storage/' . $selectedAnak->foto) }}" class="w-full h-full object-cover rounded-[1.8rem]" alt="{{ $selectedAnak->name }}">
+                    <img src="{{ asset('storage/' . $selectedAnak->foto) }}" class="w-full h-full object-cover" alt="{{ $selectedAnak->name }}">
                 @else
-                    <div class="w-full h-full flex items-center justify-center text-4xl">🎨</div>
+                    🎨
                 @endif
             </div>
             <div class="text-center md:text-left">
-                <p class="text-xs font-black uppercase tracking-[0.3em] mb-2 text-white/70">Dokumentasi Portofolio</p>
-                <h1 class="text-4xl font-black tracking-tight text-white mb-2">{{ $selectedAnak->name }}</h1>
-                <div class="flex flex-wrap items-center justify-center md:justify-start gap-4">
-                    <span class="px-4 py-1.5 rounded-xl bg-white/20 text-white text-[10px] font-black uppercase tracking-widest backdrop-blur-sm border border-white/10">Kelas: {{ $selectedAnak->kelas->nama_kelas ?? '—' }}</span>
-                    <span class="w-1.5 h-1.5 rounded-full bg-white/30"></span>
-                    <p class="text-xs font-bold text-white/80">Kumpulan karya dan aktivitas terbaik pilihan guru.</p>
+                <p class="text-[10px] font-bold uppercase tracking-[0.2em] mb-1.5" style="color: rgba(255,255,255,.7);">Dokumentasi Portofolio</p>
+                <h1 class="text-2xl font-black tracking-tight text-white">{{ $selectedAnak->name }}</h1>
+                <div class="flex flex-wrap items-center gap-3 mt-2">
+                    <span class="px-3 py-1 rounded-lg bg-white/20 text-white text-[10px] font-black backdrop-blur-sm uppercase tracking-widest">Kelas: {{ $selectedAnak->kelas->nama_kelas ?? '—' }}</span>
+                    @if($periode)
+                        <span class="px-3 py-1 rounded-lg bg-white/20 text-white text-[10px] font-black backdrop-blur-sm uppercase tracking-widest">{{ $periode->nama_periode }}</span>
+                    @endif
                 </div>
             </div>
+        </div>
+        <div class="flex flex-wrap justify-center md:justify-end gap-3 items-center">
+            @if(isset($listPeriode) && $listPeriode->count() > 1)
+                <form action="{{ route('wali.portofolio') }}" method="GET" class="flex items-center gap-2">
+                    <input type="hidden" name="siswa_id" value="{{ $selectedAnak->id_siswa }}">
+                    <span class="text-xs font-bold text-white/80 whitespace-nowrap">Pilih Periode:</span>
+                    <select name="periode_id" onchange="this.form.submit()" class="bg-white/10 backdrop-blur-md border border-white/20 text-white text-xs font-black rounded-xl px-4 py-2.5 focus:ring-0 focus:border-white/40 cursor-pointer appearance-none outline-none" style="padding-right: 32px;">
+                        @foreach($listPeriode as $p)
+                            <option value="{{ $p->id_periode }}" class="text-gray-900" {{ $periode && $periode->id_periode == $p->id_periode ? 'selected' : '' }}>
+                                {{ $p->nama_periode }} - {{ $p->tahunAjaran->nama ?? '—' }}
+                            </option>
+                        @endforeach
+                    </select>
+                </form>
+            @endif
+            <p class="text-[11px] font-medium text-white/70">Kumpulan karya dan aktivitas terbaik pilihan guru.</p>
         </div>
     </div>
 
@@ -34,7 +48,7 @@
     @if($anak->count() > 1)
         <div class="flex flex-wrap items-center gap-4 no-print">
             @foreach($anak as $a)
-                <a href="{{ route('wali.portofolio', ['siswa_id' => $a->id_siswa]) }}" 
+                <a href="{{ route('wali.portofolio', array_filter(['siswa_id' => $a->id_siswa, 'periode_id' => $periode?->id_periode])) }}" 
                    class="group flex items-center gap-4 px-6 py-3.5 rounded-[2rem] transition-all duration-500 border {{ $selectedAnak->id_siswa == $a->id_siswa ? 'bg-white border-var(--accent) shadow-2xl ring-4 ring-var(--accent-lt)' : 'bg-white border-gray-100 opacity-60 hover:opacity-100 hover:border-gray-200 shadow-sm' }}">
                     <div class="w-10 h-10 rounded-2xl flex items-center justify-center text-sm font-black transition-all duration-500 group-hover:rotate-6 {{ $selectedAnak->id_siswa == $a->id_siswa ? 'bg-var(--accent) text-white shadow-lg shadow-var(--accent-lt)' : 'bg-gray-100 text-gray-400' }} overflow-hidden">
                         @if($a->foto)
@@ -54,20 +68,27 @@
 
     {{-- ── PORTOFOLIO GRID ── --}}
     @if($portofolio_list->count() > 0)
+        {{-- Section header --}}
+        <div class="flex items-center justify-between px-2">
+            <h3 class="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">Karya & Portofolio</h3>
+            <span class="badge badge-gray px-3 py-1 text-[9px] font-black uppercase">{{ $portofolio_list->count() }} Karya</span>
+        </div>
+
         @php
-            $groupedByPeriode = $portofolio_list->groupBy(fn($p) => $p->minggu->periode->nama_periode ?? 'Periode Lainnya');
+            $groupedByMinggu = $portofolio_list->groupBy(fn($p) => $p->minggu->minggu_ke ?? 0);
         @endphp
 
-        @foreach($groupedByPeriode as $namaPeriode => $items)
-            <div class="space-y-6 mb-12">
+        @foreach($groupedByMinggu as $mingguKe => $items)
+            <div class="space-y-4">
                 <div class="flex items-center gap-3 px-1">
-                    <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-indigo-500 text-white shadow-sm">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    <div class="w-8 h-8 rounded-xl flex items-center justify-center shadow-sm" style="background: var(--accent-lt); border: 1px solid var(--border); color: var(--accent);">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                     </div>
-                    <div>
-                        <h3 class="text-sm font-bold uppercase tracking-wider text-gray-800">{{ $namaPeriode }}</h3>
-                        <p class="text-[10px] text-gray-400 font-bold uppercase tracking-widest">{{ $items->count() }} Karya</p>
+                    <div class="flex-1">
+                        <h4 class="text-xs font-black text-gray-700 uppercase tracking-widest">Minggu {{ $mingguKe }}</h4>
+                        <p class="text-[9px] font-bold text-gray-400 uppercase tracking-widest">{{ $items->count() }} Karya</p>
                     </div>
+                    <div class="flex-1 h-px bg-gray-100"></div>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

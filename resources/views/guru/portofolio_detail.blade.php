@@ -33,7 +33,7 @@
                             class="btn btn-green btn-sm">
                         Edit dokumen
                     </button>
-                    <form action="{{ route('guru.portofolio.destroy', $portofolio->id) }}" method="POST" onsubmit="return confirm('Hapus portofolio ini secara permanen?')" class="inline-block">
+                    <form action="{{ route('guru.portofolio.destroy', $portofolio->id_portofolio) }}" method="POST" onsubmit="return confirm('Hapus portofolio ini secara permanen?')" class="inline-block">
                         @csrf @method('DELETE')
                         <button type="submit" class="btn btn-sm hover:bg-rose-50 hover:text-rose-600 transition-colors" style="border: 1px solid var(--border); color: var(--text-2);">
                             Hapus
@@ -177,7 +177,7 @@
             openModal(data = null) {
                 if (data) {
                     this.isEdit = true;
-                    this.editId = data.id;
+                    this.editId = data.id_portofolio;
                     this.formData = { 
                         siswa_id: data.siswa_id, 
                         minggu_id: data.minggu_id, 
@@ -437,7 +437,7 @@
                     });
                     const result = await res.json();
                     if (result.success) {
-                        this.existingImages = this.existingImages.filter(img => img.id !== id);
+                        this.existingImages = this.existingImages.filter(img => img.id_portofolio_images !== id);
                     } else {
                         alert(result.message || 'Gagal menghapus gambar');
                     }

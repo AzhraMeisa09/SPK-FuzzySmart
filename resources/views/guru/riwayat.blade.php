@@ -12,23 +12,49 @@
                 <h2 class="text-lg font-semibold" style="color: var(--text-1);">Riwayat Penilaian</h2>
             </div>
 
-            {{-- SEARCH FORM --}}
-            <div class="w-full lg:w-[420px]">
-                <form action="{{ route('guru.riwayat') }}" method="GET" class="flex gap-2 items-center">
-                    <div class="search-box flex-1">
-                        <input type="text" 
-                               name="search" 
-                               value="{{ request('search') }}"
-                               placeholder="Cari nama siswa...">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--text-3);"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                    </div>
-                    <button type="submit" class="btn btn-blue btn-sm whitespace-nowrap">Cari</button>
-                    @if(request('search'))
-                        <a href="{{ route('guru.riwayat') }}" class="btn btn-gray btn-sm flex items-center justify-center">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
-                        </a>
-                    @endif
-                </form>
+            <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+                {{-- Filter PERIODE --}}
+                @if(isset($listPeriode) && $listPeriode->count() > 0)
+                    <form action="{{ route('guru.riwayat') }}" method="GET" id="periodeForm" class="relative">
+                        @if(request('search'))
+                            <input type="hidden" name="search" value="{{ request('search') }}">
+                        @endif
+                        <select name="periode_id" class="form-select text-gray-900" style="padding-left: 36px; color: #000;" onchange="document.getElementById('periodeForm').submit()">
+                            @foreach($listPeriode as $p)
+                                <option value="{{ $p->id_periode }}" class="text-gray-900" style="color: #000;"
+                                    {{ $currentPeriode && $currentPeriode->id_periode == $p->id_periode ? 'selected' : '' }}>
+                                    {{ $p->nama_periode }} - {{ $p->tahunAjaran->nama ?? '—' }}
+                                    @if($p->status === 'aktif') (Aktif) @elseif($p->status === 'final') (Final) @endif
+                                </option>
+                            @endforeach
+                        </select>
+                        <div class="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--text-3);"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        </div>
+                    </form>
+                @endif
+
+                {{-- SEARCH FORM --}}
+                <div class="w-full lg:w-[320px]">
+                    <form action="{{ route('guru.riwayat') }}" method="GET" class="flex gap-2 items-center">
+                        @if($currentPeriode)
+                            <input type="hidden" name="periode_id" value="{{ $currentPeriode->id_periode }}">
+                        @endif
+                        <div class="search-box flex-1">
+                            <input type="text" 
+                                   name="search" 
+                                   value="{{ request('search') }}"
+                                   placeholder="Cari nama siswa...">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--text-3);"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                        </div>
+                        <button type="submit" class="btn btn-blue btn-sm whitespace-nowrap">Cari</button>
+                        @if(request('search'))
+                            <a href="{{ route('guru.riwayat', array_filter(['periode_id' => $currentPeriode?->id_periode])) }}" class="btn btn-gray btn-sm flex items-center justify-center">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                            </a>
+                        @endif
+                    </form>
+                </div>
             </div>
         </div>
     </div>
@@ -112,7 +138,7 @@
                     </div>
 
                     <div class="mt-5 pt-4 flex gap-2" style="border-top: 1px solid var(--border);">
-                        <a href="{{ route('guru.riwayat.detail', $s['siswa_id']) }}"
+                        <a href="{{ route('guru.riwayat.detail', [$s['siswa_id'], 'periode_id' => $currentPeriode?->id_periode]) }}"
                            class="flex-1 btn btn-gray btn-sm justify-center">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
                             Detail

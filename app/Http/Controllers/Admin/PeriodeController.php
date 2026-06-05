@@ -199,23 +199,31 @@ class PeriodeController extends Controller
         }
     }
 
+    /**
+     * STEP 1: Proses evaluasi — jalankan SPK, set status 'proses', menunggu validasi guru
+     */
     public function finalize($id)
     {
         $periode = PeriodePenilaian::with('minggu')->findOrFail($id);
 
-        // 🔒 VALIDASI 1: semua minggu harus selesai
+        // 🔒 VALIDASI 1: Status harus aktif
+        if ($periode->status !== PeriodePenilaian::STATUS_AKTIF) {
+            return back()->with('error', 'Hanya periode yang berstatus Aktif yang dapat diproses.');
+        }
+
+        // 🔒 VALIDASI 2: semua minggu harus selesai
         if ($periode->minggu()->where('status', '!=', 'selesai')->exists()) {
             return back()->with('error', 'Masih ada minggu yang belum selesai');
         }
 
-        // 🔒 VALIDASI 2: tidak boleh ada nilai draft
+        // 🔒 VALIDASI 3: tidak boleh ada nilai draft
         if (\App\Models\PenilaianMingguan::whereHas('jadwalSubkriteria.minggu', function ($q) use ($id) {
             $q->where('periode_id', $id);
         })->where('status', 'draft')->exists()) {
             return back()->with('error', 'Masih ada nilai draft');
         }
 
-        // 🔒 VALIDASI 3: pastikan setiap kelas sudah melakukan pengisian
+        // 🔒 VALIDASI 4: pastikan setiap kelas sudah melakukan pengisian
         $kelasIds = $periode->kelas->pluck('id_kelas');
         $kelasKosong = [];
 
@@ -240,24 +248,66 @@ class PeriodeController extends Controller
 
         if (!empty($kelasKosong)) {
             $namaKelasDigabung = implode(', ', $kelasKosong);
-            return back()->with('error', "Gagal Finalisasi. Terdapat kelas yang belum melakukan pengisian penilaian sama sekali: Kelas {$namaKelasDigabung}");
+            return back()->with('error', "Gagal Proses. Terdapat kelas yang belum melakukan pengisian penilaian sama sekali: Kelas {$namaKelasDigabung}");
         }
 
         try {
             DB::beginTransaction();
 
-            // 🚀 JALANKAN SPK
+            // 🚀 JALANKAN SPK — hasil dihitung, status evaluasi = menunggu_review
             app(\App\Services\SpkService::class)->hitungPeriode($periode);
 
-            // ✅ UPDATE STATUS
+            // ✅ UPDATE STATUS PERIODE ke 'proses' (menunggu validasi guru)
             $periode->update([
                 'is_aktif' => false,
-                'status' => PeriodePenilaian::STATUS_FINAL,
-                'finalized_at' => now()
+                'status'   => PeriodePenilaian::STATUS_PROSES,
             ]);
 
             DB::commit();
-            return back()->with('success', 'Periode berhasil difinalisasi & SPK dihitung');
+            return back()->with('success', '✅ Evaluasi berhasil diproses! Guru kini dapat melakukan validasi hasil untuk setiap siswa.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', $e->getMessage());
+        }
+    }
+
+    /**
+     * STEP 2: Publikasi — publish hasil ke wali murid & kepala sekolah
+     * Hanya bisa dilakukan setelah semua guru memvalidasi
+     */
+    public function publish($id)
+    {
+        $periode = PeriodePenilaian::with('evaluasi')->findOrFail($id);
+
+        if ($periode->status !== PeriodePenilaian::STATUS_PROSES) {
+            return back()->with('error', 'Hanya periode berstatus "Proses" yang dapat dipublikasikan.');
+        }
+
+        $progress = $periode->getValidasiProgress();
+        if ($progress['pending'] > 0) {
+            return back()->with('error', "Masih ada {$progress['pending']} evaluasi yang belum divalidasi guru. Pastikan seluruh guru sudah memberikan keputusan sebelum dipublikasikan.");
+        }
+
+        try {
+            DB::beginTransaction();
+
+            // Update semua evaluasi periode ini: is_final = true, kategori_akhir = keputusan guru
+            foreach ($periode->evaluasi as $eval) {
+                $finalKat = $eval->kategori_keputusan_guru ?? $eval->kategori_akhir;
+                $eval->update([
+                    'is_final'       => true,
+                    'kategori_akhir' => $finalKat,
+                ]);
+            }
+
+            // Update status periode ke FINAL
+            $periode->update([
+                'status'       => PeriodePenilaian::STATUS_FINAL,
+                'finalized_at' => now(),
+            ]);
+
+            DB::commit();
+            return back()->with('success', '🎉 Periode berhasil dipublikasikan! Hasil evaluasi kini dapat dilihat oleh wali murid dan kepala sekolah.');
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', $e->getMessage());

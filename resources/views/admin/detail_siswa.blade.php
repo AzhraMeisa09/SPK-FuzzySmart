@@ -77,6 +77,42 @@
                 </div>
             </div>
 
+            <!-- KODE REGISTRASI -->
+            <div class="card p-6 border-none shadow-lg" style="background: linear-gradient(135deg, #78350f 0%, #b45309 100%);">
+                <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center mb-4">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+                </div>
+                <h4 class="text-xs font-bold text-white mb-1">Kode Registrasi</h4>
+                @if($siswa->kode_registrasi)
+                    <div class="flex items-center gap-2 mt-2 mb-3">
+                        <code class="text-lg font-black text-white tracking-[0.2em]">{{ $siswa->kode_registrasi }}</code>
+                    </div>
+                    <button
+                        onclick="copyKodeDetail('{{ $siswa->kode_registrasi }}', this)"
+                        class="mt-1 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/20 hover:bg-white/30 text-white text-[10px] font-bold transition-all border border-white/20">
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                        Salin Kode
+                    </button>
+                @else
+                    <p class="text-[11px] opacity-80 font-medium italic">Belum ada kode registrasi.</p>
+                @endif
+
+                <div class="mt-4 pt-4 border-t border-white/20">
+                    <h4 class="text-[10px] font-bold text-white/70 mb-1.5">Status Registrasi</h4>
+                    @if($siswa->wali->count() > 0 || $siswa->wali_murid_id)
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-green-400/30 text-white border border-green-300/30">
+                            <span class="w-1.5 h-1.5 rounded-full bg-green-300"></span>
+                            Sudah Terhubung
+                        </span>
+                    @else
+                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-white/10 text-white/70 border border-white/20">
+                            <span class="w-1.5 h-1.5 rounded-full bg-white/50"></span>
+                            Belum Terhubung
+                        </span>
+                    @endif
+                </div>
+            </div>
+
             <!-- WALi MURID INFO -->
             <div class="card p-6 border-none text-white shadow-lg" style="background: linear-gradient(135deg, #6A783D 0%, #84934A 100%);">
                 <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center mb-4">
@@ -112,19 +148,19 @@
                         <div class="md:col-span-2">
                             <label class="text-[10px] font-bold text-var(--text-3) mb-1.5 block">Alamat Lengkap Siswa</label>
                             <div class="px-5 py-4 bg-var(--bg) rounded-2xl border border-var(--border) text-sm font-medium text-var(--text-1) leading-relaxed">
-                                {{ $siswa->alamat ?? 'Data alamat belum dilengkapi.' }}
+                                {{ $siswa->wali->count() > 0 ? $siswa->wali->first()->alamat : ($siswa->alamat ?? 'Data alamat belum dilengkapi.') }}
                             </div>
                         </div>
                         <div>
-                            <label class="text-[10px] font-bold text-var(--text-3) mb-1.5 block">Nama Orang Tua (Manual)</label>
+                            <label class="text-[10px] font-bold text-var(--text-3) mb-1.5 block">Nama Orang Tua</label>
                             <div class="px-4 py-3 bg-white rounded-xl border border-var(--border) text-sm font-bold text-var(--text-1)">
-                                {{ $siswa->nama_orang_tua ?? '—' }}
+                                {{ $siswa->wali->count() > 0 ? $siswa->wali->first()->nama_lengkap : ($siswa->nama_orang_tua ?? '—') }}
                             </div>
                         </div>
                         <div>
                             <label class="text-[10px] font-bold text-var(--text-3) mb-1.5 block">Kontak Orang Tua</label>
                             <div class="px-4 py-3 bg-white rounded-xl border border-var(--border) text-sm font-bold text-var(--text-1)">
-                                {{ $siswa->no_hp_orang_tua ?? '—' }}
+                                {{ $siswa->wali->count() > 0 ? $siswa->wali->first()->no_hp : ($siswa->no_hp_orang_tua ?? '—') }}
                             </div>
                         </div>
                     </div>
@@ -151,4 +187,17 @@
         </div>
     </div>
 </div>
+
+@push('scripts')
+<script>
+function copyKodeDetail(kode, btn) {
+    navigator.clipboard.writeText(kode).then(() => {
+        const orig = btn.innerHTML;
+        btn.innerHTML = '<svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg> Tersalin!';
+        btn.classList.add('bg-white/40');
+        setTimeout(() => { btn.innerHTML = orig; btn.classList.remove('bg-white/40'); }, 1500);
+    });
+}
+</script>
+@endpush
 @endsection

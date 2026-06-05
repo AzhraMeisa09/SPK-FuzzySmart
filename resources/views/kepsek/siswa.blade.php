@@ -12,7 +12,7 @@
                 <label class="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2 block">Pilih Periode</label>
                 <select name="periode_id" class="form-select" onchange="this.form.submit()">
                     @foreach($periodeList as $p)
-                        <option value="{{ $p->id }}" {{ $selectedPeriodeId == $p->id ? 'selected' : '' }}>{{ $p->nama_periode }}</option>
+                        <option value="{{ $p->id_periode }}" {{ $selectedPeriodeId == $p->id_periode ? 'selected' : '' }}>{{ $p->nama_periode }} - {{ $p->tahunAjaran->nama ?? '—' }}</option>
                     @endforeach
                 </select>
             </div>
@@ -28,7 +28,7 @@
                 <select name="kelas_id" class="form-select">
                     <option value="">Semua Unit Kelas</option>
                     @foreach($kelasList as $kelas)
-                        <option value="{{ $kelas->id }}" {{ request('kelas_id') == $kelas->id ? 'selected' : '' }}>{{ $kelas->nama_kelas }}</option>
+                        <option value="{{ $kelas->id_kelas }}" {{ request('kelas_id') == $kelas->id_kelas ? 'selected' : '' }}>{{ $kelas->nama_kelas }}</option>
                     @endforeach
                 </select>
             </div>
@@ -82,7 +82,7 @@
                             </div>
                         </td>
                         <td class="hidden md:table-cell">
-                            <span class="text-xs font-mono font-bold text-gray-400 tracking-tighter">{{ $s->id_siswa ?: '—' }}</span>
+                            <span class="text-xs font-mono font-bold text-gray-400 tracking-tighter">{{ $s->kode ?: $s->id_siswa ?: '—' }}</span>
                         </td>
                         <td>
                             <div class="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-gray-100/50 border border-gray-100">

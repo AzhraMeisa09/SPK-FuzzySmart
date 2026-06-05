@@ -53,7 +53,7 @@
                                 @endif
                             </div>
                             <h1 class="text-lg font-bold tracking-tight leading-tight" style="color: var(--text-1);">{{ $siswa->name }}</h1>
-                            <p class="text-[10px] font-bold uppercase tracking-widest mt-1" style="color: var(--text-3);">Kelas: {{ $siswa->kelas->nama_kelas ?? '—' }}</p>
+                            <p class="text-[10px] font-bold uppercase tracking-widest mt-1" style="color: var(--text-3);">Kelas: {{ $siswa->kelas->nama_kelas ?? '—' }} &bull; NISN: {{ $siswa->kode ?: $siswa->id_siswa ?: '—' }}</p>
                         </div>
                     </div>
                     
@@ -116,8 +116,8 @@
                     <div class="space-y-4">
                         <div class="flex items-center justify-between p-3 rounded-lg" style="background: var(--bg); border: 1px solid var(--border);">
                             <span class="text-[10px] font-bold uppercase tracking-widest" style="color: var(--text-3);">Kategori akhir</span>
-                            <span class="badge {{ $evaluasi->kategori_akhir === 'BSB' ? 'badge-bsb' : ($evaluasi->kategori_akhir === 'BSH' ? 'badge-bsh' : 'badge-mb') }} px-3 py-1 text-[10px]">
-                                {{ $evaluasi->kategori_akhir }}
+                            <span class="badge {{ $evaluasi->kategori_akhir === 'BSB' ? 'badge-bsb' : ($evaluasi->kategori_akhir === 'BSH' ? 'badge-bsh' : 'badge-mb') }} px-3 py-1 text-[10px] uppercase font-black">
+                                {{ match($evaluasi->kategori_akhir) { 'BSB' => 'Berkembang Sangat Baik (BSB)', 'BSH' => 'Berkembang Sesuai Harapan (BSH)', 'MB' => 'Mulai Berkembang (MB)', default => $evaluasi->kategori_akhir } }}
                             </span>
                         </div>
                         <div class="space-y-1.5 px-1">

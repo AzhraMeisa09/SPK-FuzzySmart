@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Support\Str;
 
 use App\Traits\HasCustomId;
 
@@ -26,6 +27,7 @@ class Siswa extends Model
         'kelas_id',
         'wali_murid_id',
         'kode',
+        'kode_registrasi',
         'name',
         'tanggal_lahir',
         'jenis_kelamin',
@@ -34,6 +36,25 @@ class Siswa extends Model
         'no_hp_orang_tua',
         'foto',
     ];
+
+    /**
+     * Generate kode registrasi unik format TKP-XXXXX
+     * Terdiri dari prefix TKP- + kombinasi 2 huruf, 1 angka, 1 huruf, 1 angka
+     * Dipastikan unik di database.
+     */
+    public static function generateKodeRegistrasi(): string
+    {
+        do {
+            $chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+            $random = '';
+            for ($i = 0; $i < 5; $i++) {
+                $random .= $chars[random_int(0, strlen($chars) - 1)];
+            }
+            $kode = 'TKP-' . $random;
+        } while (static::where('kode_registrasi', $kode)->exists());
+
+        return $kode;
+    }
 
     protected $casts = [
         'tanggal_lahir' => 'date'

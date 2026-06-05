@@ -32,9 +32,10 @@ class PeriodePenilaian extends Model
         'created_by',
     ];
 
-    const STATUS_DRAFT = 'draft';
-    const STATUS_AKTIF = 'aktif';
-    const STATUS_FINAL = 'final';
+    const STATUS_DRAFT  = 'draft';
+    const STATUS_AKTIF  = 'aktif';
+    const STATUS_PROSES = 'proses';
+    const STATUS_FINAL  = 'final';
 
     protected $casts = [
         'tanggal_mulai'   => 'date',
@@ -63,7 +64,7 @@ class PeriodePenilaian extends Model
             // Sync is_aktif with status if necessary
             if ($periode->status === self::STATUS_AKTIF) {
                 $periode->is_aktif = true;
-            } elseif ($periode->status === self::STATUS_DRAFT) {
+            } elseif (in_array($periode->status, [self::STATUS_DRAFT, self::STATUS_PROSES, self::STATUS_FINAL])) {
                 $periode->is_aktif = false;
             }
         });
@@ -106,9 +107,10 @@ class PeriodePenilaian extends Model
     public function getStatusBadgeAttribute()
     {
         return match ($this->status) {
-            self::STATUS_FINAL => '<span class="px-2 py-1 text-[10px] font-bold uppercase rounded bg-indigo-100 text-indigo-700 border border-indigo-200">Final</span>',
-            self::STATUS_AKTIF => '<span class="px-2 py-1 text-[10px] font-bold uppercase rounded bg-green-100 text-green-700 border border-green-200">Aktif</span>',
-            default            => '<span class="px-2 py-1 text-[10px] font-bold uppercase rounded bg-slate-100 text-slate-500 border border-slate-200">Draft</span>',
+            self::STATUS_FINAL  => '<span class="px-2 py-1 text-[10px] font-bold uppercase rounded bg-indigo-100 text-indigo-700 border border-indigo-200">Final</span>',
+            self::STATUS_PROSES => '<span class="px-2 py-1 text-[10px] font-bold uppercase rounded bg-amber-100 text-amber-700 border border-amber-200">Proses</span>',
+            self::STATUS_AKTIF  => '<span class="px-2 py-1 text-[10px] font-bold uppercase rounded bg-green-100 text-green-700 border border-green-200">Aktif</span>',
+            default             => '<span class="px-2 py-1 text-[10px] font-bold uppercase rounded bg-slate-100 text-slate-500 border border-slate-200">Draft</span>',
         };
     }
 
@@ -125,6 +127,34 @@ class PeriodePenilaian extends Model
     public function isAktif(): bool
     {
         return $this->status === self::STATUS_AKTIF;
+    }
+
+    public function isProses(): bool
+    {
+        return $this->status === self::STATUS_PROSES;
+    }
+
+    /** Cek apakah semua evaluasi pada periode ini sudah divalidasi guru */
+    public function allEvaluasiValidated(): bool
+    {
+        $totalEval = $this->evaluasi()->count();
+        if ($totalEval === 0) return false;
+        $validated = $this->evaluasi()->where('status_validasi', 'disetujui_guru')->count();
+        return $totalEval === $validated;
+    }
+
+    /** Progress validasi guru */
+    public function getValidasiProgress(): array
+    {
+        $total = $this->evaluasi()->count();
+        $done  = $this->evaluasi()->where('status_validasi', 'disetujui_guru')->count();
+        return ['total' => $total, 'done' => $done, 'pending' => $total - $done];
+    }
+
+    /** Cek apakah periode sudah bisa dipublikasikan (semua guru sudah validasi) */
+    public function canBePublished(): bool
+    {
+        return $this->status === self::STATUS_PROSES && $this->allEvaluasiValidated();
     }
 
     public function canBeFinalized(): bool

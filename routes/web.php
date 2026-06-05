@@ -14,6 +14,9 @@ Route::get('/', function () {
 Route::get('/login', fn () => view('auth.login'))->name('login');
 Route::post('/api/login', [\App\Http\Controllers\Api\AuthController::class, 'login']);
 
+Route::get('/register', [\App\Http\Controllers\Auth\RegisterController::class, 'showRegistrationForm'])->name('register');
+Route::post('/register', [\App\Http\Controllers\Auth\RegisterController::class, 'register']);
+
 // ─── SHARED PROFILE ───────────────────────────────────
 Route::middleware(['auth'])->group(function () {
     Route::get('/profile', [\App\Http\Controllers\ProfileController::class, 'index'])->name('profile.index');
@@ -28,6 +31,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     // User Management
     Route::resource('user', \App\Http\Controllers\Admin\UserController::class);
     Route::patch('user/{user}/toggle', [\App\Http\Controllers\Admin\UserController::class, 'toggleStatus'])->name('user.toggle');
+    Route::delete('user/relasi/{siswa}/putus', [\App\Http\Controllers\Admin\UserController::class, 'putusRelasi'])->name('user.relasi.putus');
 
     // Tahun Ajaran
     Route::resource('tahun_ajaran', \App\Http\Controllers\Admin\TahunAjaranController::class);
@@ -36,6 +40,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::resource('kelas', \App\Http\Controllers\Admin\KelasController::class);
     // Siswa
     Route::resource('siswa', \App\Http\Controllers\Admin\SiswaController::class);
+    Route::post('siswa/{siswa}/regenerate-kode', [\App\Http\Controllers\Admin\SiswaController::class, 'regenerateKode'])->name('siswa.regenerate-kode');
     Route::resource('kriteria', \App\Http\Controllers\Admin\KriteriaController::class)->parameters(['kriteria' => 'kriteria']);
     Route::patch('kriteria/{kriteria}/toggle', [\App\Http\Controllers\Admin\KriteriaController::class, 'toggleStatus'])->name('kriteria.toggle');
     Route::post('subkriteria/import', [\App\Http\Controllers\Admin\SubkriteriaController::class, 'importWord'])->name('subkriteria.import');
@@ -51,10 +56,16 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     Route::resource('template-rekomendasi-umum', \App\Http\Controllers\Admin\TemplateRekomendasiUmumController::class);
     Route::resource('periode', \App\Http\Controllers\Admin\PeriodeController::class);
     Route::post('periode/{periode}/finalize', [\App\Http\Controllers\Admin\PeriodeController::class, 'finalize'])->name('periode.finalize');
+    Route::post('periode/{id}/publish',  [\App\Http\Controllers\Admin\PeriodeController::class, 'publish'])->name('periode.publish');
     Route::patch('periode/{periode}/toggle', [\App\Http\Controllers\Admin\PeriodeController::class, 'toggle'])->name('periode.toggle');
     Route::resource('minggu', \App\Http\Controllers\Admin\MingguPenilaianController::class);
     Route::patch('minggu/{id}/status', [\App\Http\Controllers\Admin\MingguPenilaianController::class, 'changeStatus'])->name('minggu.status');
     Route::get('/jadwal_subkriteria', fn () => view('admin.jadwal_subkriteria'))->name('jadwal_subkriteria');
+
+    // Panduan Penggunaan
+    Route::get('/panduan', function () {
+        return view('admin.panduan');
+    })->name('panduan');
 
     // Hasil Evaluasi SPK
     Route::get('/hasil-evaluasi', [\App\Http\Controllers\Admin\HasilEvaluasiController::class, 'index'])->name('hasil_evaluasi');
@@ -82,6 +93,11 @@ Route::prefix('guru')->name('guru.')->middleware(['auth'])->group(function () {
     Route::get('/siswa', [\App\Http\Controllers\Guru\SiswaController::class, 'index'])->name('siswa.index');
     Route::get('/siswa/{id}', [\App\Http\Controllers\Guru\SiswaController::class, 'show'])->name('siswa.show');
 
+    // Modul Validasi Evaluasi
+    Route::get('/validasi-evaluasi', [\App\Http\Controllers\Guru\EvaluasiValidasiController::class, 'index'])->name('validasi.index');
+    Route::get('/validasi-evaluasi/{evaluasi}', [\App\Http\Controllers\Guru\EvaluasiValidasiController::class, 'review'])->name('validasi.review');
+    Route::post('/validasi-evaluasi/{evaluasi}', [\App\Http\Controllers\Guru\EvaluasiValidasiController::class, 'submit'])->name('validasi.submit');
+
     // Modul Portofolio
     Route::resource('portofolio', \App\Http\Controllers\Guru\PortofolioController::class);
     Route::delete('portofolio/image/{id}', [\App\Http\Controllers\Guru\PortofolioController::class, 'destroyImage'])->name('portofolio.image.destroy');
@@ -108,4 +124,5 @@ Route::prefix('wali')->name('wali.')->middleware(['auth', 'role:wali_murid'])->g
     Route::get('/evaluasi',     [\App\Http\Controllers\Wali\WaliController::class, 'evaluasi'])->name('evaluasi');
     Route::get('/laporan',      [\App\Http\Controllers\Wali\WaliController::class, 'laporan'])->name('laporan');
     Route::post('/laporan/generate-word', [\App\Http\Controllers\Wali\WaliController::class, 'generateWordReport'])->name('laporan.generate-word');
+    Route::post('/tambah-anak', [\App\Http\Controllers\Wali\WaliController::class, 'tambahAnak'])->name('tambah-anak');
 });
