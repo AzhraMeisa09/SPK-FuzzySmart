@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Registrasi Wali Murid — TK Negeri Pembina Kota Padang Panjang</title>
+    <link rel="icon" type="image/jpeg" href="{{ asset('images/logotutwuri.jpg') }}">
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

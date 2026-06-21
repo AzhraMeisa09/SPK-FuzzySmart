@@ -119,6 +119,56 @@
                     <svg class="w-4.5 h-4.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path d="M12 6v6m0 0v6m0-6h6m-6 0H6"/></svg>
                     Tambah Siswa
                 </button>
+
+                {{-- Tombol Cetak PDF Kode Registrasi --}}
+                <div x-data="{ openPrint: false }" class="relative">
+                    <button @click="openPrint = !openPrint"
+                            class="flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold text-sm border border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-100 transition-all shadow-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+                        </svg>
+                        Cetak Kode
+                        <svg class="w-3.5 h-3.5" :class="openPrint ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3" style="transition:transform 0.2s">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </button>
+
+                    {{-- Dropdown pilih kelas --}}
+                    <div x-show="openPrint"
+                         x-transition:enter="transition ease-out duration-150"
+                         x-transition:enter-start="opacity-0 scale-95 translate-y-[-4px]"
+                         x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                         x-transition:leave="transition ease-in duration-100"
+                         x-transition:leave-start="opacity-100"
+                         x-transition:leave-end="opacity-0 scale-95"
+                         @click.away="openPrint = false"
+                         class="absolute right-0 top-full mt-2 w-64 bg-white border border-gray-100 rounded-2xl shadow-2xl z-50 overflow-hidden"
+                         x-cloak>
+                        <div class="px-4 pt-4 pb-2">
+                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">Pilih Kelas untuk Dicetak</p>
+                            @foreach($kelas as $k)
+                            <a href="{{ route('admin.siswa.cetak-kode-kelas', ['kelas_id' => $k->id_kelas]) }}"
+                               target="_blank"
+                               class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-amber-50 hover:text-amber-700 transition-all group mb-1">
+                                <div class="w-7 h-7 rounded-lg bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 group-hover:bg-amber-500 group-hover:text-white transition-all flex-shrink-0">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
+                                    </svg>
+                                </div>
+                                <div>
+                                    <span class="text-xs font-bold text-gray-700 group-hover:text-amber-700">{{ $k->nama_kelas }}</span>
+                                    <span class="block text-[9px] text-gray-400 font-medium">
+                                        {{ \App\Models\Siswa::where('kelas_id', $k->id_kelas)->count() }} siswa
+                                    </span>
+                                </div>
+                                <svg class="w-3.5 h-3.5 ml-auto text-gray-300 group-hover:text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                                </svg>
+                            </a>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

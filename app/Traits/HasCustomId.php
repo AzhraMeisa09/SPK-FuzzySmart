@@ -55,10 +55,23 @@ trait HasCustomId
         }
 
         // Standard handling (U001, S001, etc.)
-        $lastId = DB::table($table)
-            ->where($pk, 'LIKE', $prefix . '%')
-            ->orderBy($pk, 'desc')
-            ->value($pk);
+        $driver = DB::connection()->getDriverName();
+        if ($driver === 'mysql' || $driver === 'mariadb') {
+            $lastId = DB::table($table)
+                ->where($pk, 'LIKE', $prefix . '%')
+                ->orderByRaw('CAST(SUBSTRING(' . $pk . ', ' . (strlen($prefix) + 1) . ') AS UNSIGNED) DESC')
+                ->value($pk);
+        } elseif ($driver === 'sqlite') {
+            $lastId = DB::table($table)
+                ->where($pk, 'LIKE', $prefix . '%')
+                ->orderByRaw('CAST(SUBSTR(' . $pk . ', ' . (strlen($prefix) + 1) . ') AS INTEGER) DESC')
+                ->value($pk);
+        } else {
+            $lastId = DB::table($table)
+                ->where($pk, 'LIKE', $prefix . '%')
+                ->orderBy($pk, 'desc')
+                ->value($pk);
+        }
 
         if (!$lastId) {
             return $prefix . '001';

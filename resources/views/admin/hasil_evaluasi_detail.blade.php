@@ -37,7 +37,7 @@
                 <div class="relative">
                     <h3 class="text-lg font-bold text-var(--text-1) tracking-tight leading-tight">{{ $evaluasi->siswa->name }}</h3>
                     <p class="text-[10px] font-bold text-blue-600 mt-1">Kelas {{ $evaluasi->siswa->kelas->nama_kelas ?? '—' }}</p>
-                    <p class="text-[10px] font-bold text-var(--text-3) mt-1">NISN: {{ $evaluasi->siswa->kode ?? '—' }}</p>
+                    <p class="text-[10px] font-bold text-var(--text-3) mt-1">NISN: {{ $evaluasi->siswa->kode ?: $evaluasi->siswa->id_siswa ?: '—' }}</p>
                 </div>
             </div>
         </div>

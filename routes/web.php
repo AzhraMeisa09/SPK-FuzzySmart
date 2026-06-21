@@ -39,6 +39,7 @@ Route::prefix('admin')->name('admin.')->middleware(['auth', 'role:admin'])->grou
     // Kelas
     Route::resource('kelas', \App\Http\Controllers\Admin\KelasController::class);
     // Siswa
+    Route::get('siswa/cetak-kode-kelas', [\App\Http\Controllers\Admin\SiswaController::class, 'cetakKodeKelas'])->name('siswa.cetak-kode-kelas');
     Route::resource('siswa', \App\Http\Controllers\Admin\SiswaController::class);
     Route::post('siswa/{siswa}/regenerate-kode', [\App\Http\Controllers\Admin\SiswaController::class, 'regenerateKode'])->name('siswa.regenerate-kode');
     Route::resource('kriteria', \App\Http\Controllers\Admin\KriteriaController::class)->parameters(['kriteria' => 'kriteria']);

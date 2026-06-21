@@ -71,7 +71,7 @@
                     </div>
                     <div class="md:col-span-2 p-4 rounded-xl" style="background: var(--bg); border: 1px solid var(--border);">
                         <p class="text-[9px] font-bold uppercase tracking-widest mb-1" style="color: var(--text-3);">Alamat</p>
-                        <p class="text-sm font-medium italic" style="color: var(--text-2);">{{ $siswa->alamat ?? 'Belum diisi.' }}</p>
+                        <p class="text-sm font-medium italic" style="color: var(--text-2);">{{ $siswa->wali->count() > 0 ? ($siswa->wali->first()->alamat ?? $siswa->alamat ?? 'Belum diisi.') : ($siswa->alamat ?? 'Belum diisi.') }}</p>
                     </div>
                 </div>
             </div>

@@ -129,11 +129,11 @@ class WaliController extends Controller
             return redirect()->route('wali.dashboard')->with('error', 'Data anak tidak ditemukan.');
         }
 
-        // Fetch all periods related to the student's class (active or final)
+        // Fetch all periods related to the student's class (active, proses, or final)
         $listPeriode = PeriodePenilaian::whereHas('kelas', function($q) use ($siswa) {
                 $q->where('kelas.id_kelas', $siswa->kelas_id);
             })
-            ->whereIn('status', [PeriodePenilaian::STATUS_AKTIF, PeriodePenilaian::STATUS_FINAL])
+            ->whereIn('status', [PeriodePenilaian::STATUS_AKTIF, PeriodePenilaian::STATUS_PROSES, PeriodePenilaian::STATUS_FINAL])
             ->orderBy('created_at', 'desc')
             ->get();
 
@@ -256,11 +256,11 @@ class WaliController extends Controller
         $portofolio_list = collect();
 
         if ($selectedAnak) {
-            // Fetch all periods related to the student's class (active or final)
+            // Fetch all periods related to the student's class (active, proses, or final)
             $listPeriode = PeriodePenilaian::whereHas('kelas', function($q) use ($selectedAnak) {
                     $q->where('kelas.id_kelas', $selectedAnak->kelas_id);
                 })
-                ->whereIn('status', [PeriodePenilaian::STATUS_AKTIF, PeriodePenilaian::STATUS_FINAL])
+                ->whereIn('status', [PeriodePenilaian::STATUS_AKTIF, PeriodePenilaian::STATUS_PROSES, PeriodePenilaian::STATUS_FINAL])
                 ->orderBy('created_at', 'desc')
                 ->get();
 

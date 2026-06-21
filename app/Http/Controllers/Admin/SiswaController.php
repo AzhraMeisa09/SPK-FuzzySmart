@@ -164,6 +164,26 @@ class SiswaController extends Controller
     }
 
     /**
+     * Cetak kode registrasi per kelas (halaman cetak/PDF).
+     */
+    public function cetakKodeKelas(Request $request)
+    {
+        $request->validate([
+            'kelas_id' => 'required|exists:kelas,id_kelas',
+        ]);
+
+        $kelas = Kelas::findOrFail($request->kelas_id);
+
+        $siswa = Siswa::where('kelas_id', $kelas->id_kelas)
+                      ->orderBy('name')
+                      ->get();
+
+        $tahunAjaran = \App\Models\TahunAjaran::getAktif();
+
+        return view('admin.cetak_kode_kelas', compact('kelas', 'siswa', 'tahunAjaran'));
+    }
+
+    /**
      * Remove the specified resource from storage.
      */
     public function destroy($id)

@@ -47,7 +47,7 @@
                     </div>
                     <p class="text-var(--text-3) font-medium text-sm flex items-center justify-center md:justify-start gap-2">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
-                        NISN: {{ $siswa->kode ?? '—' }}
+                        NISN: {{ $siswa->kode ?: $siswa->id_siswa ?: '—' }}
                     </p>
                 </div>
             </div>

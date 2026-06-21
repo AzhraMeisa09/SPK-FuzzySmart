@@ -35,6 +35,15 @@ class KepsekController extends Controller
 
         $periodeAktif = PeriodePenilaian::find($selectedPeriodeId);
 
+        // Ambil kelas yang terdaftar di periode terpilih saja
+        $periode = PeriodePenilaian::with('kelas')->find($selectedPeriodeId);
+        $kelasList = $periode ? $periode->kelas : collect();
+
+        $selectedKelasId = $request->get('kelas_id');
+        if ($selectedKelasId && !$kelasList->contains('id_kelas', $selectedKelasId)) {
+            $selectedKelasId = null;
+        }
+
         $query = Evaluasi::with(['siswa.kelas', 'detail.subkriteria.kriteria'])
             ->where('periode_id', $selectedPeriodeId);
 
@@ -45,8 +54,12 @@ class KepsekController extends Controller
             });
         }
 
-        if ($request->filled('kelas_id')) {
-            $query->whereHas('siswa', fn($q) => $q->where('kelas_id', $request->kelas_id));
+        if ($selectedKelasId) {
+            $query->whereHas('siswa', fn($q) => $q->where('kelas_id', $selectedKelasId));
+        } elseif ($periode && $periode->kelas->isNotEmpty()) {
+            $query->whereHas('siswa', fn($q) => $q->whereIn('kelas_id', $periode->kelas->pluck('id_kelas')));
+        } else {
+            $query->whereRaw('1 = 0');
         }
 
         if ($request->filled('kategori')) {
@@ -64,10 +77,9 @@ class KepsekController extends Controller
             'total' => $allEvaluasi->count()
         ];
 
-        $kelasList = Kelas::all();
         $kriteriaList = Kriteria::all();
 
-        return view('kepsek.evaluasi', compact('evaluasi', 'kelasList', 'periodeAktif', 'stats', 'kriteriaList', 'periodeList', 'selectedPeriodeId'));
+        return view('kepsek.evaluasi', compact('evaluasi', 'kelasList', 'periodeAktif', 'stats', 'kriteriaList', 'periodeList', 'selectedPeriodeId', 'selectedKelasId'));
     }
 
     public function siswa(Request $request)
@@ -81,6 +93,15 @@ class KepsekController extends Controller
 
         $periodeAktif = PeriodePenilaian::find($selectedPeriodeId);
         
+        // Ambil kelas yang terdaftar di periode terpilih saja
+        $periode = PeriodePenilaian::with('kelas')->find($selectedPeriodeId);
+        $kelasList = $periode ? $periode->kelas : collect();
+
+        $selectedKelasId = $request->get('kelas_id');
+        if ($selectedKelasId && !$kelasList->contains('id_kelas', $selectedKelasId)) {
+            $selectedKelasId = null;
+        }
+
         $query = Siswa::with(['kelas.guru', 'evaluasi' => function($q) use ($selectedPeriodeId) {
             $q->where('periode_id', $selectedPeriodeId);
         }]);
@@ -90,8 +111,12 @@ class KepsekController extends Controller
                   ->orWhere('id_siswa', 'like', '%' . $request->search . '%');
         }
 
-        if ($request->filled('kelas_id')) {
-            $query->where('kelas_id', $request->kelas_id);
+        if ($selectedKelasId) {
+            $query->where('kelas_id', $selectedKelasId);
+        } elseif ($periode && $periode->kelas->isNotEmpty()) {
+            $query->whereIn('kelas_id', $periode->kelas->pluck('id_kelas'));
+        } else {
+            $query->whereRaw('1 = 0');
         }
 
         if ($request->filled('kategori')) {
@@ -102,9 +127,8 @@ class KepsekController extends Controller
         }
 
         $siswa = $query->paginate(15)->withQueryString();
-        $kelasList = Kelas::all();
 
-        return view('kepsek.siswa', compact('siswa', 'kelasList', 'periodeAktif', 'periodeList', 'selectedPeriodeId'));
+        return view('kepsek.siswa', compact('siswa', 'kelasList', 'periodeAktif', 'periodeList', 'selectedPeriodeId', 'selectedKelasId'));
     }
 
     public function siswaDetail(Request $request, $id)
@@ -498,15 +522,23 @@ class KepsekController extends Controller
 
         $selectedKelasId = $request->get('kelas_id');
 
+        // Ambil kelas yang terdaftar di periode terpilih saja
+        $periode = PeriodePenilaian::with('kelas')->find($selectedPeriodeId);
+        $kelasList = $periode ? $periode->kelas : collect();
+
+        // Validasi agar kelas yang dipilih harus ada di periode tersebut
+        if ($selectedKelasId && !$kelasList->contains('id_kelas', $selectedKelasId)) {
+            $selectedKelasId = null;
+        }
+
         // Ambil daftar siswa yang relevan
         $siswaQuery = Siswa::with('kelas');
         if ($selectedKelasId) {
             $siswaQuery->where('kelas_id', $selectedKelasId);
-        } else if ($selectedPeriodeId) {
-            $periode = PeriodePenilaian::with('kelas')->find($selectedPeriodeId);
-            if ($periode && $periode->kelas->isNotEmpty()) {
-                $siswaQuery->whereIn('kelas_id', $periode->kelas->pluck('id_kelas'));
-            }
+        } elseif ($periode && $periode->kelas->isNotEmpty()) {
+            $siswaQuery->whereIn('kelas_id', $periode->kelas->pluck('id_kelas'));
+        } else {
+            $siswaQuery->whereRaw('1 = 0');
         }
         $siswaList = $siswaQuery->get();
 

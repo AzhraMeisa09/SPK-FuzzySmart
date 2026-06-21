@@ -464,7 +464,7 @@
                         this.closeForm();
                         Swal.fire({
                             icon: 'error',
-                            title: 'Oops...',
+                            title: 'Gagal!',
                             text: res.message || 'Gagal menyimpan data.',
                             confirmButtonText: 'Tutup'
                         });

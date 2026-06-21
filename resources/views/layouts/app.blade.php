@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="SPK Fuzzy SMART — Sistem Pendukung Keputusan Penilaian Perkembangan Siswa">
     <title>@yield('title', 'Dashboard') — SPK TK Pembina</title>
+    <link rel="icon" type="image/jpeg" href="{{ asset('images/logotutwuri.jpg') }}">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -297,7 +298,7 @@
                             @if(session('error'))
                                 Swal.fire({
                                     icon: 'error',
-                                    title: 'Oops...',
+                                    title: 'Gagal!',
                                     text: "{{ session('error') }}",
                                     confirmButtonText: 'Tutup'
                                 });

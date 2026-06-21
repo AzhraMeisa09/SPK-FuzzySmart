@@ -73,10 +73,10 @@
                                 </span>
                             </td>
                             <td>
-                                <p class="text-xs font-semibold leading-tight" style="color: var(--text-1);">{{ $s->nama_orang_tua }}</p>
+                                <p class="text-xs font-semibold leading-tight" style="color: var(--text-1);">{{ $s->wali->first()->nama_lengkap ?? $s->nama_orang_tua ?? '-' }}</p>
                             </td>
                             <td>
-                                <p class="text-[10px] font-medium" style="color: var(--text-2);">{{ $s->no_hp_orang_tua ?: '-' }}</p>
+                                <p class="text-[10px] font-medium" style="color: var(--text-2);">{{ $s->wali->first()->no_hp ?? $s->no_hp_orang_tua ?? '-' }}</p>
                             </td>
                             <td>
                                 <div class="flex items-center gap-2">

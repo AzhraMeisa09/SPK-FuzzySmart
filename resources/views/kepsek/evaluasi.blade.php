@@ -53,7 +53,7 @@
                 <select name="kelas_id" class="form-select">
                     <option value="">Semua Kelas</option>
                     @foreach($kelasList as $kelas)
-                        <option value="{{ $kelas->id_kelas }}" {{ request('kelas_id') == $kelas->id_kelas ? 'selected' : '' }}>{{ $kelas->nama_kelas }}</option>
+                        <option value="{{ $kelas->id_kelas }}" {{ $selectedKelasId == $kelas->id_kelas ? 'selected' : '' }}>{{ $kelas->nama_kelas }}</option>
                     @endforeach
                 </select>
             </div>

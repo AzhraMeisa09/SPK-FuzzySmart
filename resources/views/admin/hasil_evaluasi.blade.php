@@ -186,7 +186,7 @@
                                             <td>
                                                 <div class="flex flex-col">
                                                     <span class="font-bold text-var(--text-1) leading-tight">{{ $item->siswa->name }}</span>
-                                                    <span class="text-[10px] text-var(--text-3) font-bold mt-0.5 tracking-wider">NISN: {{ $item->siswa->kode ?? '—' }}</span>
+                                                    <span class="text-[10px] text-var(--text-3) font-bold mt-0.5 tracking-wider">NISN: {{ $item->siswa->kode ?: $item->siswa->id_siswa ?: '—' }}</span>
                                                 </div>
                                             </td>
 
